@@ -1,4 +1,4 @@
-import {checkPixStatus} from './src/down-detector/pages/pix';
+import {checkPixStatus} from './src/pages/pix';
 
 async function go() {
     const pixStatus =  await checkPixStatus();
