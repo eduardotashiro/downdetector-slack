@@ -1,4 +1,7 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealth from 'puppeteer-extra-plugin-stealth';
+
+chromium.use(stealth());
 
 const url = "https://downdetector.com.br/fora-do-ar/pix/";
 
@@ -10,15 +13,11 @@ export async function checkPixStatus() {
     
    
     const dados = await page.evaluate(() => {
-        return window.DD?.currentServiceProperties; //DD NO TYPES
+        return window.DD?.currentServiceProperties;
     });
 
-    //console.log("Dados encontrados:", JSON.stringify(dados, null, 2));
-    // const data = dados.series.baseline.data;
-    // console.log("Série de dados da linha de base:");
-    // console.log(JSON.stringify(data, null, 2));
-
-    await browser.close();
     
-    return JSON.stringify(dados, null, 2);
+     await browser.close();
+
+    return dados;
 }
