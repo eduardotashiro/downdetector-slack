@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npx playwright install --with-deps chromium",
     "start": "node dist/server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Eduardo Tashiro",
   "license": "ISC",
   "dependencies": {
     "@slack/bolt": "^4.6.0",
