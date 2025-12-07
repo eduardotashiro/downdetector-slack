@@ -1,0 +1,28 @@
+{
+  "name": "downdetector-slack",
+  "version": "1.0.0",
+  "description": "Monitor Downdetector via Slack",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/bolt": "^4.6.0",
+    "dotenv": "^17.2.3",
+    "node-cron": "^4.2.1",
+    "playwright": "^1.57.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/node-cron": "^3.0.11",
+    "ngrok": "^5.0.0-beta.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
