@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch teste.ts",
     "build": "tsc && npx playwright install --with-deps chromium",
     "start": "node dist/server.js"
   },
@@ -16,7 +16,9 @@
     "@slack/bolt": "^4.6.0",
     "dotenv": "^17.2.3",
     "node-cron": "^4.2.1",
-    "playwright": "^1.57.0"
+    "playwright": "^1.57.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
