@@ -3,10 +3,10 @@ import stealth from 'puppeteer-extra-plugin-stealth';
 
 chromium.use(stealth());
 
-const url = "https://downdetector.com.br/fora-do-ar/pix/";
+const url = "https://downdetector.com.br/fora-do-ar/bradesco/";
 
-export async function checkPixStatus() {
-    const browser = await chromium.launch({ headless: true, slowMo: 50 });
+export async function checkBradescoStatus() {
+    const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
     await page.goto(url);
