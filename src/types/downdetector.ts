@@ -19,11 +19,11 @@ export interface ServiceProperties {
     series: {
         reports: {
             label: string;
-            data: Array<[number, number]>;
+            data: Array<{ x: string; y: number }>;
         };
         baseline: {
             label: string;
-            data: Array<[number, number]>;
+            data: Array<{ x: string; y: number }>;
         };
     };
 }
