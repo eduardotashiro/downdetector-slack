@@ -2,101 +2,148 @@ import { checkPixStatus } from "../../pages/pix";
 import { WebClient } from "@slack/web-api";
 import { config } from "../../config/env";
 
+
 const client = new WebClient(config.slack.botToken);
 
+//memória
 let incidenteAtivo: {
     inicio: number;
     servico: string;
-    messageTs?: string; // salvar o timestamp da mensagem
+    messageTs?: string;
 } | null = null;
+
+// Último pico notificado (para evitar duplicação)
+let lastPeakTimestamp: string | null = null;
+
+// Tipagem dos pontos do gráfico
+type ReportPoint = { x: string; y: number };
+
 
 export async function sendSlackMessage() {
     const status = await checkPixStatus();
 
-   if (!status) {
-            console.error("❌ Não foi possível obter status do Pix");
-            return;
-        }
+    if (!status) {
+        console.error("Não foi possível obter status do Pix");
+        return;
+    }
 
-    const service = status?.company;
+    const service = status?.company || "Pix";
     const statuss = status?.status;
 
-    // -----------------------------//
-    // DETECÇÃO DE INCIDENTE
-    // -----------------------------//
-    
-    // PROBLEMA COMEÇOU
+    // ---- Coleta de séries ----
+    const reports: ReportPoint[] = status?.series?.reports?.data || [];
+    const baseline: ReportPoint[] = status?.series?.baseline?.data || [];
+
+    // Maior ponto do gráfico
+    const maxReportPoint = reports.reduce(
+        (max: ReportPoint, p: ReportPoint) => (p.y > max.y ? p : max),
+        { x: "", y: 0 }
+    );
+
+    const maxReport = maxReportPoint.y;
+    const peakTimestamp = maxReportPoint.x;
+
+    // Baseline máximo
+    const maxBaseline = baseline.reduce(
+        (max: ReportPoint, p: ReportPoint) => (p.y > max.y ? p : max),
+        { x: "", y: 0 }
+    ).y;
+
+    // Converter horário real do pico
+    const horarioRealPico = peakTimestamp
+        ? new Date(peakTimestamp).toLocaleString("pt-BR")
+        : "indefinido";
+
+
+    // --------------------------------------------------------------------
+    // 🚨 INCIDENTE WARNING (Downdetector detectou real instabilidade)
+    // --------------------------------------------------------------------
+
     if (statuss === "warning" && !incidenteAtivo) {
         incidenteAtivo = {
             inicio: Date.now(),
-            servico: service || "Serviço desconhecido"
+            servico: service
         };
 
         const result = await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `🚨 *${service} ESTÁ FORA DO AR!*\n\nIncidente detectado às ${new Date().toLocaleTimeString('pt-BR')}`
+            text: `🚨 *${service} ESTÁ FORA DO AR!*\n\n` +
+                  `Incidente detectado às *${new Date().toLocaleTimeString("pt-BR")}*`
         });
 
-        // Salvar o timestamp da mensagem para editar depois
         incidenteAtivo.messageTs = result.ts;
-        
-        console.log("problema detectado!", new Date().toLocaleString('pt-BR'));
+
+        console.log("🚨 Warning detectado!");
         return;
     }
 
-    //  INCIDENTE RESOLVIDO
+
+  
+    //INCIDENTE RESOLVIDO
+    // --------------------------------------------------------------------
+
     if (statuss === "success" && incidenteAtivo) {
         const duracao = Date.now() - incidenteAtivo.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
 
-        let duracaoTexto = "";
-        if (horas > 0) {
-            duracaoTexto = `${horas}h ${minutosRestantes}min`;
-        } else {
-            duracaoTexto = `${minutosRestantes}min`;
-        }
+        const duracaoTexto = horas > 0 ? `${horas}h ${minutosRestantes}min`: `${minutosRestantes}min`;
 
-        // Atualizar a mensagem original
         if (incidenteAtivo.messageTs) {
             await client.chat.update({
                 channel: config.slack.channel,
                 ts: incidenteAtivo.messageTs,
-                text: `*${service} VOLTOU AO NORMAL!*\n\nDuração do incidente:*${duracaoTexto}*\nResolvido às ${new Date().toLocaleTimeString('pt-BR')}`
+                text: `✅ *${service} VOLTOU AO NORMAL!*\n\n` +
+                      `⏱️ Duração: *${duracaoTexto}*\n` +
+                      `📅 Resolvido às ${new Date().toLocaleTimeString("pt-BR")}`
             });
         }
 
-        console.log(`Incidente resolvido! Duração: ${duracaoTexto}`);
-        
+        console.log(`Incidente resolvido: duração ${duracaoTexto}`);
         incidenteAtivo = null;
         return;
     }
 
-    if (statuss === "warning" && incidenteAtivo) {
-        console.log("Incidente ainda ativo...");
-        return;
-    }
 
-    // -----------------------------
-    // VERIFICAÇÃO DE INSTABILIDADE
-    // -----------------------------
-    const reports = status?.series?.reports?.data || [];
-    const baseline = status?.series?.baseline?.data || [];
+    
+    //  ALERTA DE PICO  nível moderado
+    // --------------------------------------------------------------------
 
-    let maxReport = Math.max(...reports.map((p: { y: any; }) => p.y), 0);
-    let maxBaseline = Math.max(...baseline.map((p: { y: any; }) => p.y), 0);
+    const LIMIAR_MODERADO = 2;  // pico é moderado se report > baseline * 2
 
-    if (maxReport > maxBaseline * 1.5) { // 50% acima do baseline
+    const picoModerado = maxReport > maxBaseline * LIMIAR_MODERADO;
+
+    if (statuss === "success" && picoModerado) {
+
+        // Evita alertar o mesmo pico diversas vezes
+        if (peakTimestamp && lastPeakTimestamp === peakTimestamp) {
+            console.log("Pico já alertado anteriormente. Ignorando.");
+            return;
+        }
+
+        lastPeakTimestamp = peakTimestamp;
+
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `⚠️ *${service} pode estar instável*\n\nPico de reclamações: ${maxReport} (baseline: ${maxBaseline})`
+            text:
+                `*:atenção: Pico de reclamações detectado no ${service}*\n\n` +
+                `Reclamações: *${maxReport}*\n` +
+               // `Baseline: ${maxBaseline}\n\n` +
+                `*Horário do pico:* ${horarioRealPico}\n` 
+                // `Status oficial: ${statuss}`
         });
+
+        console.log(" Alerta de pico moderado enviado!");
         return;
     }
 
 
-    // TUDO OK
-    // -----------------------------
-    console.log(`${service} está ok. Pico: ${maxReport} baseline: ${maxBaseline}`);
+
+    // LOG NORMAL
+    // --------------------------------------------------------------------
+
+    console.log(
+        `✔️ ${service} ok | Pico: ${maxReport} | Baseline: ${maxBaseline} | Status: ${statuss}`
+    );
 }
