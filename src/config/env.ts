@@ -9,5 +9,13 @@ export const config = {
     },
     slackId:{
         Eduardo:process.env.EDUARDO!
+    },
+    proxy:{
+        server: process.env.PROXY_SERVER!,
+        username: process.env.PROXY_USERNAME!,
+        password: process.env.PROXY_PASSWORD!
     }
 }
+
+
+
