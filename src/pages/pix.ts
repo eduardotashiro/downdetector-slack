@@ -1,78 +1,74 @@
-import { chromium, BrowserContextOptions } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealth from 'puppeteer-extra-plugin-stealth';
+import { config } from '../config/env';
+
+chromium.use(stealth());
 
 const url = "https://downdetector.com.br/fora-do-ar/pix/";
 
+export async function checkPixStatus() {
 
-const PROXY = {
-  // server: "http://****", 
-  // username: "user",
-  // password: "pswd"
-};
-
-export async function checkPixStatus(): Promise<any> {
-  const launchOptions: any = {
+  const browser = await chromium.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
     headless: false,
-    args: [
-      "--no-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-blink-features=AutomationControlled"
-    ]
-  };
-
-  // só da gringa
-  // if (PROXY.server) launchOptions.proxy = {
-  //   server: PROXY.server,
-  //   username: PROXY.username,
-  //   password: PROXY.password
-  // };
-
-  const browser = await chromium.launch(launchOptions);
-
-  const contextOptions: BrowserContextOptions = {
-    viewport: { width: 1280, height: 720 },
-    locale: 'pt-BR',
-    timezoneId: 'America/Sao_Paulo',
-    userAgent: "",
-    extraHTTPHeaders: {
-      'Accept-Language': 'pt-BR,pt;q=0.9'
+    proxy: {   
+      server:config.proxy.server,
+      username:config.proxy.username,
+      password:config.proxy.password
     }
-  };
+  });
 
-  const context = await browser.newContext(contextOptions);
-
-  await context.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false });
-    window['outerWidth'] = window.innerWidth;
-    Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'en-US'] });
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    locale: 'pt-BR',
+    timezoneId: 'America/Sao_Paulo'
   });
 
   const page = await context.newPage();
 
   try {
-    console.log("acessando:", url);
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000
+    });
 
-    console.log("Título macabro:", await page.title());
+    console.log("titulo:", await page.title());
+
+    const titulo = await page.title();
+
+    if (titulo.includes('momento') || titulo.includes('Um momento...')) {
+      console.log("FALL BACK PRO CLAUD, QUE ACABOU VIRANDO UM TEMPO DE SEGURANÇA...");
+      await page.waitForTimeout(15000);
+    }
 
     await page.waitForFunction(() => {
-      const w: any = window as any;
-      return !!(w.DD && w.DD.currentServiceProperties);
+      return window.DD?.currentServiceProperties !== undefined;  //JS QUE VAI RODAR NA PÁG
     }, { timeout: 30000 });
 
     const dados = await page.evaluate(() => {
-      const w: any = window as any;
-      return w.DD?.currentServiceProperties ?? null;
+      return window.DD?.currentServiceProperties; //JS RODOU NA PÁG
     });
-    console.log("nunca chega aqui");
-    console.log("Dados obtidos!");
-    console.log("Status:", dados?.status);
-    console.log(" Company:", dados?.company);
+
+    if (dados) {
+      console.log("============== '-' DBUG PIX '-' ==================");
+      console.log("=-=-=-=-=-=-=-=-= Status -=-=-=-=-=-=-=");
+      console.log("Status:", dados.status);
+      console.log("=-=-=-=-=-=-=-=-= Company -=-=-=-=-=-=-=");
+      console.log("Company:", dados.company);
+      console.log("=-=-=-=-=-=-=-=-= Reports e Baseline -=-=-=-=-=-=-=");
+      console.log("reports data:", dados.series.reports.data)
+      console.log("baseline data:", dados.series.baseline.data)
+      console.log("============== '-'  FIM DBUG PIX '-' ==================");
+      
+
+    }
 
     await browser.close();
     return dados;
 
-  } catch (err) {
-    console.error(" Erro :", err);
+  } catch (error) {
+    console.error("Erro:", error);
+
     await browser.close();
     return null;
   }
