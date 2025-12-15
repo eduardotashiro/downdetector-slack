@@ -1,4 +1,4 @@
-import { app } from "./app";
+import { app } from "./app.js";
 
 (async () => {
   const port = process.env.PORT || 3000;
