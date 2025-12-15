@@ -29,15 +29,15 @@ let NubankIncidente: {
     nivel: 'warning' | 'danger';
 } | null = null;
 
-let AwsIncidente: {
-    inicio: number;
-    nivel: 'warning' | 'danger';
-} | null = null;
+// let AwsIncidente: {
+//     inicio: number;
+//     nivel: 'warning' | 'danger';
+// } | null = null;
 
-let AzureIncidente: {
-    inicio: number;
-    nivel: 'warning' | 'danger';
-} | null = null;
+// let AzureIncidente: {
+//     inicio: number;
+//     nivel: 'warning' | 'danger';
+// } | null = null;
 
 // let ClearsaleIncidente: {
 //     inicio: number;
@@ -920,152 +920,152 @@ async function tratarNubank(services: any) {
 
 
 
-// '-' ============== INICIO AWS ============== '-' //
-async function tratarAws(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const reports = dados.series?.reports?.data || [];
-    const service = dados?.company
+// // '-' ============== INICIO AWS ============== '-' //
+// async function tratarAws(services: any) {
+//     const dados = services.dados;
+//     const status = dados.status;
+//     const reports = dados.series?.reports?.data || [];
+//     const service = dados?.company
 
-    let maxReport = { x: "", y: 0 };
-    for (let p of reports) {
-        if (p.y > maxReport.y) {
-            maxReport = p;
-        }
-    }
-    //console.log("MAX" , maxReport);
+//     let maxReport = { x: "", y: 0 };
+//     for (let p of reports) {
+//         if (p.y > maxReport.y) {
+//             maxReport = p;
+//         }
+//     }
+//     //console.log("MAX" , maxReport);
 
-    const maxReportResult = maxReport.y;
-    const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+//     const maxReportResult = maxReport.y;
+//     const peakTimeStamp = maxReport.x;
+//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
 
   
 
-    //  WARNING
-    // ============================================================
-    if ((status === "warning" || status === "danger") && !AwsIncidente) {
-        AwsIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+//     //  WARNING
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && !AwsIncidente) {
+//         AwsIncidente = {
+//             inicio: Date.now(),
+//             nivel: status
+//         };
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+//         const emoji = status === "danger" ? ":red_circle:" : ":warning:";
+//         const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
-
-
-        console.log("Warning detectado!");
-        console.log(status)
-        return;
-    }
-
-    // PROBLEMA PIOROU warning -> danger
-    // ============================================================
-
-    if (status === "danger" && AwsIncidente && AwsIncidente.nivel === "warning") {
-        AwsIncidente.nivel = "danger";
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `${emoji} *${txt} - ${service}*\n\n` +
+//                 `Status: \`${status}\`\n\n` +
+//                 `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
 
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
+//         console.log("Warning detectado!");
+//         console.log(status)
+//         return;
+//     }
 
-        console.log("Problema agravou para DANGER!");
-        return;
-    }
+//     // PROBLEMA PIOROU warning -> danger
+//     // ============================================================
 
+//     if (status === "danger" && AwsIncidente && AwsIncidente.nivel === "warning") {
+//         AwsIncidente.nivel = "danger";
 
 
-    // ============================================================
-    // PROBLEMA RESOLVIDO (volta pra success)
-    // ============================================================
-    if (status === "success" && AwsIncidente) {
-        const duracao = Date.now() - AwsIncidente.inicio;
-        const minutos = Math.floor(duracao / 60000);
-        const horas = Math.floor(minutos / 60);
-        const minutosRestantes = minutos % 60;
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
+//                 `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
 
-        let duracaoTexto = "";
-        if (horas > 0) {
-            duracaoTexto = `${horas}h ${minutosRestantes}min`;
-        } else if (minutos > 0) {
-            duracaoTexto = `${minutos}min`;
-        } else {
-            duracaoTexto = "menos de 1min";
-        }
-
-        const inicioIncidente = new Date(AwsIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
-
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
-
-
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
-        AwsIncidente = null;
-        return;
-    }
+//         console.log("Problema agravou para DANGER!");
+//         return;
+//     }
 
 
 
-    // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
-    // ============================================================
-    if ((status === "warning" || status === "danger") && AwsIncidente) {
-        console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
-        return;
-    }
+//     // ============================================================
+//     // PROBLEMA RESOLVIDO (volta pra success)
+//     // ============================================================
+//     if (status === "success" && AwsIncidente) {
+//         const duracao = Date.now() - AwsIncidente.inicio;
+//         const minutos = Math.floor(duracao / 60000);
+//         const horas = Math.floor(minutos / 60);
+//         const minutosRestantes = minutos % 60;
+
+//         let duracaoTexto = "";
+//         if (horas > 0) {
+//             duracaoTexto = `${horas}h ${minutosRestantes}min`;
+//         } else if (minutos > 0) {
+//             duracaoTexto = `${minutos}min`;
+//         } else {
+//             duracaoTexto = "menos de 1min";
+//         }
+
+//         const inicioIncidente = new Date(AwsIncidente.inicio).toLocaleString("pt-BR");
+//         const fimIncidente = new Date().toLocaleString("pt-BR");
+
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
+//                 `Duração total: *${duracaoTexto}*\n` +
+//                 `Início: ${inicioIncidente}\n` +
+//                 `Fim: ${fimIncidente}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
+
+
+//         console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+//         AwsIncidente = null;
+//         return;
+//     }
+
+
+
+//     // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && AwsIncidente) {
+//         console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
+//         return;
+//     }
 
 
 
 
-    // ALERTA DE PICO > 50 && sem incidente
-    // ============================================================
-    if (maxReportResult > 50 && !AwsIncidente) {
-        if (peakTimeStamp === AwsUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+//     // ALERTA DE PICO > 50 && sem incidente
+//     // ============================================================
+//     if (maxReportResult > 50 && !AwsIncidente) {
+//         if (peakTimeStamp === AwsUltimoPico) {
+//             console.log("já alertado, ignorando flasdfas...");
+//             return;
+//         }
 
-        AwsUltimoPico = peakTimeStamp;
+//         AwsUltimoPico = peakTimeStamp;
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `Detectado alto volume de reclamações: ${service}\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+//                 `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+//                 `<${services.url} | Monitorar no Downdetector>`
+//         });
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+//         console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+//         return;
+//     }
 
    
-    // TUDO OK 
-    // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
-}
-// '-' ============== FIM NUBANK ============== '-' //
+//     // TUDO OK 
+//     // ============================================================
+//     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+// }
+// // '-' ============== FIM NUBANK ============== '-' //
 
 
 
@@ -1092,151 +1092,151 @@ async function tratarAws(services: any) {
 
 
 
-// '-' ============== INICIO AZURE ============== '-' //
-async function tratarAzure(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const reports = dados.series?.reports?.data || [];
-    const service = dados?.company
+// // '-' ============== INICIO AZURE ============== '-' //
+// async function tratarAzure(services: any) {
+//     const dados = services.dados;
+//     const status = dados.status;
+//     const reports = dados.series?.reports?.data || [];
+//     const service = dados?.company
 
-    let maxReport = { x: "", y: 0 };
-    for (let p of reports) {
-        if (p.y > maxReport.y) {
-            maxReport = p;
-        }
-    }
-    //console.log("MAX" , maxReport);
+//     let maxReport = { x: "", y: 0 };
+//     for (let p of reports) {
+//         if (p.y > maxReport.y) {
+//             maxReport = p;
+//         }
+//     }
+//     //console.log("MAX" , maxReport);
 
-    const maxReportResult = maxReport.y;
-    const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
-
-
-    //  WARNING
-    // ============================================================
-    if ((status === "warning" || status === "danger") && !AzureIncidente) {
-        AzureIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
-
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
+//     const maxReportResult = maxReport.y;
+//     const peakTimeStamp = maxReport.x;
+//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
 
 
-        console.log("Warning detectado!");
-        console.log(status)
-        return;
-    }
+//     //  WARNING
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && !AzureIncidente) {
+//         AzureIncidente = {
+//             inicio: Date.now(),
+//             nivel: status
+//         };
+
+//         const emoji = status === "danger" ? ":red_circle:" : ":warning:";
+//         const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `${emoji} *${txt} - ${service}*\n\n` +
+//                 `Status: \`${status}\`\n\n` +
+//                 `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
 
 
-    // PROBLEMA PIOROU warning -> danger
-    // ============================================================
-
-    if (status === "danger" && AzureIncidente && AzureIncidente.nivel === "warning") {
-        AzureIncidente.nivel = "danger";
-
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
-
-        console.log("Problema agravou para DANGER!");
-        return;
-    }
+//         console.log("Warning detectado!");
+//         console.log(status)
+//         return;
+//     }
 
 
+//     // PROBLEMA PIOROU warning -> danger
+//     // ============================================================
 
-    // ============================================================
-    // PROBLEMA RESOLVIDO (volta pra success)
-    // ============================================================
-    if (status === "success" && AzureIncidente) {
-        const duracao = Date.now() - AzureIncidente.inicio;
-        const minutos = Math.floor(duracao / 60000);
-        const horas = Math.floor(minutos / 60);
-        const minutosRestantes = minutos % 60;
-
-        let duracaoTexto = "";
-        if (horas > 0) {
-            duracaoTexto = `${horas}h ${minutosRestantes}min`;
-        } else if (minutos > 0) {
-            duracaoTexto = `${minutos}min`;
-        } else {
-            duracaoTexto = "menos de 1min";
-        }
-
-        const inicioIncidente = new Date(AzureIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+//     if (status === "danger" && AzureIncidente && AzureIncidente.nivel === "warning") {
+//         AzureIncidente.nivel = "danger";
 
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
-        });
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
+//                 `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
 
-
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
-        AzureIncidente = null;
-        return;
-    }
+//         console.log("Problema agravou para DANGER!");
+//         return;
+//     }
 
 
 
-    // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
-    // ============================================================
-    if ((status === "warning" || status === "danger") && AzureIncidente) {
-        console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
-        return;
-    }
+//     // ============================================================
+//     // PROBLEMA RESOLVIDO (volta pra success)
+//     // ============================================================
+//     if (status === "success" && AzureIncidente) {
+//         const duracao = Date.now() - AzureIncidente.inicio;
+//         const minutos = Math.floor(duracao / 60000);
+//         const horas = Math.floor(minutos / 60);
+//         const minutosRestantes = minutos % 60;
+
+//         let duracaoTexto = "";
+//         if (horas > 0) {
+//             duracaoTexto = `${horas}h ${minutosRestantes}min`;
+//         } else if (minutos > 0) {
+//             duracaoTexto = `${minutos}min`;
+//         } else {
+//             duracaoTexto = "menos de 1min";
+//         }
+
+//         const inicioIncidente = new Date(AzureIncidente.inicio).toLocaleString("pt-BR");
+//         const fimIncidente = new Date().toLocaleString("pt-BR");
+
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
+//                 `Duração total: *${duracaoTexto}*\n` +
+//                 `Início: ${inicioIncidente}\n` +
+//                 `Fim: ${fimIncidente}\n\n` +
+//                 `<${services.url} | Ver detalhes no Downdetector>`
+//         });
+
+
+//         console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+//         AzureIncidente = null;
+//         return;
+//     }
 
 
 
-    // ALERTA DE PICO > 50 && sem incidente
-    // ============================================================
-    if (maxReportResult > 50 && !AzureIncidente) {
-        if (peakTimeStamp === AzureUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
-
-        AzureUltimoPico = peakTimeStamp;
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
-
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+//     // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && AzureIncidente) {
+//         console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
+//         return;
+//     }
 
 
-    // TUDO OK 
-    // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
-}
-// '-' ============== FIM AZURE ============== '-' //
+
+//     // ALERTA DE PICO > 50 && sem incidente
+//     // ============================================================
+//     if (maxReportResult > 50 && !AzureIncidente) {
+//         if (peakTimeStamp === AzureUltimoPico) {
+//             console.log("já alertado, ignorando flasdfas...");
+//             return;
+//         }
+
+//         AzureUltimoPico = peakTimeStamp;
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `Detectado alto volume de reclamações: ${service}\n\n` +
+//                 `Reclamações: ${maxReportResult}\n\n` +
+//                 `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+//                 `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+//                 `<${services.url} | Monitorar no Downdetector>`
+//         });
+
+//         console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+//         return;
+//     }
+
+
+//     // TUDO OK 
+//     // ============================================================
+//     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+// }
+// // '-' ============== FIM AZURE ============== '-' //
 
 
 
@@ -1463,12 +1463,12 @@ export async function CheckAll() {
         else if (banco.nome === 'Nubank') {
             await tratarNubank(banco);
         }
-        else if (banco.nome === 'AWS') {
-            await tratarAws(banco);
-        }
-        else if (banco.nome === 'Azure') {
-            await tratarAzure(banco);
-        }
+        // else if (banco.nome === 'AWS') {
+        //     await tratarAws(banco);
+        // }
+        // else if (banco.nome === 'Azure') {
+        //     await tratarAzure(banco);
+        // }
         // else if (banco.nome === 'Clearsale') {
         //     await tratarClearsale(banco);
         // }
