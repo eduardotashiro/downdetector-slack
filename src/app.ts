@@ -1,7 +1,7 @@
 import { App, LogLevel } from "@slack/bolt";
-import { config } from "./config/env.js";
+import { config } from "./config/env";
 import cron from "node-cron";
-import { CheckAll } from "./slack/notifier/batchNotifier.js";
+import { CheckAll } from "./slack/notifier/batchNotifier";
 
 export const app = new App({
   signingSecret: config.slack.signingSecret,
