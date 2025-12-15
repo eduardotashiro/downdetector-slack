@@ -1,5 +1,5 @@
 import { chromium } from 'playwright-extra';
-import { config } from '../config/env';
+import { config } from '../config/env.js';
 import stealth from 'puppeteer-extra-plugin-stealth';
 chromium.use(stealth());
 

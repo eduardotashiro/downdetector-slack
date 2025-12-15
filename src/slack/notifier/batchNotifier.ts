@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
-import { config } from "../../config/env";
-import { checkAllServices } from "../../pages/batchPages";
+import { config } from "../../config/env.js";
+import { checkAllServices } from "../../pages/batchPages.js";
 
 const client = new WebClient(config.slack.botToken);
 
