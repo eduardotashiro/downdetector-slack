@@ -1,11 +1,11 @@
 {
   "name": "downdetector-slack",
   "version": "1.0.0",
-  "description": "Monitor Downdetector via Slack",
+  "description": "Monitor Downdetector | Slack",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch ./src/server.ts",
+    "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc && npx playwright install chromium",
     "start": "node dist/server.js"
   },
