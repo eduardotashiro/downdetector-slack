@@ -77,7 +77,7 @@ async function tratarPix(services: any) {
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
     //  WARNING 
@@ -95,7 +95,7 @@ async function tratarPix(services: any) {
             channel: config.slack.channel,
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
                 `Pico de reclamações: ${maxReportResult} (${maxReportTimeStampResult})\n\n` + //PAREI AQUI 
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
@@ -146,8 +146,8 @@ async function tratarPix(services: any) {
             duracaoTexto = "menos de 1min";
         }
 
-        const inicioIncidente = new Date(pixIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+        const inicioIncidente = new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
         await client.chat.postMessage({
@@ -248,7 +248,7 @@ async function tratarItau(services: any) {
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
 
@@ -267,7 +267,7 @@ async function tratarItau(services: any) {
             channel: config.slack.channel,
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
                 `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
@@ -318,8 +318,8 @@ async function tratarItau(services: any) {
             duracaoTexto = "menos de 1min";
         }
 
-        const inicioIncidente = new Date(itauIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+        const inicioIncidente = new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
         await client.chat.postMessage({
@@ -422,7 +422,7 @@ async function tratarBradesco(services: any) {
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
  
 
@@ -441,7 +441,7 @@ async function tratarBradesco(services: any) {
             channel: config.slack.channel,
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
                 `Reclamações: ${maxReportResult}\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
@@ -492,8 +492,8 @@ async function tratarBradesco(services: any) {
             duracaoTexto = "menos de 1min";
         }
 
-        const inicioIncidente = new Date(bradescoIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+        const inicioIncidente = new Date(bradescoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
         await client.chat.postMessage({
@@ -596,7 +596,7 @@ async function tratarSantander(services: any) {
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
    
 
@@ -615,7 +615,7 @@ async function tratarSantander(services: any) {
             channel: config.slack.channel,
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
                 `Reclamações: ${maxReportResult}\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
@@ -666,8 +666,8 @@ async function tratarSantander(services: any) {
             duracaoTexto = "menos de 1min";
         }
 
-        const inicioIncidente = new Date(santanderIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+        const inicioIncidente = new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
         await client.chat.postMessage({
@@ -770,7 +770,7 @@ async function tratarNubank(services: any) {
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
    
@@ -789,7 +789,7 @@ async function tratarNubank(services: any) {
             channel: config.slack.channel,
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
                 `Reclamações: ${maxReportResult}\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
@@ -840,8 +840,8 @@ async function tratarNubank(services: any) {
             duracaoTexto = "menos de 1min";
         }
 
-        const inicioIncidente = new Date(NubankIncidente.inicio).toLocaleString("pt-BR");
-        const fimIncidente = new Date().toLocaleString("pt-BR");
+        const inicioIncidente = new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
         await client.chat.postMessage({
@@ -937,7 +937,7 @@ async function tratarNubank(services: any) {
 
 //     const maxReportResult = maxReport.y;
 //     const peakTimeStamp = maxReport.x;
-//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
   
 
@@ -956,7 +956,7 @@ async function tratarNubank(services: any) {
 //             channel: config.slack.channel,
 //             text: `${emoji} *${txt} - ${service}*\n\n` +
 //                 `Status: \`${status}\`\n\n` +
-//                 `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+//                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
 //                 `Reclamações: ${maxReportResult}\n\n` +
 //                 `<${services.url} | Ver detalhes no Downdetector>`
 //         });
@@ -1006,8 +1006,8 @@ async function tratarNubank(services: any) {
 //             duracaoTexto = "menos de 1min";
 //         }
 
-//         const inicioIncidente = new Date(AwsIncidente.inicio).toLocaleString("pt-BR");
-//         const fimIncidente = new Date().toLocaleString("pt-BR");
+//         const inicioIncidente = new Date(AwsIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+//         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
 //         await client.chat.postMessage({
@@ -1109,7 +1109,7 @@ async function tratarNubank(services: any) {
 
 //     const maxReportResult = maxReport.y;
 //     const peakTimeStamp = maxReport.x;
-//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR") : "N/A";
+//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
 //     //  WARNING
@@ -1127,7 +1127,7 @@ async function tratarNubank(services: any) {
 //             channel: config.slack.channel,
 //             text: `${emoji} *${txt} - ${service}*\n\n` +
 //                 `Status: \`${status}\`\n\n` +
-//                 `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+//                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
 //                 `Reclamações: ${maxReportResult}\n\n` +
 //                 `<${services.url} | Ver detalhes no Downdetector>`
 //         });
@@ -1178,8 +1178,8 @@ async function tratarNubank(services: any) {
 //             duracaoTexto = "menos de 1min";
 //         }
 
-//         const inicioIncidente = new Date(AzureIncidente.inicio).toLocaleString("pt-BR");
-//         const fimIncidente = new Date().toLocaleString("pt-BR");
+//         const inicioIncidente = new Date(AzureIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+//         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
 //         await client.chat.postMessage({
@@ -1282,7 +1282,7 @@ async function tratarNubank(services: any) {
 
 //     const maxReportt = maxReport.y;
 //     const picoTimestamp = maxReport.x;
-//     const horarioPico = picoTimestamp ? new Date(picoTimestamp).toLocaleString("pt-BR") : "N/A";
+//     const horarioPico = picoTimestamp ? new Date(picoTimestamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 //       // ============================================================
 //      //  WARNING
@@ -1300,7 +1300,7 @@ async function tratarNubank(services: any) {
 //             channel: config.slack.channel,
 //             text: `${emoji} *${txt} - ${service}*\n\n` +
 //                 `Status: \`${status}\`\n\n` +
-//                 `Detectado em: ${new Date().toLocaleString("pt-BR")}\n\n` +
+//                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
 //                 `Reclamações: ${maxReportt}\n\n` +
 //                 `<${banco.url} | Ver detalhes no Downdetector>`
 //         });
@@ -1351,8 +1351,8 @@ async function tratarNubank(services: any) {
 //             duracaoTexto = "menos de 1min";
 //         }
 
-//         const inicioIncidente = new Date(itauIncidente.inicio).toLocaleString("pt-BR");
-//         const fimIncidente = new Date().toLocaleString("pt-BR");
+//         const inicioIncidente = new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+//         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
 
 //         await client.chat.postMessage({
