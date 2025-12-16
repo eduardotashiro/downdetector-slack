@@ -50,8 +50,8 @@ let itauUltimoPico: string | null = null;
 let bradescoUltimoPico: string | null = null;
 let santanderUltimoPico: string | null = null;
 let NubankUltimoPico: string | null = null;
-let AwsUltimoPico: string | null = null;
-let AzureUltimoPico: string | null = null;
+// let AwsUltimoPico: string | null = null;
+// let AzureUltimoPico: string | null = null;
 // let ClearsaleUltimoPico: string | null = null;
 
 
@@ -73,9 +73,14 @@ async function tratarPix(services: any) {
             maxReport = p;
         }
     }
-    //console.log("MAX" , maxReportResult);
+    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
+    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
+    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
+    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
+
 
     const maxReportResult = maxReport.y;
+    console.log("MAX", maxReportResult);
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -96,13 +101,12 @@ async function tratarPix(services: any) {
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} (${maxReportTimeStampResult})\n\n` + //PAREI AQUI 
+                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` + //PAREI AQUI 
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
 
-        console.log("Warning detectado! no ", service);
-        console.log(status)
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
         return;
     }
 
@@ -118,11 +122,11 @@ async function tratarPix(services: any) {
             channel: config.slack.channel,
             text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
                 `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Pico de reclamações: ${maxReportResult} (${maxReportTimeStampResult})\n\n` +
+                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
-        console.log("Problema agravou para DANGER!");
+        console.log("Problema agravou para DANGER no ", service);
         return;
     }
 
@@ -160,7 +164,7 @@ async function tratarPix(services: any) {
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(` Incidente resolvido! Duração: ${duracaoTexto} no ${service}`);
         pixIncidente = null;
         return;
     }
@@ -244,9 +248,14 @@ async function tratarItau(services: any) {
             maxReport = p;
         }
     }
-    //console.log("MAX" , maxReportResult);
+    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
+    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
+    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
+    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
+
 
     const maxReportResult = maxReport.y;
+    console.log("MAX", maxReportResult);
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -273,7 +282,7 @@ async function tratarItau(services: any) {
         });
 
 
-        console.log(`Warning detectado em ${service}, status é ${status}`);
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
 
         return;
     }
@@ -295,7 +304,7 @@ async function tratarItau(services: any) {
         });
 
 
-        console.log(`Problema agravou para DANGER do serviço ${service}`);
+        console.log("Problema agravou para DANGER no ", service);
         return;
     }
 
@@ -332,7 +341,7 @@ async function tratarItau(services: any) {
         });
 
 
-        console.log(`Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente resolvido! Duração: ${duracaoTexto} no ${service}`);
         itauIncidente = null;
         return;
     }
@@ -418,13 +427,18 @@ async function tratarBradesco(services: any) {
             maxReport = p;
         }
     }
-    //console.log("MAX" , maxReportResult);
+    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
+    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
+    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
+    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
+
 
     const maxReportResult = maxReport.y;
+
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
- 
+
 
     //  WARNING
     // ============================================================
@@ -442,17 +456,16 @@ async function tratarBradesco(services: any) {
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
+                `Pico de reclamações: ${maxReportResult} (${maxReportTimeStampResult})\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
 
-        console.log("Warning detectado!");
-        console.log(status)
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
         return;
     }
 
-   
+
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
 
@@ -468,13 +481,13 @@ async function tratarBradesco(services: any) {
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
-        console.log("Problema agravou para DANGER!");
+        console.log("Problema agravou para DANGER no ", service);
         return;
     }
 
 
 
-  
+
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
     if (status === "success" && bradescoIncidente) {
@@ -512,7 +525,7 @@ async function tratarBradesco(services: any) {
     }
 
 
-   
+
     // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
     // ============================================================
     if ((status === "warning" || status === "danger") && bradescoIncidente) {
@@ -522,7 +535,7 @@ async function tratarBradesco(services: any) {
 
 
 
-   
+
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
     if (maxReportResult > 50 && !bradescoIncidente) {
@@ -592,13 +605,19 @@ async function tratarSantander(services: any) {
             maxReport = p;
         }
     }
-    //console.log("MAX" , maxReportResult);
+    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
+    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
+    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
+    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
+
+
+
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
-   
+
 
     //  WARNING
     // ============================================================
@@ -616,17 +635,16 @@ async function tratarSantander(services: any) {
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
+                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
 
-        console.log("Warning detectado!");
-        console.log(status)
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
         return;
     }
 
-    // ============================================================
+
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
 
@@ -642,13 +660,13 @@ async function tratarSantander(services: any) {
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
-        console.log("Problema agravou para DANGER!");
+        console.log("Problema agravou para DANGER no ", service);
         return;
     }
 
 
 
-    // ============================================================
+
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
     if (status === "success" && santanderIncidente) {
@@ -766,14 +784,20 @@ async function tratarNubank(services: any) {
             maxReport = p;
         }
     }
-    //console.log("MAX" , maxReport);
+    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
+    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
+    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
+    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
+
+
+
 
     const maxReportResult = maxReport.y;
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
-   
+
     //  WARNING
     // ============================================================
     if ((status === "warning" || status === "danger") && !NubankIncidente) {
@@ -790,17 +814,16 @@ async function tratarNubank(services: any) {
             text: `${emoji} *${txt} - ${service}*\n\n` +
                 `Status: \`${status}\`\n\n` +
                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
+                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
 
-        console.log("Warning detectado!");
-        console.log(status)
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
         return;
     }
 
-    // ============================================================
+
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
 
@@ -816,13 +839,13 @@ async function tratarNubank(services: any) {
                 `<${services.url} | Ver detalhes no Downdetector>`
         });
 
-        console.log("Problema agravou para DANGER!");
+        console.log("Problema agravou para DANGER no ", service);
         return;
     }
 
 
 
-    // ============================================================
+ 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
     if (status === "success" && NubankIncidente) {
@@ -869,7 +892,7 @@ async function tratarNubank(services: any) {
 
 
 
-    
+
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
     if (maxReportResult > 50 && !NubankIncidente) {
@@ -893,12 +916,12 @@ async function tratarNubank(services: any) {
         return;
     }
 
-  
+
     // TUDO OK 
     // ============================================================
     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
-// '-' ============== FIM AWS ============== '-' //
+// '-' ============== FIM NUBANK ============== '-' //
 
 
 
@@ -939,7 +962,7 @@ async function tratarNubank(services: any) {
 //     const peakTimeStamp = maxReport.x;
 //     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
-  
+
 
 //     //  WARNING
 //     // ============================================================
@@ -1060,7 +1083,7 @@ async function tratarNubank(services: any) {
 //         return;
 //     }
 
-   
+
 //     // TUDO OK 
 //     // ============================================================
 //     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
@@ -1441,12 +1464,12 @@ async function tratarNubank(services: any) {
 export async function CheckAll() {
     console.log("iniciando a verificação dos services");
 
-  
+
     const allData = await checkAllServices();
 
     if (!allData) return;
 
-    
+
     for (const banco of allData) {
         if (banco.nome === 'Pix') {
             await tratarPix(banco);
