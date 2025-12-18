@@ -9,10 +9,8 @@ export const app = new App({
   token: config.slack.botToken,
 });
 
-cron.schedule("*/25 7-22 * * *", async () => {
+cron.schedule("*/30 7-22 * * *", async () => {
   await CheckAll();
 console.log("Monitoramento finalization!");
 });
-
-
 
