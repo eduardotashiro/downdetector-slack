@@ -518,7 +518,7 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -1478,9 +1478,9 @@ export async function CheckAll() {
         else if (banco.nome === 'Cloudflare') {
              await tratarCloudflare(banco);
         }
-        // else if (banco.nome === 'Azure') {
-        //     await tratarAzure(banco);
-        // }
+         else if (banco.nome === 'Nubank') {
+             await tratarNubank(banco);
+         }
         // else if (banco.nome === 'Clearsale') {
         //     await tratarClearsale(banco);
         // }
