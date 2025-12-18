@@ -66,7 +66,7 @@ export async function checkAllServices() {
             '--no-sandbox',
             '--disable-blink-features=AutomationControlled'
         ],
-        headless: false,
+        headless: true,
         proxy: {
             server: config.proxy.server,
             username: config.proxy.username,
