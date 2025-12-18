@@ -10,8 +10,8 @@ const SERVICES = [
     { name: 'Bradesco', url: 'https://downdetector.com.br/fora-do-ar/bradesco/' },
     { name: 'Santander', url: 'https://downdetector.com.br/fora-do-ar/santander/' },
     { name: 'Nubank', url: 'https://downdetector.com.br/fora-do-ar/nubank/' },
-    { name: 'Bancodobrasil', url: 'https://downdetector.com.br/fora-do-ar/banco-do-brasil/' }
-    // { name: 'AWS', url: 'https://downdetector.com.br/fora-do-ar/aws-amazon-web-services/' },
+    { name: 'Bancodobrasil', url: 'https://downdetector.com.br/fora-do-ar/banco-do-brasil/' },
+    { name: 'Cloudflare', url: 'https://downdetector.com.br/fora-do-ar/cloudflare/' },
     // { name: 'Azure', url: 'https://downdetector.com.br/fora-do-ar/windows-azure/' }
     //{ name: 'Clearsale', url: 'https://statusgator.com/services/clearsale' }
     //{ name: 'Rede', url: 'https://downdetector.com.br/fora-do-ar/rede/' }
@@ -110,7 +110,7 @@ export async function checkAllServices() {
                 try {
                     dados = await tentarAcessarServico(page, service);
                 } catch (err) {
-                    console.log(`Timeout / Claud / destroyer... tentando novamente...`);
+                    console.log(`Timeout / Cloud / destroyer... tentando novamente...`);
                     await page.close();
 
                     page = await context.newPage();
