@@ -29,10 +29,10 @@ let NubankIncidente: {
     nivel: 'warning' | 'danger';
 } | null = null;
 
-// let AwsIncidente: {
-//     inicio: number;
-//     nivel: 'warning' | 'danger';
-// } | null = null;
+let BBIncidente: {
+    inicio: number;
+    nivel: 'warning' | 'danger';
+} | null = null;
 
 // let AzureIncidente: {
 //     inicio: number;
@@ -45,14 +45,46 @@ let NubankIncidente: {
 // } | null = null;
 
 
-let pixUltimoPico: string | null = null;
-let itauUltimoPico: string | null = null;
-let bradescoUltimoPico: string | null = null;
-let santanderUltimoPico: string | null = null;
-let NubankUltimoPico: string | null = null;
+// let pixUltimoPico: string | null = null;
+// let itauUltimoPico: string | null = null;
+// let bradescoUltimoPico: string | null = null;
+// let santanderUltimoPico: string | null = null;
+// let NubankUltimoPico: string | null = null;
 // let AwsUltimoPico: string | null = null;
 // let AzureUltimoPico: string | null = null;
 // let ClearsaleUltimoPico: string | null = null;
+
+
+// :atenção: Alerta | Instabilidade  - Bradesco
+// Status: warning
+// Detectado em: 17/12/2025, 14:20:40
+// Pico de reclamações: 23 (16/12/2025, 15:03:12)
+// Ver detalhes no Downdetector
+// 14h20
+// :atenção: Alerta | Instabilidade  - Nubank
+// Status: warning
+// Detectado em: 17/12/2025, 14:20:40
+// Pico de reclamações: 34 ( 17/12/2025, 14:04:25 )
+// Ver detalhes no Downdetector
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -73,14 +105,8 @@ async function tratarPix(services: any) {
             maxReport = p;
         }
     }
-    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
-    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
-    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
-    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
 
-
-    const maxReportResult = maxReport.y;
-    console.log("MAX", maxReportResult);
+    const maxReportResult = dados.max
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -98,11 +124,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` + //PAREI AQUI 
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -120,10 +142,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
         console.log("Problema agravou para DANGER no ", service);
@@ -147,7 +166,7 @@ async function tratarPix(services: any) {
         } else if (minutos > 0) {
             duracaoTexto = `${minutos}min`;
         } else {
-            duracaoTexto = "menos de 1min";
+            duracaoTexto = "menos de 1min"; //duvido
         }
 
         const inicioIncidente = new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -156,11 +175,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n\n` +
-                `Início: ${inicioIncidente}\n\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -182,26 +197,37 @@ async function tratarPix(services: any) {
 
     //  PICO > 50 && sem incidente
     // ============================================================
-    if (maxReportResult > 50 && !pixIncidente) {
-        if (peakTimeStamp === pixUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+    // if (maxReportResult > 50 && !pixIncidente && status === "success") {
+    //     if (peakTimeStamp === pixUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
 
-        pixUltimoPico = peakTimeStamp;
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `${services.url} | Monitorar no Downdetector>`
-        });
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+    //     pixUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    // }
 
     // TUDO OK 
     // ============================================================
@@ -248,17 +274,10 @@ async function tratarItau(services: any) {
             maxReport = p;
         }
     }
-    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
-    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
-    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
-    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
 
-
-    const maxReportResult = maxReport.y;
-    console.log("MAX", maxReportResult);
+    const maxReportResult = dados.max
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
-
 
 
     //  WARNING
@@ -274,11 +293,7 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -297,10 +312,7 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} subiu para nível CRÍTICO\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -333,11 +345,7 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -360,26 +368,38 @@ async function tratarItau(services: any) {
 
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
-    if (maxReportResult > 50 && !itauIncidente) {
-        if (peakTimeStamp === itauUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+    // if (maxReportResult > 50 && !itauIncidente && status === "success") {
+    //     if (peakTimeStamp === itauUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
 
-        itauUltimoPico = peakTimeStamp;
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+
+    //     itauUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    //}
 
 
     // TUDO OK 
@@ -427,14 +447,8 @@ async function tratarBradesco(services: any) {
             maxReport = p;
         }
     }
-    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
-    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
-    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
-    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
 
-
-    const maxReportResult = maxReport.y;
-
+    const maxReportResult = dados.max
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -453,11 +467,7 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} (${maxReportTimeStampResult})\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -475,10 +485,7 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
         console.log("Problema agravou para DANGER no ", service);
@@ -511,11 +518,7 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -538,26 +541,38 @@ async function tratarBradesco(services: any) {
 
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
-    if (maxReportResult > 50 && !bradescoIncidente) {
-        if (peakTimeStamp === bradescoUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+    // if (maxReportResult > 50 && !bradescoIncidente && status === "success") {
+    //     if (peakTimeStamp === bradescoUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
 
-        bradescoUltimoPico = peakTimeStamp;
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+
+    //     bradescoUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    // }
 
 
     // TUDO OK 
@@ -605,15 +620,9 @@ async function tratarSantander(services: any) {
             maxReport = p;
         }
     }
-    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
-    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
-    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
-    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
 
 
-
-
-    const maxReportResult = maxReport.y;
+    const maxReportResult = dados.max;
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -632,11 +641,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -654,10 +659,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
         console.log("Problema agravou para DANGER no ", service);
@@ -690,11 +692,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -716,26 +714,37 @@ async function tratarSantander(services: any) {
 
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
-    if (maxReportResult > 50 && !santanderIncidente) {
-        if (peakTimeStamp === santanderUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+    // if (maxReportResult > 50 && !santanderIncidente && status === "success") {
+    //     if (peakTimeStamp === santanderUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
 
-        santanderUltimoPico = peakTimeStamp;
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+    //     santanderUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    // }
 
 
     // TUDO OK 
@@ -784,15 +793,11 @@ async function tratarNubank(services: any) {
             maxReport = p;
         }
     }
-    console.log(`[DEBUG] ${service} - Total de reports: ${reports.length}`);
-    console.log(`[DEBUG] ${service} - Max encontrado: ${maxReport.y} em ${maxReport.x}`);
-    console.log(`[DEBUG] ${service} - Primeiro report:`, reports[0]);
-    console.log(`[DEBUG] ${service} - Último report:`, reports[reports.length - 1]);
 
 
 
 
-    const maxReportResult = maxReport.y;
+    const maxReportResult = dados.max
     const peakTimeStamp = maxReport.x;
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
@@ -811,11 +816,7 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n` +
-                `Status: \`${status}\`\n\n` +
-                `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-                `Pico de reclamações: ${maxReportResult} ( ${maxReportTimeStampResult} )\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -833,10 +834,7 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-                `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
         console.log("Problema agravou para DANGER no ", service);
@@ -845,7 +843,7 @@ async function tratarNubank(services: any) {
 
 
 
- 
+
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
     if (status === "success" && NubankIncidente) {
@@ -869,11 +867,7 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-                `Duração total: *${duracaoTexto}*\n` +
-                `Início: ${inicioIncidente}\n` +
-                `Fim: ${fimIncidente}\n\n` +
-                `<${services.url} | Ver detalhes no Downdetector>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -895,26 +889,37 @@ async function tratarNubank(services: any) {
 
     // ALERTA DE PICO > 50 && sem incidente
     // ============================================================
-    if (maxReportResult > 50 && !NubankIncidente) {
-        if (peakTimeStamp === NubankUltimoPico) {
-            console.log("já alertado, ignorando flasdfas...");
-            return;
-        }
+    // if (maxReportResult > 50 && !NubankIncidente && status === "success") {
+    //     if (peakTimeStamp === NubankUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
 
-        NubankUltimoPico = peakTimeStamp;
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
 
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `Detectado alto volume de reclamações: ${service}\n\n` +
-                `Reclamações: ${maxReportResult}\n\n` +
-                `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-                `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-                `<${services.url} | Monitorar no Downdetector>`
-        });
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
 
-        console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-        return;
-    }
+    //     NubankUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    // }
 
 
     // TUDO OK 
@@ -943,152 +948,155 @@ async function tratarNubank(services: any) {
 
 
 
-// // '-' ============== INICIO AWS ============== '-' //
-// async function tratarAws(services: any) {
-//     const dados = services.dados;
-//     const status = dados.status;
-//     const reports = dados.series?.reports?.data || [];
-//     const service = dados?.company
+// '-' ============== INICIO BB ============== '-' //
+async function tratarBB(services: any) {
+    const dados = services.dados;
+    const status = dados.status;
+    const reports = dados.series?.reports?.data || [];
+    const service = dados?.company
 
-//     let maxReport = { x: "", y: 0 };
-//     for (let p of reports) {
-//         if (p.y > maxReport.y) {
-//             maxReport = p;
-//         }
-//     }
-//     //console.log("MAX" , maxReport);
-
-//     const maxReportResult = maxReport.y;
-//     const peakTimeStamp = maxReport.x;
-//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
-
-
-
-//     //  WARNING
-//     // ============================================================
-//     if ((status === "warning" || status === "danger") && !AwsIncidente) {
-//         AwsIncidente = {
-//             inicio: Date.now(),
-//             nivel: status
-//         };
-
-//         const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-//         const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
-
-//         await client.chat.postMessage({
-//             channel: config.slack.channel,
-//             text: `${emoji} *${txt} - ${service}*\n\n` +
-//                 `Status: \`${status}\`\n\n` +
-//                 `Detectado em: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n` +
-//                 `Reclamações: ${maxReportResult}\n\n` +
-//                 `<${services.url} | Ver detalhes no Downdetector>`
-//         });
-
-
-//         console.log("Warning detectado!");
-//         console.log(status)
-//         return;
-//     }
-
-//     // PROBLEMA PIOROU warning -> danger
-//     // ============================================================
-
-//     if (status === "danger" && AwsIncidente && AwsIncidente.nivel === "warning") {
-//         AwsIncidente.nivel = "danger";
-
-
-//         await client.chat.postMessage({
-//             channel: config.slack.channel,
-//             text: `:red_circle: *SITUAÇÃO AGRAVOU!*\n\n` +
-//                 `Instabilidade com ${service} piorou para nível CRÍTICO\n\n` +
-//                 `Reclamações: ${maxReportResult}\n\n` +
-//                 `<${services.url} | Ver detalhes no Downdetector>`
-//         });
-
-//         console.log("Problema agravou para DANGER!");
-//         return;
-//     }
-
-
-
-//     // ============================================================
-//     // PROBLEMA RESOLVIDO (volta pra success)
-//     // ============================================================
-//     if (status === "success" && AwsIncidente) {
-//         const duracao = Date.now() - AwsIncidente.inicio;
-//         const minutos = Math.floor(duracao / 60000);
-//         const horas = Math.floor(minutos / 60);
-//         const minutosRestantes = minutos % 60;
-
-//         let duracaoTexto = "";
-//         if (horas > 0) {
-//             duracaoTexto = `${horas}h ${minutosRestantes}min`;
-//         } else if (minutos > 0) {
-//             duracaoTexto = `${minutos}min`;
-//         } else {
-//             duracaoTexto = "menos de 1min";
-//         }
-
-//         const inicioIncidente = new Date(AwsIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-//         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
-
-//         await client.chat.postMessage({
-//             channel: config.slack.channel,
-//             text: `:white_check_mark: *NORMALIZADO* - ${service}\n\n` +
-//                 `Duração total: *${duracaoTexto}*\n` +
-//                 `Início: ${inicioIncidente}\n` +
-//                 `Fim: ${fimIncidente}\n\n` +
-//                 `<${services.url} | Ver detalhes no Downdetector>`
-//         });
-
-
-//         console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
-//         AwsIncidente = null;
-//         return;
-//     }
-
-
-
-//     // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
-//     // ============================================================
-//     if ((status === "warning" || status === "danger") && AwsIncidente) {
-//         console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
-//         return;
-//     }
+    let maxReport = { x: "", y: 0 };
+    for (let p of reports) {
+        if (p.y > maxReport.y) {
+            maxReport = p;
+        }
+    }
 
 
 
 
-//     // ALERTA DE PICO > 50 && sem incidente
-//     // ============================================================
-//     if (maxReportResult > 50 && !AwsIncidente) {
-//         if (peakTimeStamp === AwsUltimoPico) {
-//             console.log("já alertado, ignorando flasdfas...");
-//             return;
-//         }
-
-//         AwsUltimoPico = peakTimeStamp;
-
-//         await client.chat.postMessage({
-//             channel: config.slack.channel,
-//             text: `Detectado alto volume de reclamações: ${service}\n\n` +
-//                 `Reclamações: ${maxReportResult}\n\n` +
-//                 `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-//                 `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-//                 `<${services.url} | Monitorar no Downdetector>`
-//         });
-
-//         console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-//         return;
-//     }
+    const maxReportResult = dados.max
+    const peakTimeStamp = maxReport.x;
+    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
-//     // TUDO OK 
-//     // ============================================================
-//     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
-// }
-// // '-' ============== FIM NUBANK ============== '-' //
+
+    //  WARNING
+    // ============================================================
+    if ((status === "warning" || status === "danger") && !BBIncidente) {
+        BBIncidente = {
+            inicio: Date.now(),
+            nivel: status
+        };
+
+        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
+        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+
+        await client.chat.postMessage({
+            channel: config.slack.channel,
+            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+        });
+
+
+        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
+        return;
+    }
+
+
+    // PROBLEMA PIOROU warning -> danger
+    // ============================================================
+
+    if (status === "danger" && BBIncidente && BBIncidente.nivel === "warning") {
+        BBIncidente.nivel = "danger";
+
+
+        await client.chat.postMessage({
+            channel: config.slack.channel,
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+        });
+
+        console.log("Problema agravou para DANGER no ", service);
+        return;
+    }
+
+
+
+
+    // PROBLEMA RESOLVIDO (volta pra success)
+    // ============================================================
+    if (status === "success" && BBIncidente) {
+        const duracao = Date.now() - BBIncidente.inicio;
+        const minutos = Math.floor(duracao / 60000);
+        const horas = Math.floor(minutos / 60);
+        const minutosRestantes = minutos % 60;
+
+        let duracaoTexto = "";
+        if (horas > 0) {
+            duracaoTexto = `${horas}h ${minutosRestantes}min`;
+        } else if (minutos > 0) {
+            duracaoTexto = `${minutos}min`;
+        } else {
+            duracaoTexto = "menos de 1min";
+        }
+
+        const inicioIncidente = new Date(BBIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+
+        await client.chat.postMessage({
+            channel: config.slack.channel,
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+        });
+
+
+        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        BBIncidente = null;
+        return;
+    }
+
+
+    // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
+    // ============================================================
+    if ((status === "warning" || status === "danger") && BBIncidente) {
+        console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
+        return;
+    }
+
+
+
+
+    // ALERTA DE PICO > 50 && sem incidente
+    // ============================================================
+    // if (maxReportResult > 50 && !NubankIncidente && status === "success") {
+    //     if (peakTimeStamp === NubankUltimoPico) {
+    //         console.log("já alertado, ignorando flasdfas...");
+    //         return;
+    //     }
+
+    //     if (peakTimeStamp) {
+    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+    //         const now = Date.now();
+    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
+
+    //         if (minutosAtras > 60) {
+    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+    //         }
+    //     }
+
+    //     NubankUltimoPico = peakTimeStamp;
+
+    //     await client.chat.postMessage({
+    //         channel: config.slack.channel,
+    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+    //             `Reclamações: ${maxReportResult}\n\n` +
+    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+    //             `<${services.url} | Monitorar no Downdetector>`
+    //     });
+
+    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+    //     return;
+    // }
+
+
+    // TUDO OK 
+    // ============================================================
+    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+}
+// '-' ============== FIM BB ============== '-' //
+
+
 
 
 
@@ -1440,27 +1448,6 @@ async function tratarNubank(services: any) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export async function CheckAll() {
     console.log("iniciando a verificação dos services");
 
@@ -1483,8 +1470,8 @@ export async function CheckAll() {
         else if (banco.nome === 'Santander') {
             await tratarSantander(banco);
         }
-        else if (banco.nome === 'Nubank') {
-            await tratarNubank(banco);
+        else if (banco.nome === 'Bancodobrasil') {
+            await tratarBB(banco);
         }
         // else if (banco.nome === 'AWS') {
         //     await tratarAws(banco);
