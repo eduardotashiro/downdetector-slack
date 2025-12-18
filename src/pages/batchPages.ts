@@ -11,7 +11,7 @@ const SERVICES = [
     { name: 'Santander', url: 'https://downdetector.com.br/fora-do-ar/santander/' },
     { name: 'Nubank', url: 'https://downdetector.com.br/fora-do-ar/nubank/' },
     { name: 'Bancodobrasil', url: 'https://downdetector.com.br/fora-do-ar/banco-do-brasil/' },
-    { name: 'Cloudflare', url: 'https://downdetector.com.br/fora-do-ar/cloudflare/' },
+    { name: 'Cloudflare', url: 'https://downdetector.com.br/fora-do-ar/cloudflare/' }
     // { name: 'Azure', url: 'https://downdetector.com.br/fora-do-ar/windows-azure/' }
     //{ name: 'Clearsale', url: 'https://statusgator.com/services/clearsale' }
     //{ name: 'Rede', url: 'https://downdetector.com.br/fora-do-ar/rede/' }

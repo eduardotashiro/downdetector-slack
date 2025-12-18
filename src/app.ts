@@ -13,4 +13,3 @@ cron.schedule("*/30 * * * *", async () => {
   await CheckAll();
 console.log("Monitoramento finalization!");
 });
-
