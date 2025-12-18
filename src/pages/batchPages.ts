@@ -9,7 +9,8 @@ const SERVICES = [
     { name: 'Itaú', url: 'https://downdetector.com.br/fora-do-ar/banco-itau/' },
     { name: 'Bradesco', url: 'https://downdetector.com.br/fora-do-ar/bradesco/' },
     { name: 'Santander', url: 'https://downdetector.com.br/fora-do-ar/santander/' },
-    { name: 'Nubank', url: 'https://downdetector.com.br/fora-do-ar/nubank/' }
+    { name: 'Nubank', url: 'https://downdetector.com.br/fora-do-ar/nubank/' },
+    { name: 'Bancodobrasil', url: 'https://downdetector.com.br/fora-do-ar/banco-do-brasil/' }
     // { name: 'AWS', url: 'https://downdetector.com.br/fora-do-ar/aws-amazon-web-services/' },
     // { name: 'Azure', url: 'https://downdetector.com.br/fora-do-ar/windows-azure/' }
     //{ name: 'Clearsale', url: 'https://statusgator.com/services/clearsale' }
@@ -19,7 +20,7 @@ const SERVICES = [
     //{ name: 'Pagbank', url: 'https://downdetector.com.br/fora-do-ar/pagbank/' }
     //{ name: 'Mercadopago', url: 'https://downdetector.com.br/fora-do-ar/mercadopago/' }
     //{ name: 'Safrapay', url: 'https://downdetector.com.br/fora-do-ar/safrapay/' }
-    //{ name: 'Bancodobrasil', url: 'https://downdetector.com.br/fora-do-ar/banco-do-brasil/' }
+    
 ];
 //  '--no-sandbox',
 //     '--disable-setuid-sandbox',
@@ -109,7 +110,7 @@ export async function checkAllServices() {
                 try {
                     dados = await tentarAcessarServico(page, service);
                 } catch (err) {
-                    console.log(`Timeout / erro, tentando novamente...`);
+                    console.log(`Timeout / Claud / destroyer... tentando novamente...`);
                     await page.close();
 
                     page = await context.newPage();
@@ -123,9 +124,9 @@ export async function checkAllServices() {
                         dados
                     });
 
-                    console.log(`✅ ${service.name}`);
-                    console.log(`   Status: ${dados.status}`);
-                    console.log(`   Max: ${dados.max}`);
+                    console.log(`----> ${service.name}`);
+                    console.log(`----> Status: ${dados.status}`);
+                    console.log(`----> Max: ${dados.max}`);
                 }
 
             } catch (error) {
