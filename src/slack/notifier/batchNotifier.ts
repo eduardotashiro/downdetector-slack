@@ -175,7 +175,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -345,7 +345,7 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -692,7 +692,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -867,7 +867,7 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -1035,7 +1035,7 @@ async function tratarBB(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
@@ -1210,7 +1210,7 @@ async function tratarCloudflare(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:*${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
 
