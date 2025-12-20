@@ -1,7 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { config } from "../../config/env.js";
 import { checkAllServices } from "../../pages/batchPages.js";
-import { devNull } from "os";
 
 const client = new WebClient(config.slack.botToken);
 
@@ -144,7 +143,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\n*Instabilidade com* *${service}* *atingiu nível CRÍTICO*\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
 
         console.log("Problema agravou para DANGER no ", service);
@@ -156,7 +155,7 @@ async function tratarPix(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && pixIncidente) {
+    if (status === "success" && pixIncidente && pixIncidente.alertaEnviado) {
         const duracao = Date.now() - pixIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
