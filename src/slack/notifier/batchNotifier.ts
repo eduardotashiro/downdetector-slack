@@ -345,7 +345,7 @@ async function tratarItau(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && itauIncidente) {
+    if (status === "success" && itauIncidente && itauIncidente.alertaEnviado) {
         const duracao = Date.now() - itauIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
@@ -535,7 +535,7 @@ async function tratarBradesco(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && bradescoIncidente) {
+    if (status === "success" && bradescoIncidente && bradescoIncidente.alertaEnviado) {
         const duracao = Date.now() - bradescoIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
@@ -727,7 +727,7 @@ async function tratarSantander(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && santanderIncidente) {
+    if (status === "success" && santanderIncidente && santanderIncidente.alertaEnviado) {
         const duracao = Date.now() - santanderIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
@@ -920,7 +920,7 @@ async function tratarNubank(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && NubankIncidente) {
+    if (status === "success" && NubankIncidente && NubankIncidente.alertaEnviado) {
         const duracao = Date.now() - NubankIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
@@ -1105,7 +1105,7 @@ async function tratarBB(services: any) {
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
-    if (status === "success" && BBIncidente) {
+    if (status === "success" && BBIncidente && BBIncidente.alertaEnviado) {
         const duracao = Date.now() - BBIncidente.inicio;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
