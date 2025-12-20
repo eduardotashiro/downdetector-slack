@@ -20,7 +20,7 @@ const SERVICES = [
     //{ name: 'Pagbank', url: 'https://downdetector.com.br/fora-do-ar/pagbank/' }
     //{ name: 'Mercadopago', url: 'https://downdetector.com.br/fora-do-ar/mercadopago/' }
     //{ name: 'Safrapay', url: 'https://downdetector.com.br/fora-do-ar/safrapay/' }
-    
+
 ];
 //  '--no-sandbox',
 //     '--disable-setuid-sandbox',
@@ -59,7 +59,6 @@ async function tentarAcessarServico(page:any, service:any) {
 
 
 
-
 export async function checkAllServices() {
     const browser = await chromium.launch({
         args: [
@@ -73,7 +72,6 @@ export async function checkAllServices() {
             password: config.proxy.password
         }
     });
-
     const context = await browser.newContext({
         ignoreHTTPSErrors: true,
         locale: 'pt-BR',
