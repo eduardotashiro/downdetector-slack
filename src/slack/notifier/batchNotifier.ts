@@ -1,43 +1,50 @@
 import { WebClient } from "@slack/web-api";
 import { config } from "../../config/env.js";
 import { checkAllServices } from "../../pages/batchPages.js";
+import { devNull } from "os";
 
 const client = new WebClient(config.slack.botToken);
 
 let pixIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger'
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean // se o warning de 1h já foi avisado
 } | null = null;
 
 let itauIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger';
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean;
 } | null = null;
 
 let bradescoIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger';
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean;
 } | null = null;
 
 let santanderIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger';
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean;
 } | null = null;
 
 let NubankIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger';
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean;
 } | null = null;
 
 let BBIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger';
+    nivel: 'warning' | 'danger',
+    alertaEnviado:boolean;
 } | null = null;
 
-let CloudflareIncidente: {
-    inicio: number;
-    nivel: 'warning' | 'danger';
-} | null = null;
+// let CloudflareIncidente: {
+//     inicio: number;
+//     nivel: 'warning' | 'danger';
+// } | null = null;
 
 // let ClearsaleIncidente: {
 //     inicio: number;
@@ -67,31 +74,6 @@ let CloudflareIncidente: {
 // Pico de reclamações: 34 ( 17/12/2025, 14:04:25 )
 // Ver detalhes no Downdetector
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // '-' ============== INICIO PIX ============== '-' //
 async function tratarPix(services: any) {
     const dados = services.dados;
@@ -111,26 +93,46 @@ async function tratarPix(services: any) {
     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
+
+        //tentando mandar a mensagem depois de 1 hora caso ainda tenha o warning...
     //  WARNING 
     // ============================================================
-    if ((status === "warning" || status === "danger") && !pixIncidente) {
-        pixIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+    if ((status === "warning") && !pixIncidente) {
+            pixIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && pixIncidente && !pixIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - pixIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
+        pixIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -184,6 +186,8 @@ async function tratarPix(services: any) {
         return;
     }
 
+
+    
 
 
     // INCIDENTE JÁ ATIVO (só monitora)
@@ -282,25 +286,43 @@ async function tratarItau(services: any) {
 
     //  WARNING
     // ============================================================
-    if ((status === "warning" || status === "danger") && !itauIncidente) {
-        itauIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+    if ((status === "warning") && !itauIncidente) {
+            itauIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && itauIncidente && !itauIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - itauIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
+        itauIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-
-        return;
-    }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -456,25 +478,42 @@ async function tratarBradesco(services: any) {
 
     //  WARNING
     // ============================================================
-    if ((status === "warning" || status === "danger") && !bradescoIncidente) {
-        bradescoIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+    if ((status === "warning") && !bradescoIncidente) {
+            bradescoIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && bradescoIncidente && !bradescoIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - bradescoIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
-
+        bradescoIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -630,24 +669,42 @@ async function tratarSantander(services: any) {
 
     //  WARNING
     // ============================================================
-    if ((status === "warning" || status === "danger") && !santanderIncidente) {
-        santanderIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+       if ((status === "warning") && !santanderIncidente) {
+            santanderIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && santanderIncidente && !santanderIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - santanderIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
+        santanderIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -805,24 +862,42 @@ async function tratarNubank(services: any) {
 
     //  WARNING
     // ============================================================
-    if ((status === "warning" || status === "danger") && !NubankIncidente) {
-        NubankIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+        if ((status === "warning") && !NubankIncidente) {
+            NubankIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && NubankIncidente && !NubankIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - NubankIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
+        NubankIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -973,25 +1048,42 @@ async function tratarBB(services: any) {
 
     //  WARNING
     // ============================================================
-    if ((status === "warning" || status === "danger") && !BBIncidente) {
-        BBIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
+      if ((status === "warning") && !BBIncidente) {
+            BBIncidente = {
+            inicio: Date.now(), 
+            nivel: status,
+            alertaEnviado: false
+        }
 
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
+        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        return
+    }
 
-        await client.chat.postMessage({
+    if(status === "warning" && BBIncidente && !BBIncidente.alertaEnviado){
+        const now = Date.now();
+        const tempInterv = now - BBIncidente.inicio;
+
+        const uma_hora = 3600000;
+
+        if (tempInterv < uma_hora) {
+            console.log("warning ainda nao completou 1h")
+            return
+        }
+
+        if (tempInterv >= uma_hora) {
+        const emoji = ":warning:";
+        const txt = "Alerta | Instabilidade ";
+
+    await client.chat.postMessage({
             channel: config.slack.channel,
             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
         });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
-
+        BBIncidente.alertaEnviado = true;
+         console.log(`Warning detectado em ${service}, status é ${status}`);
+         return;
+         
+    } 
+   }
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -1124,151 +1216,151 @@ async function tratarBB(services: any) {
 
 
 // // '-' ============== INICIO Cloudflare ============== '-' //
-async function tratarCloudflare(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const reports = dados.series?.reports?.data || [];
-    const service = dados?.company
+// async function tratarCloudflare(services: any) {
+//     const dados = services.dados;
+//     const status = dados.status;
+//     const reports = dados.series?.reports?.data || [];
+//     const service = dados?.company
 
-    let maxReport = { x: "", y: 0 };
-    for (let p of reports) {
-        if (p.y > maxReport.y) {
-            maxReport = p;
-        }
-    }
-
-
-
-
-    const maxReportResult = dados.max
-    const peakTimeStamp = maxReport.x;
-    const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
-
-
-
-    //  WARNING
-    // ============================================================
-    if ((status === "warning" || status === "danger") && !CloudflareIncidente) {
-        CloudflareIncidente = {
-            inicio: Date.now(),
-            nivel: status
-        };
-
-        const emoji = status === "danger" ? ":red_circle:" : ":warning:";
-        const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-
-
-        console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
-        return;
-    }
-
-
-    // PROBLEMA PIOROU warning -> danger
-    // ============================================================
-
-    if (status === "danger" && CloudflareIncidente && CloudflareIncidente.nivel === "warning") {
-        CloudflareIncidente.nivel = "danger";
-
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-
-        console.log("Problema agravou para DANGER no ", service);
-        return;
-    }
+//     let maxReport = { x: "", y: 0 };
+//     for (let p of reports) {
+//         if (p.y > maxReport.y) {
+//             maxReport = p;
+//         }
+//     }
 
 
 
 
-    // PROBLEMA RESOLVIDO (volta pra success)
-    // ============================================================
-    if (status === "success" && CloudflareIncidente) {
-        const duracao = Date.now() - CloudflareIncidente.inicio;
-        const minutos = Math.floor(duracao / 60000);
-        const horas = Math.floor(minutos / 60);
-        const minutosRestantes = minutos % 60;
-
-        let duracaoTexto = "";
-        if (horas > 0) {
-            duracaoTexto = `${horas}h ${minutosRestantes}min`;
-        } else if (minutos > 0) {
-            duracaoTexto = `${minutos}min`;
-        } else {
-            duracaoTexto = "menos de 1min";
-        }
-
-        const inicioIncidente = new Date(CloudflareIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-        const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-
-
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
-        CloudflareIncidente = null;
-        return;
-    }
-
-
-    // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
-    // ============================================================
-    if ((status === "warning" || status === "danger") && CloudflareIncidente) {
-        console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
-        return;
-    }
+//     const maxReportResult = dados.max
+//     const peakTimeStamp = maxReport.x;
+//     const maxReportTimeStampResult = peakTimeStamp ? new Date(peakTimeStamp).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "N/A";
 
 
 
+//     //  WARNING
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && !CloudflareIncidente) {
+//         CloudflareIncidente = {
+//             inicio: Date.now(),
+//             nivel: status
+//         };
 
-    // ALERTA DE PICO > 50 && sem incidente
-    // ============================================================
-    // if (maxReportResult > 50 && !NubankIncidente && status === "success") {
-    //     if (peakTimeStamp === NubankUltimoPico) {
-    //         console.log("já alertado, ignorando flasdfas...");
-    //         return;
-    //     }
+//         const emoji = status === "danger" ? ":red_circle:" : ":warning:";
+//         const txt = status === "danger" ? "Crítico | Instabilidade Grave" : "Alerta | Instabilidade ";
 
-    //     if (peakTimeStamp) {
-    //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
-    //         const now = Date.now();
-    //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
-
-    //         if (minutosAtras > 60) {
-    //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
-    //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
-    //         }
-    //     }
-
-    //     NubankUltimoPico = peakTimeStamp;
-
-    //     await client.chat.postMessage({
-    //         channel: config.slack.channel,
-    //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
-    //             `Reclamações: ${maxReportResult}\n\n` +
-    //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
-    //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
-    //             `<${services.url} | Monitorar no Downdetector>`
-    //     });
-
-    //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
-    //     return;
-    // }
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+//         });
 
 
-    // TUDO OK 
-    // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
-}
+//         console.log(`Warning ou danger detectado em ${service}, status é ${status}`);
+//         return;
+//     }
+
+
+//     // PROBLEMA PIOROU warning -> danger
+//     // ============================================================
+
+//     if (status === "danger" && CloudflareIncidente && CloudflareIncidente.nivel === "warning") {
+//         CloudflareIncidente.nivel = "danger";
+
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+//         });
+
+//         console.log("Problema agravou para DANGER no ", service);
+//         return;
+//     }
+
+
+
+
+//     // PROBLEMA RESOLVIDO (volta pra success)
+//     // ============================================================
+//     if (status === "success" && CloudflareIncidente) {
+//         const duracao = Date.now() - CloudflareIncidente.inicio;
+//         const minutos = Math.floor(duracao / 60000);
+//         const horas = Math.floor(minutos / 60);
+//         const minutosRestantes = minutos % 60;
+
+//         let duracaoTexto = "";
+//         if (horas > 0) {
+//             duracaoTexto = `${horas}h ${minutosRestantes}min`;
+//         } else if (minutos > 0) {
+//             duracaoTexto = `${minutos}min`;
+//         } else {
+//             duracaoTexto = "menos de 1min";
+//         }
+
+//         const inicioIncidente = new Date(CloudflareIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+//         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+
+//         await client.chat.postMessage({
+//             channel: config.slack.channel,
+//             text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+//         });
+
+
+//         console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+//         CloudflareIncidente = null;
+//         return;
+//     }
+
+
+//     // INCIDENTE JÁ ATIVO (não faz nada, só monitora)
+//     // ============================================================
+//     if ((status === "warning" || status === "danger") && CloudflareIncidente) {
+//         console.log(`Incidente ${service}, status: ${status} ainda ativo...`);
+//         return;
+//     }
+
+
+
+
+//     // ALERTA DE PICO > 50 && sem incidente
+//     // ============================================================
+//     // if (maxReportResult > 50 && !NubankIncidente && status === "success") {
+//     //     if (peakTimeStamp === NubankUltimoPico) {
+//     //         console.log("já alertado, ignorando flasdfas...");
+//     //         return;
+//     //     }
+
+//     //     if (peakTimeStamp) {
+//     //         const peakTime = new Date(peakTimeStamp).getTime(); // sttring para número
+//     //         const now = Date.now();
+//     //         const minutosAtras = (now - peakTime) / (1000 * 60); // ms para minutos
+
+//     //         if (minutosAtras > 60) {
+//     //             console.log(`${service}: Pico de ${Math.floor(minutosAtras)}min atrás - ignorando`);
+//     //             return; // nem adianta continuar, pra pegar o pico atrasado, nem compensa
+//     //         }
+//     //     }
+
+//     //     NubankUltimoPico = peakTimeStamp;
+
+//     //     await client.chat.postMessage({
+//     //         channel: config.slack.channel,
+//     //         text: `Detectado alto volume de reclamações: ${service}\n\n` +
+//     //             `Reclamações: ${maxReportResult}\n\n` +
+//     //             `Horário do pico: ${maxReportTimeStampResult}\n\n` +
+//     //             `Status oficial: \`${status}\` ( Nenhuma Instabilidade confirmada )\n\n` +
+//     //             `<${services.url} | Monitorar no Downdetector>`
+//     //     });
+
+//     //     console.log(`Alerta de pico enviado para o serviço ${service} - reclamações: ${maxReportResult}`);
+//     //     return;
+//     // }
+
+
+//     // TUDO OK 
+//     // ============================================================
+//     console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+// }
 // // '-' ============== FIM tratarCloudflare ============== '-' //
 
 
@@ -1475,9 +1567,9 @@ export async function CheckAll() {
         else if (banco.nome === 'Bancodobrasil') {
             await tratarBB(banco);
         }
-        else if (banco.nome === 'Cloudflare') {
-             await tratarCloudflare(banco);
-        }
+        // else if (banco.nome === 'Cloudflare') {
+        //      await tratarCloudflare(banco);
+        // }
          else if (banco.nome === 'Nubank') {
              await tratarNubank(banco);
          }
