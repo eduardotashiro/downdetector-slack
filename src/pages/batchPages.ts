@@ -3,69 +3,57 @@ import { config } from "../config/env.js";
 import stealth from "puppeteer-extra-plugin-stealth";
 chromium.use(stealth());
 
-//Bradesco
 const SERVICES = [
     { name: "Pix", url: "https://downdetector.com.br/fora-do-ar/pix/" },
     { name: "Itaú", url: "https://downdetector.com.br/fora-do-ar/banco-itau/" },
     { name: "Bradesco", url: "https://downdetector.com.br/fora-do-ar/bradesco/" },
-    {
-        name: "Santander",
-        url: "https://downdetector.com.br/fora-do-ar/santander/",
-    },
+    { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/" },
     { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/" },
-    {
-        name: "Bancodobrasil",
-        url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/",
-    },
-    // { name: 'Cloudflare', url: 'https://downdetector.com.br/fora-do-ar/cloudflare/' }
-    // { name: 'Azure', url: 'https://downdetector.com.br/fora-do-ar/windows-azure/' }
-    //{ name: 'Clearsale', url: 'https://statusgator.com/services/clearsale' }
-    //{ name: 'Rede', url: 'https://downdetector.com.br/fora-do-ar/rede/' }
-    //{ name: 'Getnet', url: 'https://downdetector.com.br/fora-do-ar/getnet/' }
-    //{ name: 'Cielo', url: 'https://downdetector.com.br/fora-do-ar/cielo/' }
-    //{ name: 'Pagbank', url: 'https://downdetector.com.br/fora-do-ar/pagbank/' }
-    //{ name: 'Mercadopago', url: 'https://downdetector.com.br/fora-do-ar/mercadopago/' }
-    //{ name: 'Safrapay', url: 'https://downdetector.com.br/fora-do-ar/safrapay/' }
+    { name: "Bancodobrasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/" },
+    //limpeza né, muito lixo
 ];
-//  '--no-sandbox',
-//     '--disable-setuid-sandbox',
-//     '--ignore-certificate-errors',
-//     '--disable-gpu','--disable-dev-shm-usag
 
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "commit", 
         timeout: 40000,
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(300); //era 500
 
     const titulo = await page.title();
     if (titulo.includes("momento") || titulo.includes("Um momento")) {
         console.log(`Cloudflare detectado...`);
-        await page.waitForTimeout(4000);
+        await page.waitForTimeout(3000);  // era 4000
     }
 
     await page.waitForFunction(
         () => {
-            return window.DD?.currentServiceProperties?.status !== undefined;
+            return window.DD?.currentServiceProperties !== undefined;
         },
         { timeout: 12000, polling: 500 }
     );
 
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);  // era 1000
 
     return await page.evaluate(() => {
         return window.DD?.currentServiceProperties;
-        
     });
-
-    
 }
 
 export async function checkAllServices() {
     const browser = await chromium.launch({
-        args: ["--no-sandbox", "--disable-blink-features=AutomationControlled"],
+        args: [
+            "--no-sandbox",
+            "--disable-blink-features=AutomationControlled",
+            //qualquer coisa tiro
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+            "--no-zygote",
+            "--disable-gpu",
+            "--disable-images"
+        ],
         headless: true,
         proxy: {
             server: config.proxy.server,
@@ -73,12 +61,15 @@ export async function checkAllServices() {
             password: config.proxy.password,
         },
     });
+
     const context = await browser.newContext({
         ignoreHTTPSErrors: true,
         locale: "pt-BR",
         timezoneId: "America/Sao_Paulo",
-        userAgent:
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+        userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+
+        javaScriptEnabled: true,  // window.DD
+        serviceWorkers: 'block',
     });
 
     const resultados = [];
@@ -92,29 +83,49 @@ export async function checkAllServices() {
             try {
                 page = await context.newPage();
 
+                
                 await page.route("**/*", (route) => {
                     const url = route.request().url();
                     const type = route.request().resourceType();
 
+                   
                     if (
                         url.includes("google-analytics") ||
                         url.includes("googletagmanager") ||
                         url.includes("gtag") ||
-                        url.includes("facebook.com/tr") ||
+                        url.includes("facebook.com") ||
                         url.includes("facebook.net") ||
                         url.includes("doubleclick") ||
                         url.includes("hotjar") ||
                         url.includes("/ads/") ||
-                        url.includes("analytics")
+                        url.includes("analytics") ||
+                        url.includes("clarity.ms") ||
+                        url.includes("newrelic.com") ||
+                        url.includes("datadoghq.com") ||
+                        url.includes("sentry.io") ||
+                        url.includes("taboola") ||
+                        url.includes("outbrain") ||
+                        url.includes("amazon-adsystem")
                     ) {
                         return route.abort();
                     }
 
-                    if (["document", "script", "xhr", "fetch"].includes(type)) {
-                        route.continue();
-                    } else {
-                        route.abort();
+                   
+
+                    
+                    if (type === 'document') {
+                        return route.continue();
                     }
+
+                   
+                    if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
+                        if (['script', 'xhr', 'fetch'].includes(type)) {
+                            return route.continue();
+                        }
+                    }
+
+                  
+                    return route.abort();
                 });
 
                 let dados;
@@ -126,6 +137,46 @@ export async function checkAllServices() {
                     await page.close();
 
                     page = await context.newPage();
+
+                    
+                    await page.route("**/*", (route) => {
+                        const url = route.request().url();
+                        const type = route.request().resourceType();
+
+                        if (
+                            url.includes("google-analytics") ||
+                            url.includes("googletagmanager") ||
+                            url.includes("gtag") ||
+                            url.includes("facebook.com") ||
+                            url.includes("facebook.net") ||
+                            url.includes("doubleclick") ||
+                            url.includes("hotjar") ||
+                            url.includes("/ads/") ||
+                            url.includes("analytics") ||
+                            url.includes("clarity.ms") ||
+                            url.includes("newrelic.com") ||
+                            url.includes("datadoghq.com") ||
+                            url.includes("sentry.io") ||
+                            url.includes("taboola") ||
+                            url.includes("outbrain") ||
+                            url.includes("amazon-adsystem")
+                        ) {
+                            return route.abort();
+                        }
+
+                        if (type === 'document') {
+                            return route.continue();
+                        }
+                           //if (url.includes('downdetector.com') || url.includes('downdetector.com.br')) {
+                        if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
+                            if (['script', 'xhr', 'fetch'].includes(type)) {
+                                return route.continue();
+                            }
+                        }
+
+                        return route.abort();
+                    });
+
                     dados = await tentarAcessarServico(page, service);
                 }
 
@@ -157,3 +208,4 @@ export async function checkAllServices() {
         await browser.close();
     }
 }
+
