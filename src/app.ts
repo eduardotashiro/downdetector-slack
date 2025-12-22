@@ -11,5 +11,8 @@ export const app = new App({
 
 cron.schedule("*/30 7-22 * * *", async () => {
  await CheckAll();
-console.log("Monitoramento finalization!");
-});
+console.log("Monitoramento finalization! ",new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
+},{
+  timezone:"America/Sao_Paulo"
+}
+);
