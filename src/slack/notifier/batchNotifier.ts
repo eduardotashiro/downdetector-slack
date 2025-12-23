@@ -6,38 +6,38 @@ const client = new WebClient(config.slack.botToken);
 
 let pixIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean // se o warning de 1h já foi avisado
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean
 } | null = null;
 
 let itauIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean;
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean;
 } | null = null;
 
 let bradescoIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean;
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean;
 } | null = null;
 
 let santanderIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean;
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean;
 } | null = null;
 
 let NubankIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean;
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean;
 } | null = null;
 
 let BBIncidente: {
     inicio: number;
-    nivel: 'warning' | 'danger',
-    alertaEnviado:boolean;
+    nivel: 'success' | 'warning' | 'danger',
+    alertaEnviado: boolean;
 } | null = null;
 
 // let CloudflareIncidente: {
@@ -61,18 +61,6 @@ let BBIncidente: {
 // let ClearsaleUltimoPico: string | null = null;
 
 
-// :atenção: Alerta | Instabilidade  - Bradesco
-// Status: warning
-// Detectado em: 17/12/2025, 14:20:40
-// Pico de reclamações: 23 (16/12/2025, 15:03:12)
-// Ver detalhes no Downdetector
-// 14h20
-// :atenção: Alerta | Instabilidade  - Nubank
-// Status: warning
-// Detectado em: 17/12/2025, 14:20:40
-// Pico de reclamações: 34 ( 17/12/2025, 14:04:25 )
-// Ver detalhes no Downdetector
-
 // '-' ============== INICIO PIX ============== '-' //
 async function tratarPix(services: any) {
     const dados = services.dados;
@@ -93,45 +81,48 @@ async function tratarPix(services: any) {
 
 
 
-        //tentando mandar a mensagem depois de 1 hora caso ainda tenha o warning...
+    //tentando mandar a mensagem depois de 1 hora caso ainda tenha o warning...
     //  WARNING 
     // ============================================================
     if ((status === "warning") && !pixIncidente) {
-            pixIncidente = {
-            inicio: Date.now(), 
+        pixIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && pixIncidente && !pixIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - pixIncidente.inicio;
+    if (status === "warning" && pixIncidente && !pixIncidente.alertaEnviado) {
+        pixIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - pixIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        pixIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+
+            pixIncidente.alertaEnviado = true;
+
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -140,25 +131,28 @@ async function tratarPix(services: any) {
     if (status === "danger" && pixIncidente && pixIncidente.nivel === "warning") {
         pixIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\n*Instabilidade com* *${service}* *atingiu nível CRÍTICO*\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
 
-//elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    //elaborar o reset quando o status estava warning ou danger e volta para o success, 
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
+        pixIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    pixIncidente = null 
-}
+        pixIncidente = null
+    }
 
     // PROBLEMA RESOLVIDO (volta pra success)
     // ============================================================
@@ -183,17 +177,17 @@ if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" ) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto} no ${service}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         pixIncidente = null;
         return;
     }
 
 
-    
+
 
 
     // INCIDENTE JÁ ATIVO (só monitora)
@@ -293,41 +287,42 @@ async function tratarItau(services: any) {
     //  WARNING
     // ============================================================
     if ((status === "warning") && !itauIncidente) {
-            itauIncidente = {
-            inicio: Date.now(), 
+        itauIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && itauIncidente && !itauIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - itauIncidente.inicio;
+    if (status === "warning" && itauIncidente && !itauIncidente.alertaEnviado) {
+        itauIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - itauIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        itauIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+            itauIncidente.alertaEnviado = true;
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
 
 
@@ -337,26 +332,29 @@ async function tratarItau(services: any) {
     if (status === "danger" && itauIncidente && itauIncidente.nivel === "warning") {
         itauIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
 
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && itauIncidente && itauIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && itauIncidente && itauIncidente.nivel === "warning" && !itauIncidente.alertaEnviado) {
+        itauIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    itauIncidente = null 
-}
+        itauIncidente = null
+    }
 
 
 
@@ -374,7 +372,7 @@ if (status === "success" && itauIncidente && itauIncidente.nivel === "warning" )
         } else if (minutos > 0) {
             duracaoTexto = `${minutos}min`;
         } else {
-            duracaoTexto = "menos de 1min";
+            duracaoTexto = "menos de 1min"; //jamais
         }
 
         const inicioIncidente = new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -383,11 +381,11 @@ if (status === "success" && itauIncidente && itauIncidente.nivel === "warning" )
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(`Incidente resolvido! Duração: ${duracaoTexto} no ${service}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         itauIncidente = null;
         return;
     }
@@ -495,41 +493,42 @@ async function tratarBradesco(services: any) {
     //  WARNING
     // ============================================================
     if ((status === "warning") && !bradescoIncidente) {
-            bradescoIncidente = {
-            inicio: Date.now(), 
+        bradescoIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && bradescoIncidente && !bradescoIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - bradescoIncidente.inicio;
+    if (status === "warning" && bradescoIncidente && !bradescoIncidente.alertaEnviado) {
+        bradescoIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - bradescoIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        bradescoIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(bradescoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+            bradescoIncidente.alertaEnviado = true;
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -537,24 +536,27 @@ async function tratarBradesco(services: any) {
     if (status === "danger" && bradescoIncidente && bradescoIncidente.nivel === "warning") {
         bradescoIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
-//elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    //elaborar o reset quando o status estava warning ou danger e volta para o success, 
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && bradescoIncidente && bradescoIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && bradescoIncidente && bradescoIncidente.nivel === "warning" && !bradescoIncidente.alertaEnviado) {
+        bradescoIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    bradescoIncidente = null 
-}
+        bradescoIncidente = null
+    }
 
 
 
@@ -581,11 +583,11 @@ if (status === "success" && bradescoIncidente && bradescoIncidente.nivel === "wa
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         bradescoIncidente = null;
         return;
     }
@@ -693,42 +695,45 @@ async function tratarSantander(services: any) {
 
     //  WARNING
     // ============================================================
-       if ((status === "warning") && !santanderIncidente) {
-            santanderIncidente = {
-            inicio: Date.now(), 
+    if ((status === "warning") && !santanderIncidente) {
+        santanderIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && santanderIncidente && !santanderIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - santanderIncidente.inicio;
+    if (status === "warning" && santanderIncidente && !santanderIncidente.alertaEnviado) {
+        santanderIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - santanderIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        santanderIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+
+            santanderIncidente.alertaEnviado = true;
+
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -737,24 +742,27 @@ async function tratarSantander(services: any) {
     if (status === "danger" && santanderIncidente && santanderIncidente.nivel === "warning") {
         santanderIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg nviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
-//elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    //elaborar o reset quando o status estava warning ou danger e volta para o success, 
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && santanderIncidente && santanderIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
+        pixIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    santanderIncidente = null 
-}
+        santanderIncidente = null
+    }
 
 
 
@@ -781,11 +789,11 @@ if (status === "success" && santanderIncidente && santanderIncidente.nivel === "
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         santanderIncidente = null;
         return;
     }
@@ -894,42 +902,43 @@ async function tratarNubank(services: any) {
 
     //  WARNING
     // ============================================================
-        if ((status === "warning") && !NubankIncidente) {
-            NubankIncidente = {
-            inicio: Date.now(), 
+    if ((status === "warning") && !NubankIncidente) {
+        NubankIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && NubankIncidente && !NubankIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - NubankIncidente.inicio;
+    if (status === "warning" && NubankIncidente && !NubankIncidente.alertaEnviado) {
+        NubankIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - NubankIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        NubankIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+            NubankIncidente.alertaEnviado = true;
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -938,24 +947,27 @@ async function tratarNubank(services: any) {
     if (status === "danger" && NubankIncidente && NubankIncidente.nivel === "warning") {
         NubankIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
-//elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    //elaborar o reset quando o status estava warning ou danger e volta para o success, 
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && NubankIncidente && NubankIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
+        pixIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    NubankIncidente = null 
-}
+        NubankIncidente = null
+    }
 
 
 
@@ -982,11 +994,11 @@ if (status === "success" && NubankIncidente && NubankIncidente.nivel === "warnin
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         NubankIncidente = null;
         return;
     }
@@ -1088,42 +1100,43 @@ async function tratarBB(services: any) {
 
     //  WARNING
     // ============================================================
-      if ((status === "warning") && !BBIncidente) {
-            BBIncidente = {
-            inicio: Date.now(), 
+    if ((status === "warning") && !BBIncidente) {
+        BBIncidente = {
+            inicio: Date.now(),
             nivel: status,
             alertaEnviado: false
         }
 
-        console.log(`primeiro incidente detectado para ${service}, iniciando contagem...`)
+        console.log(`primeiro status warning detectado para ${service}, iniciando contagem...`)
         return
     }
 
-    if(status === "warning" && BBIncidente && !BBIncidente.alertaEnviado){
-        const now = Date.now();
-        const tempInterv = now - BBIncidente.inicio;
+    if (status === "warning" && BBIncidente && !BBIncidente.alertaEnviado) {
+        BBIncidente.nivel = "warning"
 
-        const uma_hora = 3600000;
+        const tempInterv: number = Date.now() - BBIncidente.inicio;
+
+        const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("warning ainda nao completou 1h")
+            console.log("status warning ainda nao completou 1h")
             return
         }
 
         if (tempInterv >= uma_hora) {
-        const emoji = ":warning:";
-        const txt = "Alerta | Instabilidade ";
+            const emoji = ":warning:";
+            const txt = "Instabilidade";
 
-    await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `> ${emoji} *${txt} - ${service}*\n*Status:* \`${status}\`\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
-        });
-        BBIncidente.alertaEnviado = true;
-         console.log(`Warning detectado em ${service}, status é ${status}`);
-         return;
-         
-    } 
-   }
+            await client.chat.postMessage({
+                channel: config.slack.channel,
+                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(BBIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            });
+            BBIncidente.alertaEnviado = true;
+            console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
+            return;
+
+        }
+    }
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -1131,25 +1144,28 @@ async function tratarBB(services: any) {
     if (status === "danger" && BBIncidente && BBIncidente.nivel === "warning") {
         BBIncidente.nivel = "danger";
 
+        const emojii = ":alert:";
+        const txtt = "critic";
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :red_circle: *SITUAÇÃO AGRAVOU!*\nInstabilidade com *${service}* atingiu nível CRÍTICO\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
-        console.log("Problema agravou para DANGER no ", service);
+        console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
         return;
     }
 
 
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
-// nao estou considerando as oscilações no momento de mandar notificação
+    // nao estou considerando as oscilações no momento de mandar notificação
 
-if (status === "success" && BBIncidente && BBIncidente.nivel === "warning" ) {
-    console.log(`${service} Oscilacao detectada, zerando contagem `)
+    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
+        pixIncidente.nivel = "success"
+        console.log(`${service} Oscilacao detectada, zerando contagem `)
 
-    BBIncidente = null 
-}
+        BBIncidente = null
+    }
 
 
 
@@ -1176,11 +1192,11 @@ if (status === "success" && BBIncidente && BBIncidente.nivel === "warning" ) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `> :large_green_circle: *NORMALIZADO* - *${service}*\n*Duração total:* ${duracaoTexto}\n\n*Início:* ${inicioIncidente}\n\n*Fim:* ${fimIncidente}\n\n<${services.url} | *Ver detalhes no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
         });
 
 
-        console.log(` Incidente resolvido! Duração: ${duracaoTexto}`);
+        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
         BBIncidente = null;
         return;
     }
@@ -1619,9 +1635,9 @@ export async function CheckAll() {
         // else if (banco.nome === 'Cloudflare') {
         //      await tratarCloudflare(banco);
         // }
-         else if (banco.nome === 'Nubank') {
-             await tratarNubank(banco);
-         }
+        else if (banco.nome === 'Nubank') {
+            await tratarNubank(banco);
+        }
         // else if (banco.nome === 'Clearsale') {
         //     await tratarClearsale(banco);
         // }
