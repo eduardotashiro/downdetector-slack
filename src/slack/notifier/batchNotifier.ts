@@ -757,8 +757,8 @@ async function tratarSantander(services: any) {
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
     // nao estou considerando as oscilações no momento de mandar notificação
 
-    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
-        pixIncidente.nivel = "success"
+    if (status === "success" && santanderIncidente && santanderIncidente.nivel === "warning" && !santanderIncidente.alertaEnviado) {
+        santanderIncidente.nivel = "success"
         console.log(`${service} Oscilacao detectada, zerando contagem `)
 
         santanderIncidente = null
@@ -962,8 +962,8 @@ async function tratarNubank(services: any) {
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
     // nao estou considerando as oscilações no momento de mandar notificação
 
-    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
-        pixIncidente.nivel = "success"
+    if (status === "success" && NubankIncidente && NubankIncidente.nivel === "warning" && !NubankIncidente.alertaEnviado) {
+        NubankIncidente.nivel = "success"
         console.log(`${service} Oscilacao detectada, zerando contagem `)
 
         NubankIncidente = null
@@ -1160,8 +1160,8 @@ async function tratarBB(services: any) {
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
     // nao estou considerando as oscilações no momento de mandar notificação
 
-    if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
-        pixIncidente.nivel = "success"
+    if (status === "success" && BBIncidente && BBIncidente.nivel === "warning" && !BBIncidente.alertaEnviado) {
+        BBIncidente.nivel = "success"
         console.log(`${service} Oscilacao detectada, zerando contagem `)
 
         BBIncidente = null
