@@ -103,7 +103,7 @@ async function tratarPix(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -113,7 +113,7 @@ async function tratarPix(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
 
             pixIncidente.alertaEnviado = true;
@@ -136,7 +136,7 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
@@ -149,7 +149,7 @@ async function tratarPix(services: any) {
 
     if (status === "success" && pixIncidente && pixIncidente.nivel === "warning" && !pixIncidente.alertaEnviado) {
         pixIncidente.nivel = "success"
-        console.log(`${service} Oscilacao detectada, zerando contagem `)
+        console.log(`${service} Oscilacao detectada, zerando contagem... `)
 
         pixIncidente = null
     }
@@ -177,11 +177,12 @@ async function tratarPix(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
-        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
+
         pixIncidente = null;
         return;
     }
@@ -305,7 +306,7 @@ async function tratarItau(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -315,9 +316,11 @@ async function tratarItau(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(itauIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
+
             itauIncidente.alertaEnviado = true;
+
             console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
             return;
 
@@ -337,7 +340,7 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
@@ -351,7 +354,7 @@ async function tratarItau(services: any) {
 
     if (status === "success" && itauIncidente && itauIncidente.nivel === "warning" && !itauIncidente.alertaEnviado) {
         itauIncidente.nivel = "success"
-        console.log(`${service} Oscilacao detectada, zerando contagem `)
+        console.log(`${service} Oscilacao detectada, zerando contagem... `)
 
         itauIncidente = null
     }
@@ -381,11 +384,11 @@ async function tratarItau(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
-        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
         itauIncidente = null;
         return;
     }
@@ -511,7 +514,7 @@ async function tratarBradesco(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -521,9 +524,11 @@ async function tratarBradesco(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(bradescoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(bradescoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
+
             bradescoIncidente.alertaEnviado = true;
+
             console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
             return;
 
@@ -541,7 +546,7 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
@@ -583,11 +588,11 @@ async function tratarBradesco(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
-        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
         bradescoIncidente = null;
         return;
     }
@@ -714,7 +719,7 @@ async function tratarSantander(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -724,7 +729,7 @@ async function tratarSantander(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
 
             santanderIncidente.alertaEnviado = true;
@@ -747,7 +752,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg nviado no slack, Problema agravou para DANGER no ${service}`);
@@ -789,11 +794,12 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
-        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
+
         santanderIncidente = null;
         return;
     }
@@ -921,7 +927,7 @@ async function tratarNubank(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -931,9 +937,11 @@ async function tratarNubank(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
+
             NubankIncidente.alertaEnviado = true;
+
             console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
             return;
 
@@ -952,7 +960,7 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
@@ -964,7 +972,7 @@ async function tratarNubank(services: any) {
 
     if (status === "success" && NubankIncidente && NubankIncidente.nivel === "warning" && !NubankIncidente.alertaEnviado) {
         NubankIncidente.nivel = "success"
-        console.log(`${service} Oscilacao detectada, zerando contagem `)
+        console.log(`${service} Oscilacao detectada, zerando contagem... `)
 
         NubankIncidente = null
     }
@@ -985,7 +993,7 @@ async function tratarNubank(services: any) {
         } else if (minutos > 0) {
             duracaoTexto = `${minutos}min`;
         } else {
-            duracaoTexto = "menos de 1min";
+            duracaoTexto = "menos de 1min"; //kkkkk
         }
 
         const inicioIncidente = new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -994,11 +1002,12 @@ async function tratarNubank(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
         console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+
         NubankIncidente = null;
         return;
     }
@@ -1119,7 +1128,7 @@ async function tratarBB(services: any) {
         const uma_hora: number = 3600000;
 
         if (tempInterv < uma_hora) {
-            console.log("status warning ainda nao completou 1h")
+            console.log(`status warning para ${service} ainda nao completou 1h`)
             return
         }
 
@@ -1129,9 +1138,11 @@ async function tratarBB(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(BBIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(BBIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
+
             BBIncidente.alertaEnviado = true;
+
             console.log(`Warning enviado no slack, detectado em ${service}, status é ${status}`);
             return;
 
@@ -1149,7 +1160,7 @@ async function tratarBB(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
@@ -1162,7 +1173,7 @@ async function tratarBB(services: any) {
 
     if (status === "success" && BBIncidente && BBIncidente.nivel === "warning" && !BBIncidente.alertaEnviado) {
         BBIncidente.nivel = "success"
-        console.log(`${service} Oscilacao detectada, zerando contagem `)
+        console.log(`${service} Oscilacao detectada, zerando contagem... `)
 
         BBIncidente = null
     }
@@ -1192,11 +1203,12 @@ async function tratarBB(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n• *Status: \`resolved\`*\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | *Ver no Downdetector*>`
+            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
-        console.log(` Incidente no ${service}resolvido! Duração: ${duracaoTexto}`);
+        console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
+        
         BBIncidente = null;
         return;
     }
