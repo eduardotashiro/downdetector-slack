@@ -124,6 +124,14 @@ async function tratarPix(services: any) {
         }
     }
 
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && pixIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
+
+
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -140,8 +148,11 @@ async function tratarPix(services: any) {
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+
+        pixIncidente.alertaEnviado = true
         return;
     }
+
 
 
     //elaborar o reset quando o status estava warning ou danger e volta para o success, 
@@ -236,7 +247,7 @@ async function tratarPix(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 // '-' ============== FIM PIX ============== '-' //
 
@@ -327,6 +338,12 @@ async function tratarItau(services: any) {
         }
     }
 
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && itauIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -345,6 +362,7 @@ async function tratarItau(services: any) {
 
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+        itauIncidente.alertaEnviado = true
         return;
     }
 
@@ -443,7 +461,7 @@ async function tratarItau(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 // '-' ============== FIM ITAU ============== '-' //
 
@@ -535,6 +553,14 @@ async function tratarBradesco(services: any) {
         }
     }
 
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && bradescoIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
+
+
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
 
@@ -550,6 +576,7 @@ async function tratarBradesco(services: any) {
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+        bradescoIncidente.alertaEnviado = true
         return;
     }
 
@@ -647,7 +674,7 @@ async function tratarBradesco(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 // '-' ============== FIM BRADESCO ============== '-' //
 
@@ -740,6 +767,13 @@ async function tratarSantander(services: any) {
         }
     }
 
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && santanderIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
+
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -756,6 +790,7 @@ async function tratarSantander(services: any) {
         });
 
         console.log(`msg nviado no slack, Problema agravou para DANGER no ${service}`);
+        santanderIncidente.alertaEnviado = true
         return;
     }
 
@@ -852,7 +887,7 @@ async function tratarSantander(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 
 // '-' ============== FIM SANTANDER ============== '-' //
@@ -948,6 +983,14 @@ async function tratarNubank(services: any) {
         }
     }
 
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && NubankIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
+
+
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -964,6 +1007,7 @@ async function tratarNubank(services: any) {
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+        NubankIncidente.alertaEnviado = true
         return;
     }
 
@@ -1060,7 +1104,7 @@ async function tratarNubank(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 // '-' ============== FIM NUBANK ============== '-' //
 
@@ -1149,6 +1193,15 @@ async function tratarBB(services: any) {
         }
     }
 
+
+    //colocando um ajuste para quando o status danger aparecer < 1h 
+
+    if (status === "warning" && BBIncidente?.nivel === "danger") {
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        return
+    }
+
+
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
 
@@ -1164,6 +1217,7 @@ async function tratarBB(services: any) {
         });
 
         console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+        BBIncidente.alertaEnviado = true
         return;
     }
 
@@ -1208,7 +1262,7 @@ async function tratarBB(services: any) {
 
 
         console.log(`Incidente no ${service} resolvido! Duração: ${duracaoTexto}`);
-        
+
         BBIncidente = null;
         return;
     }
@@ -1261,7 +1315,7 @@ async function tratarBB(services: any) {
 
     // TUDO OK 
     // ============================================================
-    console.log(`${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
+    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status} | Pico: ${maxReportResult}`);
 }
 // '-' ============== FIM BB ============== '-' //
 
