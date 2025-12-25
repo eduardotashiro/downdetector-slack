@@ -24,14 +24,14 @@ async function tentarAcessarServico(page: any, service: any) {
     const titulo = await page.title();
     if (titulo.includes("momento") || titulo.includes("Um momento")) {
         console.log(`Cloudflare detectado...`);
-        await page.waitForTimeout(3000);  // era 4000
+        await page.waitForTimeout(4000);  // voltando p 4000...
     }
 
     await page.waitForFunction(
         () => {
             return window.DD?.currentServiceProperties !== undefined;
         },
-        { timeout: 12000, polling: 500 }
+        { timeout: 20000, polling: 800 } // sera que aumentando o timeout para 20 s volta a funcionar '-'
     );
 
     await page.waitForTimeout(500);  // era 1000
