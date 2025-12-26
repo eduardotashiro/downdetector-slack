@@ -15,7 +15,7 @@ const SERVICES = [
 
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
-        waitUntil: "commit", 
+        waitUntil: "domcontentloaded", 
         timeout: 40000,
     });
 
@@ -53,8 +53,9 @@ export async function checkAllServices() {
             "--no-zygote",
             "--disable-gpu",
             "--disable-images"
+
         ],
-        headless: true,
+        headless: false,
         proxy: {
             server: config.proxy.server,
             username: config.proxy.username,
@@ -70,6 +71,7 @@ export async function checkAllServices() {
 
         javaScriptEnabled: true,  // window.DD
         serviceWorkers: 'block',
+        bypassCSP:true
     });
 
     const resultados = [];
