@@ -55,7 +55,7 @@ export async function checkAllServices() {
             "--disable-images"
 
         ],
-        headless: false,
+        headless: true,
         proxy: {
             server: config.proxy.server,
             username: config.proxy.username,
