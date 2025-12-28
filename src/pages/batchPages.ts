@@ -10,12 +10,16 @@ const SERVICES = [
     { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/" },
     { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/" },
     { name: "Bancodobrasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/" },
-    //limpeza né, muito lixo
+    // //limpeza né, muito lixo
 ];
+const delay = (min = 4000, max = 9000) =>
+    new Promise(res =>
+        setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min)
+    );
 
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
-        waitUntil: "domcontentloaded", 
+        waitUntil: "domcontentloaded",
         timeout: 40000,
     });
 
@@ -24,7 +28,7 @@ async function tentarAcessarServico(page: any, service: any) {
     const titulo = await page.title();
     if (titulo.includes("momento") || titulo.includes("Um momento")) {
         console.log(`Cloudflare detectado...`);
-        await page.waitForTimeout(4000);  // voltando p 4000...
+        await delay(8000, 15000); // 
     }
 
     await page.waitForFunction(
@@ -46,32 +50,43 @@ export async function checkAllServices() {
         args: [
             "--no-sandbox",
             "--disable-blink-features=AutomationControlled",
+            "--disable-setuid-sandbox"
             //qualquer coisa tiro
-            "--disable-dev-shm-usage",
-            "--disable-accelerated-2d-canvas",
-            "--no-first-run",
-            "--no-zygote",
-            "--disable-gpu",
-            "--disable-images"
+            // "--disable-dev-shm-usage",
+            // "--disable-accelerated-2d-canvas",
+            // "--no-first-run",
+            // "--no-zygote",
+            // "--disable-gpu",
+            // "--disable-images"
 
         ],
         headless: true,
-        proxy: {
-            server: config.proxy.server,
-            username: config.proxy.username,
-            password: config.proxy.password,
-        },
+        // proxy: {
+        //     server: config.proxy.server,
+        //     username: config.proxy.username,
+        //     password: config.proxy.password,
+        // },
+
     });
 
     const context = await browser.newContext({
-        ignoreHTTPSErrors: true,
+        storageState: 'cookies.json',
         locale: "pt-BR",
         timezoneId: "America/Sao_Paulo",
-        userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+        userAgent:
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
 
-        javaScriptEnabled: true,  // window.DD
-        serviceWorkers: 'block',
-        bypassCSP:true
+
+        viewport: { width: 1366, height: 768 },
+        deviceScaleFactor: 1,
+        colorScheme: "light",
+
+        permissions: ["geolocation", "notifications"],
+        ignoreHTTPSErrors: true,
+        javaScriptEnabled: true,
+        serviceWorkers: "allow",
+        bypassCSP: true
+
     });
 
     const resultados = [];
@@ -85,50 +100,50 @@ export async function checkAllServices() {
             try {
                 page = await context.newPage();
 
-                
-                await page.route("**/*", (route) => {
-                    const url = route.request().url();
-                    const type = route.request().resourceType();
 
-                   
-                    if (
-                        url.includes("google-analytics") ||
-                        url.includes("googletagmanager") ||
-                        url.includes("gtag") ||
-                        url.includes("facebook.com") ||
-                        url.includes("facebook.net") ||
-                        url.includes("doubleclick") ||
-                        url.includes("hotjar") ||
-                        url.includes("/ads/") ||
-                        url.includes("analytics") ||
-                        url.includes("clarity.ms") ||
-                        url.includes("newrelic.com") ||
-                        url.includes("datadoghq.com") ||
-                        url.includes("sentry.io") ||
-                        url.includes("taboola") ||
-                        url.includes("outbrain") ||
-                        url.includes("amazon-adsystem")
-                    ) {
-                        return route.abort();
-                    }
+                // await page.route("**/*", (route) => {
+                //     const url = route.request().url();
+                //     const type = route.request().resourceType();
 
-                   
 
-                    
-                    if (type === 'document') {
-                        return route.continue();
-                    }
+                //     if (
+                //         url.includes("google-analytics") ||
+                //         url.includes("googletagmanager") ||
+                //         url.includes("gtag") ||
+                //         url.includes("facebook.com") ||
+                //         url.includes("facebook.net") ||
+                //         url.includes("doubleclick") ||
+                //         url.includes("hotjar") ||
+                //         url.includes("/ads/") ||
+                //         url.includes("analytics") ||
+                //         url.includes("clarity.ms") ||
+                //         url.includes("newrelic.com") ||
+                //         url.includes("datadoghq.com") ||
+                //         url.includes("sentry.io") ||
+                //         url.includes("taboola") ||
+                //         url.includes("outbrain") ||
+                //         url.includes("amazon-adsystem")
+                //     ) {
+                //         return route.abort();
+                //     }
 
-                   
-                    if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
-                        if (['script', 'xhr', 'fetch'].includes(type)) {
-                            return route.continue();
-                        }
-                    }
 
-                  
-                    return route.abort();
-                });
+
+
+                //     if (type === 'document') {
+                //         return route.continue();
+                //     }
+
+
+                //     if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
+                //         if (['script', 'xhr', 'fetch'].includes(type)) {
+                //             return route.continue();
+                //         }
+                //     }
+
+
+                //     return route.abort();
+                // });
 
                 let dados;
 
@@ -136,48 +151,49 @@ export async function checkAllServices() {
                     dados = await tentarAcessarServico(page, service);
                 } catch (err) {
                     console.log(`Timeout / Cloud / destroyer... tentando novamente...`);
+                    await delay(10000, 20000);
                     await page.close();
 
                     page = await context.newPage();
 
-                    
-                    await page.route("**/*", (route) => {
-                        const url = route.request().url();
-                        const type = route.request().resourceType();
 
-                        if (
-                            url.includes("google-analytics") ||
-                            url.includes("googletagmanager") ||
-                            url.includes("gtag") ||
-                            url.includes("facebook.com") ||
-                            url.includes("facebook.net") ||
-                            url.includes("doubleclick") ||
-                            url.includes("hotjar") ||
-                            url.includes("/ads/") ||
-                            url.includes("analytics") ||
-                            url.includes("clarity.ms") ||
-                            url.includes("newrelic.com") ||
-                            url.includes("datadoghq.com") ||
-                            url.includes("sentry.io") ||
-                            url.includes("taboola") ||
-                            url.includes("outbrain") ||
-                            url.includes("amazon-adsystem")
-                        ) {
-                            return route.abort();
-                        }
+                    // await page.route("**/*", (route) => {
+                    //     const url = route.request().url();
+                    //     const type = route.request().resourceType();
 
-                        if (type === 'document') {
-                            return route.continue();
-                        }
-                           //if (url.includes('downdetector.com') || url.includes('downdetector.com.br')) {
-                        if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
-                            if (['script', 'xhr', 'fetch'].includes(type)) {
-                                return route.continue();
-                            }
-                        }
+                    //     if (
+                    //         url.includes("google-analytics") ||
+                    //         url.includes("googletagmanager") ||
+                    //         url.includes("gtag") ||
+                    //         url.includes("facebook.com") ||
+                    //         url.includes("facebook.net") ||
+                    //         url.includes("doubleclick") ||
+                    //         url.includes("hotjar") ||
+                    //         url.includes("/ads/") ||
+                    //         url.includes("analytics") ||
+                    //         url.includes("clarity.ms") ||
+                    //         url.includes("newrelic.com") ||
+                    //         url.includes("datadoghq.com") ||
+                    //         url.includes("sentry.io") ||
+                    //         url.includes("taboola") ||
+                    //         url.includes("outbrain") ||
+                    //         url.includes("amazon-adsystem")
+                    //     ) {
+                    //         return route.abort();
+                    //     }
 
-                        return route.abort();
-                    });
+                    //     if (type === 'document') {
+                    //         return route.continue();
+                    //     }
+                    //     //if (url.includes('downdetector.com') || url.includes('downdetector.com.br')) {
+                    //     if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
+                    //         if (['script', 'xhr', 'fetch'].includes(type)) {
+                    //             return route.continue();
+                    //         }
+                    //     }
+
+                    //     return route.abort();
+                    // });
 
                     dados = await tentarAcessarServico(page, service);
                 }
@@ -199,7 +215,10 @@ export async function checkAllServices() {
                 if (page) {
                     await page.close();
                 }
+                console.log("aguardando antes do próximo serviço...");
+                await delay(5000, 12000); // delay entre serviços
             }
+
         }
 
         console.log(

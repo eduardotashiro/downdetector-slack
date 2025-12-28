@@ -1,0 +1,242 @@
+{
+  "cookies": [
+    {
+      "name": "__cf_bm",
+      "value": "YUKmSxBnyey5aij0Ra8QVsiE.n.0lf7LPIjCRloBm5M-1766940726-1.0.1.1-d4oplkSDJ3C1CoJJqxLmjGrEsq7lZELioVnD9x1gCaIUm66lTvf1sijcj66LkD5aU.xvpjvtINQsuw6mYxqB7UHAYxmSYNhVL4mwtzM7TCc",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1766942526.802748,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "geoCC",
+      "value": "BR",
+      "domain": "downdetector.com.br",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "geoRC",
+      "value": "SC",
+      "domain": "downdetector.com.br",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "hF6g9hGkczvffc.6Ua8PL0GvBGnnPLSX9bc3XZlvyx8-1766940726788-0.0.1.1-604800000",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "9L7Qyi3D3jGO4Whgyun2zme2kBO5dlIHutdf9_80JWk-1766940726-1.0.1.1-3xdVcFPCmgeusje4swMNY2BngqWdYrBI7eSFLS.2Htf7MyN1bhC_4uAttD1s_OBiYe59oMEQDIfICXZJf6wz_RcNWBFB6QhEmLoyYLEY3I4",
+      "domain": ".downdetector.com",
+      "path": "/",
+      "expires": 1766942526.999064,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_cfuvid",
+      "value": "fdmVN.SepYF_LkbwhG.F0Rb2BG_1A61HmOLuHyCbdyA-1766940726951-0.0.1.1-604800000",
+      "domain": ".downdetector.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "cf_clearance",
+      "value": "cxm5VIzs5apL0Mf3D3bjZH2OAv4xacRh91_cb6dltfs-1766940728-1.2.1.1-XMYTAXgm95d3tpUjadFkVbYAsUYbt.xlBTfCeBr6VPEn9ewXg5hNdPznBs9qP_PaMYClQMMiDmfsCfVDudzDBvHLKob2hYgCaDoFnlXSoPV9hQ7cT0YE1YRep8sbJYDxcAWu3E5SJ6hZ3Aed2RNULguj1bV3q4vhG.GrU2pOu7uNQz6bJfs9LtuOz8pauczfw2viTQj5U0jVmyl9rKpfz6dya8Hhuyw3M2ytV1zQRe0",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1798476728.418796,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://downdetector.com.br",
+      "_crHasCrossSiteAncestor": false
+    },
+    {
+      "name": "OTGPPConsent",
+      "value": "DBABLA~BVQVAAAAAAGA.QA",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1798476728,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "usprivacy",
+      "value": "1YYY",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "opt_out",
+      "value": "1",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1800895928.736086,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "OptanonConsent",
+      "value": "isGpcEnabled=0&datestamp=Sun+Dec+28+2025+13%3A52%3A08+GMT-0300+(Hor%C3%A1rio+Padr%C3%A3o+de+Bras%C3%ADlia)&version=202509.1.0&browserGpcFlag=0&isIABGlobal=false&genVendors=&consentId=ef164e47-13c8-40d2-84d2-9a048c893f82&interactionCount=0&isAnonUser=1&landingPath=https%3A%2F%2Fdowndetector.com.br%2Ffora-do-ar%2Fbanco-itau%2F&GPPCookiesCount=1&gppSid=7&groups=C0001%3A1%2CC0002%3A0%2CC0003%3A0%2COSSTA_BG%3A0%2CC0004%3A0",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1798476728,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_li_dcdm_c",
+      "value": ".downdetector.com.br",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_lc2_fpi",
+      "value": "80c679b018e0--01kdjxzrkw16cjjannc2v33qer",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1801500729.981359,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_lc2_fpi_meta",
+      "value": "%7B%22w%22%3A1766940729980%7D",
+      "domain": ".downdetector.com.br",
+      "path": "/",
+      "expires": 1801500729.981553,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "UID",
+      "value": "144d199d39e90aa006301561766940730",
+      "domain": ".scorecardresearch.com",
+      "path": "/",
+      "expires": 1800636730.281273,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "XID",
+      "value": "144d199d39e90aa006301561766940730",
+      "domain": ".scorecardresearch.com",
+      "path": "/",
+      "expires": 1800636730.281416,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://downdetector.com.br",
+      "_crHasCrossSiteAncestor": true
+    },
+    {
+      "name": "receive-cookie-deprecation",
+      "value": "1",
+      "domain": ".casalemedia.com",
+      "path": "/",
+      "expires": 1798476730.765946,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://downdetector.com.br",
+      "_crHasCrossSiteAncestor": true
+    },
+    {
+      "name": "khaos",
+      "value": "MJPYW1KG-C-31WG",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1798476731.027381,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "audit",
+      "value": "1|/FiJjZ+CXyM5Nd/RPY1Xd/l6xMwXwGgmIl108g/x2H6mVWP6qkmraut74KjAvDsTFkM5jre62aVIHHY/eKfzM96gzLp9HsRmIo8tEQuGXfEijy0RC4Zd8SKPLRELhl3xIo8tEQuGXfEYuY/fSI0kfg==",
+      "domain": ".rubiconproject.com",
+      "path": "/",
+      "expires": 1798476731.027482,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "lidid",
+      "value": "e7e71e1e-1a74-4d02-9e6a-8e0bd441c4e8",
+      "domain": ".liadm.com",
+      "path": "/",
+      "expires": 1801500731.470904,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://downdetector.com.br",
+      "localStorage": [
+        {
+          "name": "_GESPSK-esp.criteo.com",
+          "value": "[\"esp.criteo.com\",null,1766940730287,null,null,null,null,null,null,[100]]"
+        },
+        {
+          "name": "_li_duid",
+          "value": "80c679b018e0--01kdjxzrkw16cjjannc2v33qer"
+        },
+        {
+          "name": "_lc2_fpi_meta",
+          "value": "{\"w\":1766940729980}"
+        },
+        {
+          "name": "_lc2_fpi",
+          "value": "80c679b018e0--01kdjxzrkw16cjjannc2v33qer"
+        }
+      ]
+    },
+    {
+      "origin": "https://www.google.com",
+      "localStorage": [
+        {
+          "name": "rc::h",
+          "value": "1766940732744"
+        }
+      ]
+    }
+  ]
+}
