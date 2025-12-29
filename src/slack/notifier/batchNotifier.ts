@@ -1695,7 +1695,7 @@ export async function CheckAll() {
         else if (banco.nome === 'Santander') {
             await tratarSantander(banco);
         }
-        else if (banco.nome === 'Bancodobrasil') {
+        else if (banco.nome === 'Banco do Brasil') {
             await tratarBB(banco);
         }
         // else if (banco.nome === 'Cloudflare') {
