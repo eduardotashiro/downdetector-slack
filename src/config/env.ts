@@ -14,6 +14,9 @@ export const config = {
         server: process.env.PROXY_SERVER!,
         username: process.env.PROXY_USERNAME!,
         password: process.env.PROXY_PASSWORD!
+    },
+    api:{
+        apiKey:process.env.APIKEY!
     }
 }
 
