@@ -1,7 +1,7 @@
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import BrowsercashSDK from "@browsercash/sdk";
-import { config } from "../config/env";
+import { config } from "../config/env.js";
 
 
 chromium.use(stealth());
