@@ -17,33 +17,33 @@ export const app = new App({
 // // }
 // // );
 
-CheckAll();
+// CheckAll();
 
-// const randomDelay = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomDelay = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// // Roda a cada 15 minutos, MAS com delay aleatório no início
-// cron.schedule("*/15 6-23 * * *", async () => {
-//   // Delay aleatório de 0-3 minutos antes de começar
-//   const initialDelay = randomDelay(0, 3 * 60 * 1000);
+// Roda a cada 15 minutos, MAS com delay aleatório no início
+cron.schedule("*/15 6-22 * * *", async () => {
+  // Delay aleatório de 0-3 minutos antes de começar
+  const initialDelay = randomDelay(0, 3 * 60 * 1000);
 
-//   console.log(`Aguardando ${(initialDelay / 1000 / 60).toFixed(1)} min...`);
+  console.log(`Aguardando ${(initialDelay / 1000 / 60).toFixed(1)} min...`);
 
-//   await sleep(initialDelay);
+  await sleep(initialDelay);
 
-//   const timestamp = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-//   console.log(`Iniciando monitoramento: ${timestamp}`);
+  const timestamp = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  console.log(`Iniciando monitoramento: ${timestamp}`);
 
-//   try {
-//     await CheckAll();
-//     console.log(`finalization: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+  try {
+    await CheckAll();
+    console.log(`finalization: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
 
-//   } catch (error) {
-//     console.error(`Erro no monitoramento:`, error);
-//   }
-// },
-//   {
-//     timezone: "America/Sao_Paulo"
-//   }
-// );
+  } catch (error) {
+    console.error(`Erro no monitoramento:`, error);
+  }
+},
+  {
+    timezone: "America/Sao_Paulo"
+  }
+);
