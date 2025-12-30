@@ -4,6 +4,9 @@
   "description": "Monitor Downdetector | Slack",
   "main": "dist/server.js",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
