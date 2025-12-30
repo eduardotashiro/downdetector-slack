@@ -17,6 +17,8 @@ const SERVICES = [
     { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/" },
     { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/" },
     { name: "Banco do Brasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/" },
+    { name: "Mercado Pago", url: "https://downdetector.com.br/fora-do-ar/mercadopago/" },
+    { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" },
 ];
 
 const delay = (min = 4000, max = 9000) =>
@@ -114,7 +116,7 @@ export async function checkAllServices() {
                 await page.close();
                 await delay(5000, 12000);
             }
-        }
+        } //fim loop
 
         return resultados;
     } finally {
