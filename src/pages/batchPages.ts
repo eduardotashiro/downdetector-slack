@@ -21,11 +21,15 @@ const SERVICES = [
     { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" },
 ];
 
+//disfarçando 
 const delay = (min = 4000, max = 9000) =>
     new Promise(res =>
         setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min)
     );
 
+
+
+//
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded",
@@ -34,11 +38,18 @@ async function tentarAcessarServico(page: any, service: any) {
 
     await page.waitForFunction(
         () => window.DD?.currentServiceProperties !== undefined,
-        { timeout: 20000, polling: 800 }
+        { timeout: 40000, polling: 800 }
     );
 
     return await page.evaluate(() => window.DD?.currentServiceProperties);
 }
+
+
+
+
+
+
+
 
 export async function checkAllServices() {
 
@@ -59,49 +70,49 @@ export async function checkAllServices() {
             try {
                 const dados = await tentarAcessarServico(page, service);
 
-                await page.route("**/*", (route) => {
-                    const url = route.request().url();
-                    const type = route.request().resourceType();
+                // await page.route("**/*", (route) => {
+                //     const url = route.request().url();
+                //     const type = route.request().resourceType();
 
 
-                    if (
-                        url.includes("google-analytics") ||
-                        url.includes("googletagmanager") ||
-                        url.includes("gtag") ||
-                        url.includes("facebook.com") ||
-                        url.includes("facebook.net") ||
-                        url.includes("doubleclick") ||
-                        url.includes("hotjar") ||
-                        url.includes("/ads/") ||
-                        url.includes("analytics") ||
-                        url.includes("clarity.ms") ||
-                        url.includes("newrelic.com") ||
-                        url.includes("datadoghq.com") ||
-                        url.includes("sentry.io") ||
-                        url.includes("taboola") ||
-                        url.includes("outbrain") ||
-                        url.includes("amazon-adsystem")
-                    ) {
-                        return route.abort();
-                    }
+                //     if (
+                //         url.includes("google-analytics") ||
+                //         url.includes("googletagmanager") ||
+                //         url.includes("gtag") ||
+                //         url.includes("facebook.com") ||
+                //         url.includes("facebook.net") ||
+                //         url.includes("doubleclick") ||
+                //         url.includes("hotjar") ||
+                //         url.includes("/ads/") ||
+                //         url.includes("analytics") ||
+                //         url.includes("clarity.ms") ||
+                //         url.includes("newrelic.com") ||
+                //         url.includes("datadoghq.com") ||
+                //         url.includes("sentry.io") ||
+                //         url.includes("taboola") ||
+                //         url.includes("outbrain") ||
+                //         url.includes("amazon-adsystem")
+                //     ) {
+                //         return route.abort();
+                //     }
 
 
 
 
-                    if (type === 'document') {
-                        return route.continue();
-                    }
+                //     if (type === 'document') {
+                //         return route.continue();
+                //     }
 
 
-                    if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
-                        if (['script', 'xhr', 'fetch'].includes(type)) {
-                            return route.continue();
-                        }
-                    }
+                //     if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
+                //         if (['script', 'xhr', 'fetch'].includes(type)) {
+                //             return route.continue();
+                //         }
+                //     }
 
 
-                    return route.abort();
-                });
+                //     return route.abort();
+                // });
 
                 if (dados) {
                     resultados.push({
@@ -112,6 +123,27 @@ export async function checkAllServices() {
 
                     console.log(`💀 ${service.name}: ${dados.status}`);
                 }
+
+            } catch (error) {
+                try {
+                    console.log("deu ruim:", error)
+                    console.log("tentando novamente...")
+                    const dados = await tentarAcessarServico(page, service);
+
+                    if (dados) {
+                        resultados.push({
+                            nome: service.name,
+                            url: service.url,
+                            dados
+                        });
+
+                        console.log(`💀 ${service.name}: ${dados.status}`);
+                    }
+                } catch (err) {
+                    console.log("falhou duas vezes bora pro telegram")
+                }
+
+
             } finally {
                 await page.close();
                 await delay(5000, 12000);
