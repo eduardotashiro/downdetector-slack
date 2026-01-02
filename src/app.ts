@@ -24,7 +24,7 @@ const randomDelay = (min: number, max: number) => Math.floor(Math.random() * (ma
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Roda a cada 15 minutos, MAS com delay aleatório no início
-cron.schedule("*/15 6-22 * * *", async () => {
+cron.schedule("*/15 * * * *", async () => {
   // Delay aleatório de 0-3 minutos antes de começar
   const initialDelay = randomDelay(0, 3 * 60 * 1000);
 
