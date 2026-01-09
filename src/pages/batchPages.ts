@@ -1,10 +1,10 @@
-import { chromium } from "playwright-extra";
-import stealth from "puppeteer-extra-plugin-stealth";
+// import { chromium } from "playwright-extra";
+// import stealth from "puppeteer-extra-plugin-stealth";
+// import BrowsercashSDK from "@browsercash/sdk";
+import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-
-
-chromium.use(stealth());
+// chromium.use(stealth());
 
 const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
@@ -53,13 +53,10 @@ async function tentarAcessarServico(page: any, service: any) {
 
 export async function checkAllServices() {
 
-    const session = await client.browser.session.create();
-
-
+    let session = await client.browser.session.create();
     console.log("Session:", session.sessionId);
-
-    const browser = await chromium.connectOverCDP(session.cdpUrl as string);
-    const context = browser.contexts()[0];
+    let browser = await chromium.connectOverCDP(session.cdpUrl as string);
+    let context = browser.contexts()[0];
 
     const resultados = [];
 
@@ -69,50 +66,6 @@ export async function checkAllServices() {
 
             try {
                 const dados = await tentarAcessarServico(page, service);
-
-                // await page.route("**/*", (route) => {
-                //     const url = route.request().url();
-                //     const type = route.request().resourceType();
-
-
-                //     if (
-                //         url.includes("google-analytics") ||
-                //         url.includes("googletagmanager") ||
-                //         url.includes("gtag") ||
-                //         url.includes("facebook.com") ||
-                //         url.includes("facebook.net") ||
-                //         url.includes("doubleclick") ||
-                //         url.includes("hotjar") ||
-                //         url.includes("/ads/") ||
-                //         url.includes("analytics") ||
-                //         url.includes("clarity.ms") ||
-                //         url.includes("newrelic.com") ||
-                //         url.includes("datadoghq.com") ||
-                //         url.includes("sentry.io") ||
-                //         url.includes("taboola") ||
-                //         url.includes("outbrain") ||
-                //         url.includes("amazon-adsystem")
-                //     ) {
-                //         return route.abort();
-                //     }
-
-
-
-
-                //     if (type === 'document') {
-                //         return route.continue();
-                //     }
-
-
-                //     if (url.includes('downdetector.com') || url.includes('downdetector.br')) {
-                //         if (['script', 'xhr', 'fetch'].includes(type)) {
-                //             return route.continue();
-                //         }
-                //     }
-
-
-                //     return route.abort();
-                // });
 
                 if (dados) {
                     resultados.push({
@@ -125,6 +78,8 @@ export async function checkAllServices() {
                 }
 
             } catch (error) {
+
+
                 try {
                     console.log("deu ruim:", error)
                     console.log("tentando novamente...")
@@ -139,23 +94,44 @@ export async function checkAllServices() {
 
                         console.log(`💀 ${service.name}: ${dados.status}`);
                     }
-                } catch (err) {
-                    console.log("falhou duas vezes bora pro telegram")
+                } catch (e) {
+                    console.log("falhou duas vezes bora tratar essa merda")
+                    if ((e as Error).message.includes('net::ERR_QUIC_PROTOCOL_ERROR')) {
+                        await delay(4000, 12000);
+                        await page.close();
+                        await browser.close();
+                        await client.browser.session.stop({sessionId: session.sessionId});
+                        await delay(4000, 12000);
+                        session = await client.browser.session.create();
+                        browser = await chromium.connectOverCDP(session.cdpUrl as string);
+                        context = browser.contexts()[0];
+                        console.log("nova sessão:", session.sessionId);
+                        const page2 = await context.newPage();
+                        const dados = await tentarAcessarServico(page2, service);
+                        if (dados) {
+                            resultados.push({
+                                nome: service.name,
+                                url: service.url,
+                                dados
+                            });
+
+                            console.log(`💀 ${service.name}: ${dados.status}`);
+                        }
+                        await page2.close();
+                    } else {
+                        console.log(e)
+                    }
                 }
-
-
             } finally {
-                await page.close();
+                try {
+                    await page.close();
+                } catch (error) {} 
                 await delay(5000, 12000);
             }
         } //fim loop
-
         return resultados;
     } finally {
-
         await browser.close();
-        await client.browser.session.stop({
-            sessionId: session.sessionId,
-        });
+        await client.browser.session.stop({ sessionId: session.sessionId });
     }
 }
