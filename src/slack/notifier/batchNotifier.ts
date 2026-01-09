@@ -758,7 +758,7 @@ async function tratarSantander(services: any) {
 
             await client.chat.postMessage({
                 channel: config.slack.channel,
-                text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+                text: `${emoji} *${txt} - Santander*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
             });
 
             santanderIncidente.alertaEnviado = true;
@@ -772,7 +772,7 @@ async function tratarSantander(services: any) {
     //colocando um ajuste para quando o status danger aparecer < 1h 
 
     if (status === "warning" && santanderIncidente?.nivel === "danger") {
-        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
+        console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando !`)
         return
     }
 
@@ -788,7 +788,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+            text: `${emojii} *Nível Crítico - Santander*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
 
         console.log(`msg nviado no slack, Problema agravou para DANGER no ${service}`);
@@ -812,8 +812,8 @@ async function tratarSantander(services: any) {
     // ============================================================
     if (status === "success" && santanderIncidente && santanderIncidente.alertaEnviado) {
         const duracao = Date.now() - santanderIncidente.inicio;
-        const minutos = Math.floor(duracao / 60000);
-        const horas = Math.floor(minutos / 60);
+        const minutos = (duracao / 60000);
+        const horas = (minutos / 60);
         const minutosRestantes = minutos % 60;
 
         let duracaoTexto = "";
@@ -831,7 +831,7 @@ async function tratarSantander(services: any) {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
+            text: `:white_check_mark: *Normalizado* *-* *Santander*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${inicioIncidente}\n• *Fim:* ${fimIncidente}\n• *Duração:* ${duracaoTexto}\n\n<${services.url} | Ver no Downdetector>`
         });
 
 
