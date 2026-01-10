@@ -96,11 +96,23 @@ export async function checkAllServices() {
                     }
                 } catch (e) {
                     console.log("falhou duas vezes bora tratar essa merda")
-                    if ((e as Error).message.includes('net::ERR_QUIC_PROTOCOL_ERROR')) {
+                    if (
+                        (e as Error).message.includes('net::ERR_QUIC_PROTOCOL_ERROR')
+                        ||
+                        (e as Error).message.includes('net::ERR_CONNECTION_CLOSED')
+                        ||
+                        (e as Error).message.includes('interrupted by another navigation')
+                        ||
+                        (e as Error).message.includes('Timeout')
+                        ||
+                        (e as Error).message.includes('TimeoutError')
+                        ||
+                        (e as Error).message.includes('Error')                        
+                        ) {                         
                         await delay(4000, 12000);
                         await page.close();
                         await browser.close();
-                        await client.browser.session.stop({sessionId: session.sessionId});
+                        await client.browser.session.stop({ sessionId: session.sessionId });
                         await delay(4000, 12000);
                         session = await client.browser.session.create();
                         browser = await chromium.connectOverCDP(session.cdpUrl as string);
@@ -125,7 +137,9 @@ export async function checkAllServices() {
             } finally {
                 try {
                     await page.close();
-                } catch (error) {} 
+                } catch (error) {
+                    console.log(`não caiu no catch do quic, passa reto`)
+                }
                 await delay(5000, 12000);
             }
         } //fim loop
