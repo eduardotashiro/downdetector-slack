@@ -135,13 +135,9 @@ export async function checkAllServices() {
                     }
                 }
             } finally {
-
-
                 if (page && !page.isClosed()) {
                     await page.close();
                 }
-
-
             }
         } //fim loop
         return resultados;

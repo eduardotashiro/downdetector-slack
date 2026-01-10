@@ -812,8 +812,8 @@ async function tratarSantander(services: any) {
     // ============================================================
     if (status === "success" && santanderIncidente && santanderIncidente.alertaEnviado) {
         const duracao = Date.now() - santanderIncidente.inicio;
-        const minutos = (duracao / 60000);
-        const horas = (minutos / 60);
+        const minutos = Math.floor(duracao / 60000);
+        const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
 
         let duracaoTexto = "";
