@@ -105,9 +105,7 @@ export async function checkAllServices() {
                         ||
                         (e as Error).message.includes('Timeout')
                         ||
-                        (e as Error).message.includes('TimeoutError')
-                        ||
-                        (e as Error).message.includes('Error')                        
+                        (e as Error).message.includes('TimeoutError')                      
                         ) {                         
                         await delay(4000, 12000);
                         await page.close();
