@@ -33,12 +33,12 @@ const delay = (min = 4000, max = 9000) =>
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded",
-        timeout: 40000,
+        timeout: 60000,
     });
 
     await page.waitForFunction(
         () => window.DD?.currentServiceProperties !== undefined,
-        { timeout: 40000, polling: 800 }
+        { timeout: 60000, polling: 800 }
     );
 
     return await page.evaluate(() => window.DD?.currentServiceProperties);
