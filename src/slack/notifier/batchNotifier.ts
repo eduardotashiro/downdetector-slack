@@ -134,6 +134,25 @@ async function tratarPix(services: any) {
     }
 
 
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !pixIncidente){
+    pixIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    pixIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
+    
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -347,6 +366,24 @@ async function tratarItau(services: any) {
         return
     }
 
+    // adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !itauIncidente){
+    itauIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    itauIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -555,12 +592,34 @@ async function tratarBradesco(services: any) {
         }
     }
 
+
+
+
     //colocando um ajuste para quando o status danger aparecer < 1h 
 
     if (status === "warning" && bradescoIncidente?.nivel === "danger") {
         console.log(`instabilidade em ${service} foi de danger para warning, seguimos monitorando ?`)
         return
     }
+
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !bradescoIncidente){
+    bradescoIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    bradescoIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -776,6 +835,24 @@ async function tratarSantander(services: any) {
         return
     }
 
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !santanderIncidente){
+    santanderIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    santanderIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -992,6 +1069,24 @@ async function tratarNubank(services: any) {
         return
     }
 
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !NubankIncidente){
+    NubankIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    NubankIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
 
     // PROBLEMA PIOROU warning -> danger
@@ -1203,6 +1298,25 @@ async function tratarBB(services: any) {
         return
     }
 
+    // adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !BBIncidente){
+    BBIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+
+    BBIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -1419,6 +1533,25 @@ async function tratarMecadoPago(services: any) {
     }
 
 
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !MercadoPagoIncidente){
+    MercadoPagoIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
+
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    MercadoPagoIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
+
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
@@ -1633,7 +1766,24 @@ async function tratarPicPay(services: any) {
         return
     }
 
+// adicionar uma feat quando ir de success para danger direto, pular o warning, analisar se nao vai atrapalhar nas outras condições 
+if(status === "danger" && !PicPayIncidente){
+    PicPayIncidente = {  
+        inicio: Date.now(),
+        nivel: status,
+        alertaEnviado: false
+    }
 
+    const emojii = ":alert:";
+    const txtt = "critic";
+    await client.chat.postMessage({
+        channel: config.slack.channel,
+            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+    });
+    PicPayIncidente.alertaEnviado = true;
+    console.log(`msg enviado no slack, Problema agravou para DANGER no ${service}`);
+    return;
+} 
 
     // PROBLEMA PIOROU warning -> danger
     // ============================================================
