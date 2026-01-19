@@ -57,34 +57,19 @@ export async function checkAllServices() {
 
     try {
         for (const service of SERVICES) {
+
             let page = await context.newPage();
+            let keepTrying = true;
+            const renewPage = async () => {
+                await page.close();
+                page = await context.newPage();
+                await delay(4000, 12000);
+            }
 
-            try {
-                const dados = await tentarAcessarServico(page, service);
-
-                if (dados) {
-                    resultados.push({
-                        nome: service.name,
-                        url: service.url,
-                        dados
-                    });
-
-                    console.log(`💀 ${service.name}: ${dados.status}`);
-                }
-
-            } catch (error) {
-
-
+            while (keepTrying) {
                 try {
-                    console.log("deu ruim:", error)
-                    console.log("tentando novamente...")
-                    await page.close();
-                    console.log(`aba fechada...`)
-                    page = await context.newPage()
-                    console.log(`aba aberta...`)
-
                     const dados = await tentarAcessarServico(page, service);
-                    console.log(`acessando os serviços no segundo erro.. `)
+
                     if (dados) {
                         resultados.push({
                             nome: service.name,
@@ -93,52 +78,18 @@ export async function checkAllServices() {
                         });
 
                         console.log(`💀 ${service.name}: ${dados.status}`);
-
-
-                    }
+                        keepTrying = false;
+                    } else
+                        renewPage();
                 } catch (e) {
-                    console.log("falhou duas vezes bora tratar essa merda")
-                    if (
-                        (e as Error).message.includes('net::ERR_QUIC_PROTOCOL_ERROR')
-                        ||
-                        (e as Error).message.includes('net::ERR_CONNECTION_CLOSED')
-                        ||
-                        (e as Error).message.includes('interrupted by another navigation')
-                        ||
-                        (e as Error).message.includes('Timeout')
-                        ||
-                        (e as Error).message.includes('TimeoutError')
-                    ) {
-                        await delay(4000, 12000);
-                        await page.close();
-                        await browser.close();
-                        await client.browser.session.stop({ sessionId: session.sessionId });
-                        await delay(4000, 12000);
-                        session = await client.browser.session.create(); //
-                        browser = await chromium.connectOverCDP(session.cdpUrl as string);
-                        context = browser.contexts()[0];
-                        console.log("nova sessão:", session.sessionId);
-                        page = await context.newPage();
-                        const dados = await tentarAcessarServico(page, service);
-                        if (dados) {
-                            resultados.push({
-                                nome: service.name,
-                                url: service.url,
-                                dados
-                            });
-
-                            console.log(`💀 ${service.name}: ${dados.status}`);
-                        }
-
-                    } else {
-                        console.log(e)
-                    }
-                }
-            } finally {
-                if (page && !page.isClosed()) {
-                    await page.close();
+                    renewPage();
                 }
             }
+
+            if (page && !page.isClosed()) {
+                await page.close();
+            }
+
         } //fim loop
         return resultados;
     } finally {
