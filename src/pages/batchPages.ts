@@ -1,7 +1,5 @@
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
-// import BrowsercashSDK from "@browsercash/sdk";
-// import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
 chromium.use(stealth());
@@ -39,13 +37,6 @@ async function tentarAcessarServico(page: any, service: any) {
     return await page.evaluate(() => window.DD?.currentServiceProperties);
 }
 
-
-
-
-
-
-
-
 export async function checkAllServices() {
 
     let session = await client.browser.session.create();
@@ -59,14 +50,15 @@ export async function checkAllServices() {
         for (const service of SERVICES) {
 
             let page = await context.newPage();
-            let keepTrying = true;
             const renewPage = async () => {
                 await page.close();
                 page = await context.newPage();
                 await delay(4000, 12000);
             }
 
-            while (keepTrying) {
+            const tentativasMaximas = 5;
+            let tentativas = 0;
+            while (tentativas < tentativasMaximas) {
                 try {
                     const dados = await tentarAcessarServico(page, service);
 
@@ -78,18 +70,19 @@ export async function checkAllServices() {
                         });
 
                         console.log(`💀 ${service.name}: ${dados.status}`);
-                        keepTrying = false;
+                        break;
                     } else
-                        renewPage();
-                } catch (e) {
-                    renewPage();
+                        await renewPage();                 
+                    } catch (e) {
+                    tentativas++;
+                    console.log(`${service.name} | Tentativa ${tentativas} de ${tentativasMaximas} | O erro foi :`, e);
+                    await renewPage();
                 }
             }
 
             if (page && !page.isClosed()) {
                 await page.close();
             }
-
         } //fim loop
         return resultados;
     } finally {
