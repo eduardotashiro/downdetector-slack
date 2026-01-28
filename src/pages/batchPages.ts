@@ -1,8 +1,9 @@
-import { chromium } from "playwright-extra";
-import stealth from "puppeteer-extra-plugin-stealth";
+// import { chromium } from "playwright-extra";
+// import stealth from "puppeteer-extra-plugin-stealth";
+import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-chromium.use(stealth());
+// chromium.use(stealth());
 
 const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
