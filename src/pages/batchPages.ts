@@ -36,29 +36,27 @@ async function tentarAcessarServico(page: any, service: any) {
 
     return await page.evaluate(() => window.DD?.currentServiceProperties);
 }
-
 export async function checkAllServices() {
-
-    let session = await client.browser.session.create();
-    console.log("Session:", session.sessionId);
-    let browser = await chromium.connectOverCDP(session.cdpUrl as string);
-    let context = browser.contexts()[0];
-
     const resultados = [];
 
-    try {
-        for (const service of SERVICES) {
+    for (const service of SERVICES) {
+        let session;
+        let browser;
+        let sucesso = null;
 
-            let page = await context.newPage();
-            const renewPage = async () => {
-                await page.close();
-                page = await context.newPage();
-                await delay(4000, 12000);
-            }
+        try {
+           
+            session = await client.browser.session.create();
+            console.log(`Session:${session.sessionId} para ${service.name}`);
+            browser = await chromium.connectOverCDP(session.cdpUrl as string);
+            let context = browser.contexts()[0];
 
             const tentativasMaximas = 5;
             let tentativas = 0;
-            while (tentativas < tentativasMaximas) {
+
+            while (tentativas < tentativasMaximas && !sucesso) {
+                let page = await context.newPage();
+                
                 try {
                     const dados = await tentarAcessarServico(page, service);
 
@@ -68,25 +66,75 @@ export async function checkAllServices() {
                             url: service.url,
                             dados
                         });
-
                         console.log(`💀 ${service.name}: ${dados.status}`);
-                        break;
-                    } else
-                        await renewPage();                 
-                    } catch (e) {
+                        sucesso = true;
+                    }
+                } catch (e) {
                     tentativas++;
                     console.log(`${service.name} | Tentativa ${tentativas} de ${tentativasMaximas} | O erro foi :`, e);
-                    await renewPage();
+                } finally {
+                    if (page && !page.isClosed()) {
+                        await page.close();
+                    }
+                }
+
+                if (!sucesso && tentativas < tentativasMaximas) {
+                    await delay(4000, 12000);
                 }
             }
 
-            if (page && !page.isClosed()) {
-                await page.close();
+            if (!sucesso) {
+                console.log(`falhou em todas...`);
+
+                try {
+                    await browser.close();
+                    await client.browser.session.stop({ sessionId: session.sessionId });
+                    console.log(`Sessão: ${session.sessionId} | fechada`);
+                } catch (e) {
+                    console.error(`Erro ao fechar sessão, o erro foi :`, e);
+                }
+
+                session = await client.browser.session.create();
+                console.log(`Nova sessão: ${session.sessionId}`);
+                browser = await chromium.connectOverCDP(session.cdpUrl as string);
+                context = browser.contexts()[0];
+
+
+                let page = await context.newPage();
+                try {
+                    const dados = await tentarAcessarServico(page, service);
+
+                    if (dados) {
+                        resultados.push({
+                            nome: service.name,
+                            url: service.url,
+                            dados
+                        });
+                        console.log(`💀 ${service.name}: ${dados.status} (sessão nova)`);
+                        sucesso = true;
+                    }
+                } catch (e) {
+                    console.log(`${service.name} | DESISTO!!!!!!!!!!!!!!!!!.`);
+                } finally {
+                    if (page && !page.isClosed()) {
+                        await page.close();
+                    }
+                }
             }
-        } //fim loop
-        return resultados;
-    } finally {
-        await browser.close();
-        await client.browser.session.stop({ sessionId: session.sessionId });
+        } finally {
+            try {
+                if (browser) {
+                    await browser.close();
+                }
+                if (session) {
+                    await client.browser.session.stop({ sessionId: session.sessionId });
+                    console.log(`Sessão: ${session.sessionId} | fechada`);
+                }
+            } catch (e) {
+                console.error(`Erro ao limpar infos:`, e);
+            }
+        }
     }
+
+    return resultados;
 }
