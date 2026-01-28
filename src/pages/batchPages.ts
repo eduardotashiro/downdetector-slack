@@ -29,10 +29,10 @@ const delay = (min = 4000, max = 9000) =>
 async function tentarAcessarServico(page: any, service: any) {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded",
-        timeout: 60000,
+        timeout: 80000,
     });
 
-    await page.waitForFunction(() => window.DD?.currentServiceProperties !== undefined, { timeout: 60000, polling: 800 });
+    await page.waitForFunction(() => window.DD?.currentServiceProperties !== undefined, { timeout: 80000, polling: 800 });
 
     return await page.evaluate(() => window.DD?.currentServiceProperties);
 }
@@ -42,16 +42,15 @@ export async function checkAllServices() {
     for (const service of SERVICES) {
         let session;
         let browser;
-        let sucesso = null;
+        let sucesso = false;
 
         try {
-           
             session = await client.browser.session.create();
             console.log(`Session:${session.sessionId} para ${service.name}`);
             browser = await chromium.connectOverCDP(session.cdpUrl as string);
             let context = browser.contexts()[0];
 
-            const tentativasMaximas = 5;
+            const tentativasMaximas = 3; 
             let tentativas = 0;
 
             while (tentativas < tentativasMaximas && !sucesso) {
@@ -71,7 +70,7 @@ export async function checkAllServices() {
                     }
                 } catch (e) {
                     tentativas++;
-                    console.log(`${service.name} | Tentativa ${tentativas} de ${tentativasMaximas} | O erro foi :`, e);
+                    console.log(`${service.name} | TENTATIVA ${tentativas} DE ${tentativasMaximas}`);
                 } finally {
                     if (page && !page.isClosed()) {
                         await page.close();
@@ -83,44 +82,13 @@ export async function checkAllServices() {
                 }
             }
 
+           
             if (!sucesso) {
-                console.log(`falhou em todas...`);
-
-                try {
-                    await browser.close();
-                    await client.browser.session.stop({ sessionId: session.sessionId });
-                    console.log(`Sessão: ${session.sessionId} | fechada`);
-                } catch (e) {
-                    console.error(`Erro ao fechar sessão, o erro foi :`, e);
-                }
-
-                session = await client.browser.session.create();
-                console.log(`Nova sessão: ${session.sessionId}`);
-                browser = await chromium.connectOverCDP(session.cdpUrl as string);
-                context = browser.contexts()[0];
-
-
-                let page = await context.newPage();
-                try {
-                    const dados = await tentarAcessarServico(page, service);
-
-                    if (dados) {
-                        resultados.push({
-                            nome: service.name,
-                            url: service.url,
-                            dados
-                        });
-                        console.log(`💀 ${service.name}: ${dados.status} (sessão nova)`);
-                        sucesso = true;
-                    }
-                } catch (e) {
-                    console.log(`${service.name} | DESISTO!!!!!!!!!!!!!!!!!.`);
-                } finally {
-                    if (page && !page.isClosed()) {
-                        await page.close();
-                    }
-                }
+                console.log(`${service.name} FALHOU EM TODAS AS TENTATIVAS, DESISTINDO...`);
             }
+
+        } catch (error) {
+            console.error(`Erro no ${service.name}:`, error);
         } finally {
             try {
                 if (browser) {
@@ -128,10 +96,10 @@ export async function checkAllServices() {
                 }
                 if (session) {
                     await client.browser.session.stop({ sessionId: session.sessionId });
-                    console.log(`Sessão: ${session.sessionId} | fechada`);
+                    console.log(`SESSÃO :${session.sessionId} FECHADA`);
                 }
             } catch (e) {
-                console.error(`Erro ao limpar infos:`, e);
+                console.error(`Erro ao limpar :`, e);
             }
         }
     }
