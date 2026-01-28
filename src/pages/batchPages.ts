@@ -38,19 +38,20 @@ async function tentarAcessarServico(page: any, service: any) {
 }
 export async function checkAllServices() {
     const resultados = [];
+    
+    let session;
+    let browser;
+    
+    try {
+        session = await client.browser.session.create();
+        console.log("Session:", session.sessionId);
+        
+        browser = await chromium.connectOverCDP(session.cdpUrl as string);
+        let context = browser.contexts()[0];
 
-    for (const service of SERVICES) {
-        let session;
-        let browser;
-        let sucesso = false;
-
-        try {
-            session = await client.browser.session.create();
-            console.log(`Session:${session.sessionId} para ${service.name}`);
-            browser = await chromium.connectOverCDP(session.cdpUrl as string);
-            let context = browser.contexts()[0];
-
-            const tentativasMaximas = 3; 
+        for (const service of SERVICES) {
+            let sucesso = false;
+            const tentativasMaximas = 3;
             let tentativas = 0;
 
             while (tentativas < tentativasMaximas && !sucesso) {
@@ -82,25 +83,24 @@ export async function checkAllServices() {
                 }
             }
 
-           
             if (!sucesso) {
                 console.log(`${service.name} FALHOU EM TODAS AS TENTATIVAS, DESISTINDO...`);
             }
-
-        } catch (error) {
-            console.error(`Erro no ${service.name}:`, error);
-        } finally {
-            try {
-                if (browser) {
-                    await browser.close();
-                }
-                if (session) {
-                    await client.browser.session.stop({ sessionId: session.sessionId });
-                    console.log(`SESSÃO :${session.sessionId} FECHADA`);
-                }
-            } catch (e) {
-                console.error(`Erro ao limpar :`, e);
+        }
+        
+    } catch (error) {
+            console.error(`ERRO CT`,error);
+    } finally {
+        try {
+            if (browser) {
+                await browser.close();
             }
+            if (session) {
+                await client.browser.session.stop({ sessionId: session.sessionId });
+                console.log(`✅ SESSÃO ÚNICA FECHADA: ${session.sessionId}`);
+            }
+        } catch (e) {
+            console.error(`Erro ao limpar :`, e);
         }
     }
 
