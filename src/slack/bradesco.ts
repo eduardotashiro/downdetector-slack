@@ -16,51 +16,6 @@ export async function tratarBradesco(services: any) {
     const status = dados.status;
     const service = dados?.company
 
-    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.WARNING) && !bradescoIncidente) {
-        bradescoIncidente = {
-            inicio: Date.now(),
-            nivel: status,
-            alertaEnviado: false
-        }
-
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} DETECTADO ! | INICIANDO CONTAGEM...`)
-        return
-    }
-
-    if (status === ServiceStatus.WARNING && bradescoIncidente && !bradescoIncidente.alertaEnviado) {
-        bradescoIncidente.nivel = ServiceStatus.WARNING
-
-        const tempInterv: number = Date.now() - bradescoIncidente.inicio;
-        const uma_hora: number = 3600000;
-
-        if (tempInterv < uma_hora) {
-            console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} NÃO COMPLETOU 1H !`)
-            return
-        }
-
-        const emoji = ":warning:";
-        const txt = "Instabilidade";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(bradescoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
-        });
-
-        bradescoIncidente.alertaEnviado = true;
-
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} ENVIADO NO SLACK !`);
-        return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.WARNING && bradescoIncidente?.nivel === ServiceStatus.DANGER) {
-        console.log(`INSTABILIDADE EM ${service} FOI DE ${ServiceStatus.DANGER} PARA ${ServiceStatus.WARNING}, SEGUIMOS MONITORANDO !`)
-        return
-    }
-
-
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !bradescoIncidente) {
         bradescoIncidente = {
@@ -76,36 +31,8 @@ export async function tratarBradesco(services: any) {
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
         bradescoIncidente.alertaEnviado = true;
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} ENVIADO NO SLACK !`);
-        return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING -> DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && bradescoIncidente && bradescoIncidente.nivel === ServiceStatus.WARNING) {
-        bradescoIncidente.nivel = ServiceStatus.DANGER;
-
-        const emojii = ":alert:";
-        const txtt = "critic";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
-        });
-
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
-
-        bradescoIncidente.alertaEnviado = true
         return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING || DANGER e volta para o SUCCESS *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && bradescoIncidente && bradescoIncidente.nivel === ServiceStatus.WARNING && !bradescoIncidente.alertaEnviado) {
-        bradescoIncidente.nivel = ServiceStatus.SUCCESS
-        console.log(`${service} - OSCILAÇÃO DETECTADA, ZERANDO CONTAGEM !`)
-
-        bradescoIncidente = null
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
@@ -138,7 +65,7 @@ export async function tratarBradesco(services: any) {
 
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.WARNING || status === ServiceStatus.DANGER) && bradescoIncidente) {
+    if ((status === ServiceStatus.DANGER) && bradescoIncidente) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }

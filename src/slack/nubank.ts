@@ -16,51 +16,6 @@ export async function tratarNubank(services: any) {
     const status = dados.status;
     const service = dados?.company
 
-    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.WARNING) && !NubankIncidente) {
-        NubankIncidente = {
-            inicio: Date.now(),
-            nivel: status,
-            alertaEnviado: false
-        }
-
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} DETECTADO ! | INICIANDO CONTAGEM...`)
-        return
-    }
-
-    if (status === ServiceStatus.WARNING && NubankIncidente && !NubankIncidente.alertaEnviado) {
-        NubankIncidente.nivel = ServiceStatus.WARNING
-
-        const tempInterv: number = Date.now() - NubankIncidente.inicio;
-        const uma_hora: number = 3600000;
-
-        if (tempInterv < uma_hora) {
-            console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} NÃO COMPLETOU 1H !`)
-            return
-        }
-
-        const emoji = ":warning:";
-        const txt = "Instabilidade";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date(NubankIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
-        });
-
-        NubankIncidente.alertaEnviado = true;
-
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} ENVIADO NO SLACK !`);
-        return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.WARNING && NubankIncidente?.nivel === ServiceStatus.DANGER) {
-        console.log(`INSTABILIDADE EM ${service} FOI DE ${ServiceStatus.DANGER} PARA ${ServiceStatus.WARNING}, SEGUIMOS MONITORANDO !`)
-        return
-    }
-
-
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !NubankIncidente) {
         NubankIncidente = {
@@ -76,36 +31,8 @@ export async function tratarNubank(services: any) {
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
         NubankIncidente.alertaEnviado = true;
-        console.log(`STATUS ${ServiceStatus.WARNING} PARA ${service} ENVIADO NO SLACK !`);
-        return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING -> DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && NubankIncidente && NubankIncidente.nivel === ServiceStatus.WARNING) {
-        NubankIncidente.nivel = ServiceStatus.DANGER;
-
-        const emojii = ":alert:";
-        const txtt = "critic";
-
-        await client.chat.postMessage({
-            channel: config.slack.channel,
-            text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
-        });
-
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
-
-        NubankIncidente.alertaEnviado = true
         return;
-    }
-
-
-    /*-*-*-*-*-*-*-* WARNING || DANGER e volta para o SUCCESS *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && NubankIncidente && NubankIncidente.nivel === ServiceStatus.WARNING && !NubankIncidente.alertaEnviado) {
-        NubankIncidente.nivel = ServiceStatus.SUCCESS
-        console.log(`${service} - OSCILAÇÃO DETECTADA, ZERANDO CONTAGEM !`)
-
-        NubankIncidente = null
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
@@ -138,7 +65,7 @@ export async function tratarNubank(services: any) {
 
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.WARNING || status === ServiceStatus.DANGER) && NubankIncidente) {
+    if ((status === ServiceStatus.DANGER) && NubankIncidente) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
