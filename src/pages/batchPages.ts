@@ -1,9 +1,7 @@
-// import { chromium } from "playwright-extra";
-// import stealth from "puppeteer-extra-plugin-stealth";
 import { chromium } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-// chromium.use(stealth());
+
 
 const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
@@ -27,83 +25,64 @@ const delay = (min = 4000, max = 9000) =>
     );
 
 
-async function tentarAcessarServico(page: any, service: any) {
+async function checkServiceStatus(page: any, service: { name: string, url: string }) {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded",
-        timeout: 80000,
+        timeout: 60000,
     });
 
-    await page.waitForFunction(() => window.DD?.currentServiceProperties !== undefined, { timeout: 80000, polling: 800 });
+    await page.waitForFunction(() => window.DD?.currentServiceProperties !== undefined, { timeout: 30000 });
 
     return await page.evaluate(() => window.DD?.currentServiceProperties);
 }
+
+
 export async function checkAllServices() {
-    const resultados = [];
-    
+    const results:any = [];
     let session;
     let browser;
-    
     try {
-        session = await client.browser.session.create();
+        session = await client.browser.session.create({
+            country: "CA",
+            type: "hosted",
+        });
+
         console.log("Session:", session.sessionId);
-        
+        console.log("CDP URL:", session.cdpUrl);
+
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
-        let context = browser.contexts()[0];
 
-        for (const service of SERVICES) {
-            let sucesso = false;
-            const tentativasMaximas = 3;
-            let tentativas = 0;
+        const context = browser.contexts()[0];
 
-            while (tentativas < tentativasMaximas && !sucesso) {
-                let page = await context.newPage();
+   for (const service of SERVICES) {
+            const page = await context.newPage();
+            try {
+                const data = await checkServiceStatus(page, service);
+                if (data) {
+                    results.push({ 
+                        name: service.name,
+                        url: service.url, 
+                        data });
+                     console.log(`💀 ${service.name}: ${data.status}`);
+                }
                 
-                try {
-                    const dados = await tentarAcessarServico(page, service);
-
-                    if (dados) {
-                        resultados.push({
-                            nome: service.name,
-                            url: service.url,
-                            dados
-                        });
-                        console.log(`💀 ${service.name}: ${dados.status}`);
-                        sucesso = true;
-                    }
-                } catch (e) {
-                    tentativas++;
-                    console.log(`${service.name} | TENTATIVA ${tentativas} DE ${tentativasMaximas}`);
-                } finally {
-                    if (page && !page.isClosed()) {
-                        await page.close();
-                    }
-                }
-
-                if (!sucesso && tentativas < tentativasMaximas) {
-                    await delay(4000, 12000);
-                }
+            } catch (error: any) {
+                console.log(`${service.name}: ${error.message}`);
+            } finally {
+                await page.close();
             }
-
-            if (!sucesso) {
-                console.log(`${service.name} FALHOU EM TODAS AS TENTATIVAS, DESISTINDO...`);
-            }
+            await delay(5000 + Math.random() * 5000);
         }
-        
     } catch (error) {
-            console.error(`ERRO CT`,error);
+        console.error("Session error:", error);
     } finally {
-        try {
-            if (browser) {
-                await browser.close();
-            }
-            if (session) {
-                await client.browser.session.stop({ sessionId: session.sessionId });
-                console.log(`✅ SESSÃO ÚNICA FECHADA: ${session.sessionId}`);
-            }
-        } catch (e) {
-            console.error(`Erro ao limpar :`, e);
+        if (browser) {
+            await browser.close();
+        }
+        if (session) {
+            await client.browser.session.stop({ sessionId: session.sessionId });
+            console.log("Session stopp:", session.sessionId);
         }
     }
-
-    return resultados;
+    return results;
 }
