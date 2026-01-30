@@ -1,6 +1,7 @@
 export enum ServiceStatus {
     SUCCESS = "success",
-    DANGER = "danger"
+    DANGER = "danger",
+    WARNING = "warning"
 }
 
 export enum ServiceName {
