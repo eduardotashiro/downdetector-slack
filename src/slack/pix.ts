@@ -1,7 +1,7 @@
 import { WebClient } from "@slack/web-api";
 import { config } from "../config/env.js";
 import { ServiceStatus } from "./types.js";
-import {registrarWarningGlobal} from "./warningGlobal.js"
+// import {registrarWarningGlobal} from "./warningGlobal.js"
 
 const client = new WebClient(config.slack.botToken);
 
