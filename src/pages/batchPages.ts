@@ -8,20 +8,18 @@ const client = new BrowsercashSDK({
 });
 
 const SERVICES = [
-    { name: "Pix", url: "https://downdetector.com.br/fora-do-ar/pix/" },
-    { name: "Itaú", url: "https://downdetector.com.br/fora-do-ar/banco-itau/" },
-    { name: "Bradesco", url: "https://downdetector.com.br/fora-do-ar/bradesco/" },
-    { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/" },
-    { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/" },
-    { name: "Banco do Brasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/" },
-    { name: "Mercado Pago", url: "https://downdetector.com.br/fora-do-ar/mercadopago/" },
-    { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" }
+    { name: "Pix", url: "https://downdetector.com.br/fora-do-ar/pix/"},
+    { name: "Banco Itaú", url: "https://downdetector.com.br/fora-do-ar/banco-itau/"},
+    { name: "Bradesco", url: "https://downdetector.com.br/fora-do-ar/bradesco/"},
+    { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/"},
+    { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/"},
+    { name: "Banco do Brasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/"},
+    { name: "Mercado Pago", url: "https://downdetector.com.br/fora-do-ar/mercadopago/"},
+    { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/"}
 ];
 
 
-const delay = (min = 4000, max = 9000) =>
-    new Promise(res =>
-        setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min)
+const delay = (min = 4000, max = 9000) => new Promise(res => setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min)
     );
 
 
@@ -71,7 +69,7 @@ export async function checkAllServices() {
             } finally {
                 await page.close();
             }
-            await delay(5000 + Math.random() * 5000);
+            await delay(2000, 4000);
         }
     } catch (error) {
         console.error("Session error:", error);

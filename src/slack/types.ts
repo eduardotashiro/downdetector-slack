@@ -1,6 +1,7 @@
 export enum ServiceStatus {
     SUCCESS = "success",
-    DANGER = "danger"
+    DANGER = "danger",
+    WARNING = "warning"
 }
 
 export enum ServiceName {
@@ -8,8 +9,8 @@ export enum ServiceName {
     BRADESCO = "Bradesco",
     SANTANDER = "Santander",
     PIX = "Pix",
-    PICPAY = "PicPay",
-    ITAU = "Itaú",
+    PICPAY = "Pic Pay",
+    ITAU = "Banco Itaú",
     NUBANK = "Nubank",
     MERCADO_PAGO = "Mercado Pago"
 }

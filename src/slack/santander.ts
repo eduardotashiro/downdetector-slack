@@ -12,9 +12,9 @@ let santanderIncidente: {
 
 /*-*-*-*-*-*-*-* INICIO SANTANDER *-*-*-*-*-*-*-*/
 export async function tratarSantander(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const service = dados?.company
+    const data = services.data;
+    const status = data.status;
+    const service = data.company;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !santanderIncidente) {
@@ -47,7 +47,7 @@ export async function tratarSantander(services: any) {
             duracaoTexto = `${horas}h ${minutosRestantes}min`;
         } else if (minutos > 0) {
             duracaoTexto = `${minutos}min`;
-        } 
+        }
 
         const inicioIncidente = new Date(santanderIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });

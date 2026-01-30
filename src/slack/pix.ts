@@ -1,6 +1,7 @@
 import { WebClient } from "@slack/web-api";
 import { config } from "../config/env.js";
 import { ServiceStatus } from "./types.js";
+import {registrarWarningGlobal} from "./warningGlobal.js"
 
 const client = new WebClient(config.slack.botToken);
 
@@ -12,9 +13,12 @@ let pixIncidente: {
 
 /*-*-*-*-*-*-*-* INICIO PIX *-*-*-*-*-*-*-*/
 export async function tratarPix(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const service = dados?.company
+    const data = services.data;
+    const status = data.status;
+    const service = data.company;
+
+    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
+// registrarWarningGlobal(services)
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !pixIncidente) {
