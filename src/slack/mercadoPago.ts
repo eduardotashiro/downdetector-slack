@@ -4,24 +4,24 @@ import { ServiceStatus } from "./types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let MercadoPagoIncidente: {
-    inicio: number;
-    nivel: ServiceStatus;
-    alertaEnviado: boolean;
+let MercadoPagoIncident: {
+    startedAt: number;
+    level: ServiceStatus;
+    alertSent: boolean;
 } | null = null;
 
 /*-*-*-*-*-*-*-* INICIO MERCADOPAGO *-*-*-*-*-*-*-*/
-export async function tratarMercadoPago(services: any) {
+export async function handleMercadoPago(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
-    const service = data.company;
+    const service = services.name;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !MercadoPagoIncidente) {
-        MercadoPagoIncidente = {
-            inicio: Date.now(),
-            nivel: status,
-            alertaEnviado: false
+    if (status === ServiceStatus.DANGER && !MercadoPagoIncident) {
+        MercadoPagoIncident = {
+            startedAt: Date.now(),
+            level: status,
+            alertSent: false
         }
 
         const emojii = ":alert:";
@@ -30,14 +30,14 @@ export async function tratarMercadoPago(services: any) {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        MercadoPagoIncidente.alertaEnviado = true;
+        MercadoPagoIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && MercadoPagoIncidente && MercadoPagoIncidente.alertaEnviado) {
-        const duracao = Date.now() - MercadoPagoIncidente.inicio;
+    if (status === ServiceStatus.SUCCESS && MercadoPagoIncident && MercadoPagoIncident.alertSent) {
+        const duracao = Date.now() - MercadoPagoIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function tratarMercadoPago(services: any) {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(MercadoPagoIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(MercadoPagoIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,18 +59,15 @@ export async function tratarMercadoPago(services: any) {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        MercadoPagoIncidente = null;
+        MercadoPagoIncident = null;
         return;
     }
 
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && MercadoPagoIncidente) {
+    if ((status === ServiceStatus.DANGER) && MercadoPagoIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
-
-    /*-*-*-*-*-*-*-* TUDO OK *-*-*-*-*-*-*-*/
-    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status}`);
 }
 /*-*-*-*-*-*-*-* FIM MERCADOPAGO *-*-*-*-*-*-*-*/

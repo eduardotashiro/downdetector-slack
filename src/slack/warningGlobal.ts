@@ -13,7 +13,7 @@
 // export async function registrarWarningGlobal(services:any) {
 //     const data = services.data;
 //     const status = data.status;
-//     const service = data.company;
+//     const service = services.name;
 
 //     const agora = Date.now();
 //     if (!janelaInicio) {

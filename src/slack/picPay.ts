@@ -4,24 +4,24 @@ import { ServiceStatus } from "./types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let PicPayIncidente: {
-    inicio: number;
-    nivel: ServiceStatus;
-    alertaEnviado: boolean;
+let PicPayIncident: {
+    startedAt: number;
+    level: ServiceStatus;
+    alertSent: boolean;
 } | null = null;
 
 /*-*-*-*-*-*-*-* INICIO PICPAY *-*-*-*-*-*-*-*/
-export async function tratarPicPay(services: any) {
+export async function handlePicPay(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
-    const service = data.company;
+    const service = services.name;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !PicPayIncidente) {
-        PicPayIncidente = {
-            inicio: Date.now(),
-            nivel: status,
-            alertaEnviado: false
+    if (status === ServiceStatus.DANGER && !PicPayIncident) {
+        PicPayIncident = {
+            startedAt: Date.now(),
+            level: status,
+            alertSent: false
         }
 
         const emojii = ":alert:";
@@ -30,14 +30,14 @@ export async function tratarPicPay(services: any) {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        PicPayIncidente.alertaEnviado = true;
+        PicPayIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && PicPayIncidente && PicPayIncidente.alertaEnviado) {
-        const duracao = Date.now() - PicPayIncidente.inicio;
+    if (status === ServiceStatus.SUCCESS && PicPayIncident && PicPayIncident.alertSent) {
+        const duracao = Date.now() - PicPayIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function tratarPicPay(services: any) {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(PicPayIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(PicPayIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,18 +59,15 @@ export async function tratarPicPay(services: any) {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        PicPayIncidente = null;
+        PicPayIncident = null;
         return;
     }
 
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && PicPayIncidente) {
+    if ((status === ServiceStatus.DANGER) && PicPayIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
-
-    /*-*-*-*-*-*-*-* TUDO OK *-*-*-*-*-*-*-*/
-    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status}`);
 }
 /*-*-*-*-*-*-*-* FIM PICPAY *-*-*-*-*-*-*-*/

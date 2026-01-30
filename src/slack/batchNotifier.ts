@@ -1,13 +1,13 @@
 import { checkAllServices } from "../pages/batchPages.js";
-import { tratarMercadoPago } from "./mercadoPago.js";
-import { tratarSantander } from "./santander.js";
-import { tratarBradesco } from "./bradesco.js";
-import { tratarPicPay } from "./picPay.js";
-import { tratarNubank } from "./nubank.js";
-import { tratarItau } from "./itau.js";
-import { tratarPix } from "./pix.js";
-import { tratarBB } from "./bancoDoBrasil.js";
 import { ServiceName } from "./types.js";
+import { handleBancoDoBrasil } from "./bancoDoBrasil.js";
+import { handleMercadoPago } from "./mercadoPago.js";
+import { handleSantander } from "./santander.js";
+import { handleBradesco } from "./bradesco.js";
+import { handlePicPay } from "./picPay.js";
+import { handleNubank } from "./nubank.js";
+import { handleItau } from "./itau.js";
+import { handlePix } from "./pix.js";
 
 export async function CheckAll() {
     const allData = await checkAllServices();
@@ -15,28 +15,28 @@ export async function CheckAll() {
 
     for (const bank of allData) {
         if (bank.name === ServiceName.PIX) {
-            await tratarPix(bank);
+            await handlePix(bank);
         }
         else if (bank.name === ServiceName.ITAU) {
-            await tratarItau(bank);
+            await handleItau(bank);
         }
         else if (bank.name === ServiceName.BRADESCO) {
-            await tratarBradesco(bank);
+            await handleBradesco(bank);
         }
         else if (bank.name === ServiceName.SANTANDER) {
-            await tratarSantander(bank);
+            await handleSantander(bank);
         }
         else if (bank.name === ServiceName.BANCO_DO_BRASIL) {
-            await tratarBB(bank);
+            await handleBancoDoBrasil(bank);
         }
         else if (bank.name === ServiceName.NUBANK) {
-            await tratarNubank(bank);
+            await handleNubank(bank);
         }
         else if (bank.name === ServiceName.MERCADO_PAGO) {
-            await tratarMercadoPago(bank);
+            await handleMercadoPago(bank);
         }
         else if (bank.name === ServiceName.PICPAY) {
-            await tratarPicPay(bank);
+            await handlePicPay(bank);
         }
     }
 }

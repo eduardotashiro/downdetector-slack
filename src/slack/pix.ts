@@ -5,27 +5,27 @@ import { ServiceStatus } from "./types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let pixIncidente: {
-    inicio: number;
-    nivel: ServiceStatus;
-    alertaEnviado: boolean;
+let pixIncident: {
+    startedAt: number;
+    level: ServiceStatus;
+    alertSent: boolean;
 } | null = null;
 
 /*-*-*-*-*-*-*-* INICIO PIX *-*-*-*-*-*-*-*/
-export async function tratarPix(services: any) {
+export async function handlePix(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
-    const service = data.company;
+    const service = services.name;
 
     /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-// registrarWarningGlobal(services)
+    // registrarWarningGlobal(services)
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !pixIncidente) {
-        pixIncidente = {
-            inicio: Date.now(),
-            nivel: status,
-            alertaEnviado: false
+    if (status === ServiceStatus.DANGER && !pixIncident) {
+        pixIncident = {
+            startedAt: Date.now(),
+            level: status,
+            alertSent: false
         }
 
         const emojii = ":alert:";
@@ -34,14 +34,14 @@ export async function tratarPix(services: any) {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        pixIncidente.alertaEnviado = true;
+        pixIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && pixIncidente && pixIncidente.alertaEnviado) {
-        const duracao = Date.now() - pixIncidente.inicio;
+    if (status === ServiceStatus.SUCCESS && pixIncident && pixIncident.alertSent) {
+        const duracao = Date.now() - pixIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -51,9 +51,9 @@ export async function tratarPix(services: any) {
             duracaoTexto = `${horas}h ${minutosRestantes}min`;
         } else if (minutos > 0) {
             duracaoTexto = `${minutos}min`;
-        } 
+        }
 
-        const inicioIncidente = new Date(pixIncidente.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(pixIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -63,17 +63,15 @@ export async function tratarPix(services: any) {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        pixIncidente = null;
+        pixIncident = null;
         return;
     }
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && pixIncidente) {
+    if ((status === ServiceStatus.DANGER) && pixIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
 
-    /*-*-*-*-*-*-*-* TUDO OK *-*-*-*-*-*-*-*/
-    console.log(`${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_paulo" })} | ${service} OK | Status: ${status}`);
 }
 /*-*-*-*-*-*-*-* FIM PIX *-*-*-*-*-*-*-*/
