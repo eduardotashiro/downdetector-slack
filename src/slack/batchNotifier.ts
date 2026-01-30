@@ -13,30 +13,30 @@ export async function CheckAll() {
     const allData = await checkAllServices();
     if (!allData) return;
 
-    for (const banco of allData) {
-        if (banco.nome === ServiceName.PIX) {
-            await tratarPix(banco);
+    for (const bank of allData) {
+        if (bank.name === ServiceName.PIX) {
+            await tratarPix(bank);
         }
-        else if (banco.nome === ServiceName.ITAU) {
-            await tratarItau(banco);
+        else if (bank.name === ServiceName.ITAU) {
+            await tratarItau(bank);
         }
-        else if (banco.nome === ServiceName.BRADESCO) {
-            await tratarBradesco(banco);
+        else if (bank.name === ServiceName.BRADESCO) {
+            await tratarBradesco(bank);
         }
-        else if (banco.nome === ServiceName.SANTANDER) {
-            await tratarSantander(banco);
+        else if (bank.name === ServiceName.SANTANDER) {
+            await tratarSantander(bank);
         }
-        else if (banco.nome === ServiceName.BANCO_DO_BRASIL) {
-            await tratarBB(banco);
+        else if (bank.name === ServiceName.BANCO_DO_BRASIL) {
+            await tratarBB(bank);
         }
-        else if (banco.nome === ServiceName.NUBANK) {
-            await tratarNubank(banco);
+        else if (bank.name === ServiceName.NUBANK) {
+            await tratarNubank(bank);
         }
-        else if (banco.nome === ServiceName.MERCADO_PAGO) {
-            await tratarMercadoPago(banco);
+        else if (bank.name === ServiceName.MERCADO_PAGO) {
+            await tratarMercadoPago(bank);
         }
-        else if (banco.nome === ServiceName.PICPAY) {
-            await tratarPicPay(banco);
+        else if (bank.name === ServiceName.PICPAY) {
+            await tratarPicPay(bank);
         }
     }
 }
