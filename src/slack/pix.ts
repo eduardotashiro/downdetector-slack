@@ -13,12 +13,12 @@ let pixIncidente: {
 
 /*-*-*-*-*-*-*-* INICIO PIX *-*-*-*-*-*-*-*/
 export async function tratarPix(services: any) {
-    const dados = services.dados;
-    const status = dados.status;
-    const service = dados.company;
+    const data = services.data;
+    const status = data.status;
+    const service = data.company;
 
     /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-registrarWarningGlobal(services)
+// registrarWarningGlobal(services)
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !pixIncidente) {
