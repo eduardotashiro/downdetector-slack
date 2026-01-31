@@ -1,15 +1,21 @@
+import { checkWarningGlobal, registerWarningGlobal } from "./warningGlobal.js";
+import { ServiceName, ServiceStatus } from "./types.js";
 import { checkAllServices } from "../pages/batchPages.js";
-import { ServiceName } from "./types.js";
-import { checkWarningGlobal,registerWarningGlobal } from "./warningGlobal.js";
-import { handleBancoDoBrasil }from"./services/bancoDoBrasil.js";
-import { handleMercadoPago } from"./services/mercadoPago.js";
-import { handleSantander } from "./services/santander.js";
-import { handleBradesco } from "./services/bradesco.js";
-import { handlePicPay } from  "./services/picPay.js";
-import { handleNubank } from "./services/nubank.js";
-import { handleItau } from  "./services/itau.js";
-import { handlePix } from  "./services/pix.js";
+import { IncidentMonitor } from "./incidentMonitor.js";
+import { WebClient } from "@slack/web-api";
+import { config } from "../config/env.js";
 
+const client = new WebClient(config.slack.botToken)
+
+
+const pixMonitor = new IncidentMonitor(client, config.slack.channel)
+const nubankMonitor = new IncidentMonitor(client, config.slack.channel)
+const bradescoMonitor = new IncidentMonitor(client, config.slack.channel)
+const santanderMonitor = new IncidentMonitor(client, config.slack.channel)
+const bbMonitor = new IncidentMonitor(client, config.slack.channel)
+const itauMonitor = new IncidentMonitor(client, config.slack.channel)
+const mercadoPagoMonitor = new IncidentMonitor(client, config.slack.channel)
+const picpayMonitor = new IncidentMonitor(client, config.slack.channel)
 
 export async function CheckAll() {
 
@@ -21,28 +27,28 @@ export async function CheckAll() {
 
     for (const bank of allData) {
         if (bank.name === ServiceName.PIX) {
-            await handlePix(bank);
-        }
-        else if (bank.name === ServiceName.ITAU) {
-            await handleItau(bank);
-        }
-        else if (bank.name === ServiceName.BRADESCO) {
-            await handleBradesco(bank);
-        }
-        else if (bank.name === ServiceName.SANTANDER) {
-            await handleSantander(bank);
-        }
-        else if (bank.name === ServiceName.BANCO_DO_BRASIL) {
-            await handleBancoDoBrasil(bank);
+            await pixMonitor.handle(bank)
         }
         else if (bank.name === ServiceName.NUBANK) {
-            await handleNubank(bank);
+            await nubankMonitor.handle(bank)
+        }
+        else if (bank.name === ServiceName.BRADESCO) {
+            await bradescoMonitor.handle(bank)
+        }
+        else if (bank.name === ServiceName.SANTANDER) {
+            await santanderMonitor.handle(bank)
+        }
+        else if (bank.name === ServiceName.BANCO_DO_BRASIL) {
+            await bbMonitor.handle(bank)
+        }
+        else if (bank.name === ServiceName.ITAU) {
+            await itauMonitor.handle(bank)
         }
         else if (bank.name === ServiceName.MERCADO_PAGO) {
-            await handleMercadoPago(bank);
+            await mercadoPagoMonitor.handle(bank)
         }
         else if (bank.name === ServiceName.PICPAY) {
-            await handlePicPay(bank);
+            await picpayMonitor.handle(bank)
         }
     }
 

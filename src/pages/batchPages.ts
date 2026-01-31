@@ -19,8 +19,7 @@ const SERVICES = [
 ];
 
 
-const delay = (min = 4000, max = 9000) => new Promise(res => setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min)
-    );
+const delay = (min = 4000, max = 9000) => new Promise(res => setTimeout(res, Math.floor(Math.random() * (max - min + 1)) + min));
 
 
 async function checkServiceStatus(page: any, service: { name: string, url: string }) {
