@@ -1,24 +1,24 @@
 import { WebClient } from "@slack/web-api";
-import { config } from "../config/env.js";
-import { ServiceStatus } from "./types.js";
+import { config } from "../../config/env.js";
+import { ServiceStatus } from "../types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let itauIncident: {
+let BancoDoBrasilIncident: {
     startedAt: number;
     level: ServiceStatus;
     alertSent: boolean;
 } | null = null;
 
-/*-*-*-*-*-*-*-* INICIO ITAU *-*-*-*-*-*-*-*/
-export async function handleItau(services: any): Promise<void> {
+/*-*-*-*-*-*-*-* INICIO BB *-*-*-*-*-*-*-*/
+export async function handleBancoDoBrasil(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
     const service = services.name;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !itauIncident) {
-        itauIncident = {
+    if (status === ServiceStatus.DANGER && !BancoDoBrasilIncident) {
+        BancoDoBrasilIncident = {
             startedAt: Date.now(),
             level: status,
             alertSent: false
@@ -30,14 +30,14 @@ export async function handleItau(services: any): Promise<void> {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        itauIncident.alertSent = true;
+        BancoDoBrasilIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && itauIncident && itauIncident.alertSent) {
-        const duracao = Date.now() - itauIncident.startedAt;
+    if (status === ServiceStatus.SUCCESS && BancoDoBrasilIncident && BancoDoBrasilIncident.alertSent) {
+        const duracao = Date.now() - BancoDoBrasilIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function handleItau(services: any): Promise<void> {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(itauIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(BancoDoBrasilIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,14 +59,14 @@ export async function handleItau(services: any): Promise<void> {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        itauIncident = null;
+        BancoDoBrasilIncident = null;
         return;
     }
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && itauIncident) {
+    if ((status === ServiceStatus.DANGER) && BancoDoBrasilIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
 }
-/*-*-*-*-*-*-*-* FIM ITAU *-*-*-*-*-*-*-*/
+/*-*-*-*-*-*-*-* FIM BB *-*-*-*-*-*-*-*/

@@ -1,24 +1,24 @@
 import { WebClient } from "@slack/web-api";
-import { config } from "../config/env.js";
-import { ServiceStatus } from "./types.js";
+import { config } from "../../config/env.js";
+import { ServiceStatus } from "../types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let NubankIncident: {
+let pixIncident: {
     startedAt: number;
     level: ServiceStatus;
     alertSent: boolean;
 } | null = null;
 
-/*-*-*-*-*-*-*-* INICIO NUBANK *-*-*-*-*-*-*-*/
-export async function handleNubank(services: any): Promise<void> {
+/*-*-*-*-*-*-*-* INICIO PIX *-*-*-*-*-*-*-*/
+export async function handlePix(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
     const service = services.name;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !NubankIncident) {
-        NubankIncident = {
+    if (status === ServiceStatus.DANGER && !pixIncident) {
+        pixIncident = {
             startedAt: Date.now(),
             level: status,
             alertSent: false
@@ -30,14 +30,14 @@ export async function handleNubank(services: any): Promise<void> {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        NubankIncident.alertSent = true;
+        pixIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && NubankIncident && NubankIncident.alertSent) {
-        const duracao = Date.now() - NubankIncident.startedAt;
+    if (status === ServiceStatus.SUCCESS && pixIncident && pixIncident.alertSent) {
+        const duracao = Date.now() - pixIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function handleNubank(services: any): Promise<void> {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(NubankIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(pixIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,15 +59,15 @@ export async function handleNubank(services: any): Promise<void> {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        NubankIncident = null;
+        pixIncident = null;
         return;
     }
 
-
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && NubankIncident) {
+    if ((status === ServiceStatus.DANGER) && pixIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
+
 }
-/*-*-*-*-*-*-*-* FIM NUBANK *-*-*-*-*-*-*-*/
+/*-*-*-*-*-*-*-* FIM PIX *-*-*-*-*-*-*-*/

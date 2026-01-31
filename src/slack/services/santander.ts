@@ -1,24 +1,24 @@
 import { WebClient } from "@slack/web-api";
-import { config } from "../config/env.js";
-import { ServiceStatus } from "./types.js";
+import { config } from "../../config/env.js";
+import { ServiceStatus } from "../types.js";
 
 const client = new WebClient(config.slack.botToken);
-
-let bradescoIncident: {
+//       
+let santanderIncident: {
     startedAt: number;
     level: ServiceStatus;
     alertSent: boolean;
 } | null = null;
 
-/*-*-*-*-*-*-*-* INICIO BRADESCO *-*-*-*-*-*-*-*/
-export async function handleBradesco(services: any): Promise<void> {
+/*-*-*-*-*-*-*-* INICIO SANTANDER *-*-*-*-*-*-*-*/
+export async function handleSantander(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
-    const service = services.name;
+    const service = services.name;;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !bradescoIncident) {
-        bradescoIncident = {
+    if (status === ServiceStatus.DANGER && !santanderIncident) {
+        santanderIncident = {
             startedAt: Date.now(),
             level: status,
             alertSent: false
@@ -30,14 +30,14 @@ export async function handleBradesco(services: any): Promise<void> {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        bradescoIncident.alertSent = true;
+        santanderIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && bradescoIncident && bradescoIncident.alertSent) {
-        const duracao = Date.now() - bradescoIncident.startedAt;
+    if (status === ServiceStatus.SUCCESS && santanderIncident && santanderIncident.alertSent) {
+        const duracao = Date.now() - santanderIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function handleBradesco(services: any): Promise<void> {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(bradescoIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(santanderIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,16 +59,15 @@ export async function handleBradesco(services: any): Promise<void> {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        bradescoIncident = null;
+        santanderIncident = null;
         return;
     }
 
-
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && bradescoIncident) {
+    if ((status === ServiceStatus.DANGER) && santanderIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
 
 }
-/*-*-*-*-*-*-*-* FIM BRADESCO *-*-*-*-*-*-*-*/
+/*-*-*-*-*-*-*-* FIM SANTANDER *-*-*-*-*-*-*-*/

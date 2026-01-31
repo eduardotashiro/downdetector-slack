@@ -1,24 +1,24 @@
 import { WebClient } from "@slack/web-api";
-import { config } from "../config/env.js";
-import { ServiceStatus } from "./types.js";
+import { config } from "../../config/env.js";
+import { ServiceStatus } from "../types.js";
 
 const client = new WebClient(config.slack.botToken);
 
-let MercadoPagoIncident: {
+let PicPayIncident: {
     startedAt: number;
     level: ServiceStatus;
     alertSent: boolean;
 } | null = null;
 
-/*-*-*-*-*-*-*-* INICIO MERCADOPAGO *-*-*-*-*-*-*-*/
-export async function handleMercadoPago(services: any): Promise<void> {
+/*-*-*-*-*-*-*-* INICIO PICPAY *-*-*-*-*-*-*-*/
+export async function handlePicPay(services: any): Promise<void> {
     const data = services.data;
     const status = data.status;
     const service = services.name;
 
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.DANGER && !MercadoPagoIncident) {
-        MercadoPagoIncident = {
+    if (status === ServiceStatus.DANGER && !PicPayIncident) {
+        PicPayIncident = {
             startedAt: Date.now(),
             level: status,
             alertSent: false
@@ -30,14 +30,14 @@ export async function handleMercadoPago(services: any): Promise<void> {
             channel: config.slack.channel,
             text: `${emojii} *Nível Crítico - ${service}*\n\n• *Status:* \`${txtt}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
         });
-        MercadoPagoIncident.alertSent = true;
+        PicPayIncident.alertSent = true;
         console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
         return;
     }
 
     /*-*-*-*-*-*-*-* PROBLEMA RESOLVIDO (volta pra success) *-*-*-*-*-*-*-*/
-    if (status === ServiceStatus.SUCCESS && MercadoPagoIncident && MercadoPagoIncident.alertSent) {
-        const duracao = Date.now() - MercadoPagoIncident.startedAt;
+    if (status === ServiceStatus.SUCCESS && PicPayIncident && PicPayIncident.alertSent) {
+        const duracao = Date.now() - PicPayIncident.startedAt;
         const minutos = Math.floor(duracao / 60000);
         const horas = Math.floor(minutos / 60);
         const minutosRestantes = minutos % 60;
@@ -49,7 +49,7 @@ export async function handleMercadoPago(services: any): Promise<void> {
             duracaoTexto = `${minutos}min`;
         }
 
-        const inicioIncidente = new Date(MercadoPagoIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+        const inicioIncidente = new Date(PicPayIncident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
         const fimIncidente = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
         await client.chat.postMessage({
@@ -59,15 +59,15 @@ export async function handleMercadoPago(services: any): Promise<void> {
 
         console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${duracaoTexto}`);
 
-        MercadoPagoIncident = null;
+        PicPayIncident = null;
         return;
     }
 
 
     /*-*-*-*-*-*-*-* INCIDENTE JÁ ATIVO (não faz nada, só monitora) *-*-*-*-*-*-*-*/
-    if ((status === ServiceStatus.DANGER) && MercadoPagoIncident) {
+    if ((status === ServiceStatus.DANGER) && PicPayIncident) {
         console.log(`INCIDENTE EM ${service} | STATUS: ${status} AINDA ATIVO...`);
         return;
     }
 }
-/*-*-*-*-*-*-*-* FIM MERCADOPAGO *-*-*-*-*-*-*-*/
+/*-*-*-*-*-*-*-* FIM PICPAY *-*-*-*-*-*-*-*/

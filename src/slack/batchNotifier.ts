@@ -1,14 +1,14 @@
 import { checkAllServices } from "../pages/batchPages.js";
 import { ServiceName } from "./types.js";
 import { checkWarningGlobal,registerWarningGlobal } from "./warningGlobal.js";
-import { handleBancoDoBrasil } from "./bancoDoBrasil.js";
-import { handleMercadoPago } from "./mercadoPago.js";
-import { handleSantander } from "./santander.js";
-import { handleBradesco } from "./bradesco.js";
-import { handlePicPay } from "./picPay.js";
-import { handleNubank } from "./nubank.js";
-import { handleItau } from "./itau.js";
-import { handlePix } from "./pix.js";
+import { handleBancoDoBrasil }from"./services/bancoDoBrasil.js";
+import { handleMercadoPago } from"./services/mercadoPago.js";
+import { handleSantander } from "./services/santander.js";
+import { handleBradesco } from "./services/bradesco.js";
+import { handlePicPay } from  "./services/picPay.js";
+import { handleNubank } from "./services/nubank.js";
+import { handleItau } from  "./services/itau.js";
+import { handlePix } from  "./services/pix.js";
 
 
 export async function CheckAll() {
