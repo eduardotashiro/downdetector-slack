@@ -1,49 +1,38 @@
-// import { WebClient } from "@slack/web-api";
-// import { config } from "../config/env.js";
+import { ServiceStatus } from "./types.js";
+import { WebClient } from "@slack/web-api";
+import { config } from "../config/env.js";
 
-// const client = new WebClient(config.slack.botToken);
+const client = new WebClient(config.slack.botToken);
 
-// const janelaTemp = 15 * 60 * 1000;
-// const servicesMax = 3;
+const servicesMax = 3;
+let servicesInWarning: { name: string; url: string }[] = [];
 
-// let janelaInicio: number | null = null;
-// let servicosEmWarning = new Set();
-// let alertaEnviado = false;
+export function registerWarningGlobal(bank: any): void {
+    const status = bank.data.status;
+    const service = bank.name;
+    const url = bank.url;
 
-// export async function registrarWarningGlobal(services:any) {
-//     const data = services.data;
-//     const status = data.status;
-//     const service = services.name;
+    if (status === ServiceStatus.WARNING) {
+        servicesInWarning.push({ name: service, url: url });
+        console.log(`${service} em WARNING | TOTAL: ${servicesInWarning.length}`);
+    }
+}
 
-//     const agora = Date.now();
-//     if (!janelaInicio) {
-//         janelaInicio = agora;
-//         servicosEmWarning.clear();
-//         alertaEnviado = false;
-//     }
+export async function checkWarningGlobal(): Promise<void> {
+    if (servicesInWarning.length >= servicesMax) {
+        
+        let servicesList = "";
+        for (const service of servicesInWarning) {
+            servicesList += `• <${service.url}|${service.name}>\n`;
+        }
 
-//     if (agora - janelaInicio > janelaTemp) {
-//         janelaInicio = agora;
-//         servicosEmWarning.clear();
-//         alertaEnviado = false;
-//     }
+        await client.chat.postMessage({
+            channel: config.slack.channel,
+            text: `:warning: *Instability detected in ${servicesInWarning.length} services*\n\n${servicesList}\n*Detected at:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` 
+        });
 
-//     servicosEmWarning.add(service);
+        console.log(`[GLOBAL WARNING] ALERTA ENVIADO(${servicesInWarning.length} SERVIÇOS)`);
+    }
 
-//     console.log(
-//         `GLOBAL WARNING ${service} | Total na janela: ${servicosEmWarning.size}`
-//     );
-
-//     if (servicosEmWarning.size >= servicesMax && !alertaEnviado) {
-
-//         const emoji = ":warning:";
-//         const txt = "Instabilidade";
-//         await client.chat.postMessage({
-//             channel: config.slack.channel,
-//             text: `${emoji} *${txt} - ${service}*\n\n• *Status:* \`${status}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
-//         });
-
-//         alertaEnviado = true;
-//         console.log(`[GLOBAL WARNING] ALERTA DISPARADO`);
-//     }
-// }
+    servicesInWarning = [];
+}

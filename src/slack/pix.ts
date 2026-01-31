@@ -17,9 +17,6 @@ export async function handlePix(services: any): Promise<void> {
     const status = data.status;
     const service = services.name;
 
-    /*-*-*-*-*-*-*-* WARNING *-*-*-*-*-*-*-*/
-    // registrarWarningGlobal(services)
-
     /*-*-*-*-*-*-*-* DANGER *-*-*-*-*-*-*-*/
     if (status === ServiceStatus.DANGER && !pixIncident) {
         pixIncident = {
