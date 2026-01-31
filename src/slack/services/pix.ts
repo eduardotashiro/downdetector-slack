@@ -1,8 +1,8 @@
 import { WebClient } from "@slack/web-api";
 import { config } from "../../config/env.js";
-import { ServiceStatus } from "../types.js";
-
+import { ServiceStatus} from "../types.js";
 const client = new WebClient(config.slack.botToken);
+// const nome = ServiceName.BANCO_DO_BRASIL
 
 let pixIncident: {
     startedAt: number;
