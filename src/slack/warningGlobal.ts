@@ -14,7 +14,7 @@ export function registerWarningGlobal(bank: any): void {
 
     if (status === ServiceStatus.WARNING) {
         servicesInWarning.push({ name: service, url: url });
-        console.log(`${service} em WARNING | TOTAL: ${servicesInWarning.length}`);
+        console.log(`${service} EM WARNING | TOTAL: ${servicesInWarning.length}`);
     }
 }
 
@@ -28,7 +28,7 @@ export async function checkWarningGlobal(): Promise<void> {
 
         await client.chat.postMessage({
             channel: config.slack.channel,
-            text: `:warning: *Instability detected in ${servicesInWarning.length} services*\n\n${servicesList}\n*Detected at:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` 
+            text: `:warning: *Instabilidade detectada em ${servicesInWarning.length} serviços.*\n\n${servicesList}\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` 
         });
 
         console.log(`[GLOBAL WARNING] ALERTA ENVIADO(${servicesInWarning.length} SERVIÇOS)`);
