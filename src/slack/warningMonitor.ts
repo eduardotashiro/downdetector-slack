@@ -23,7 +23,6 @@ export class WarningCollector {
                 name: service,
                 url: url
             })
-        console.log(`${service} EM WARNING | TOTAL: ${this.servicesInWarning.length}`);
     }
 
     async check(): Promise<void> {
