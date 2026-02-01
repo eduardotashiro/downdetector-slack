@@ -17,12 +17,11 @@ export class IncidentMonitor {
         this.client = client;
         this.channel = channel
     }
-
-    //separar as 3 condições em func ? or whatever  ? 
+    //metho
     async handle(services: any): Promise<void> {
         const status = services.data.status
         const service = services.name
-        //1
+
         if (status === ServiceStatus.DANGER && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
@@ -39,7 +38,7 @@ export class IncidentMonitor {
             console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
             return;
         }
-        //2
+
         if (status === ServiceStatus.SUCCESS && this.incident && this.incident.alertSent) {
             const time = Date.now() - this.incident.startedAt
             const minutes = Math.floor(time / 60000);
@@ -64,7 +63,7 @@ export class IncidentMonitor {
             this.incident = null;
             return;
         }
-        //3
+
         if ((status === ServiceStatus.DANGER) && this.incident) {
             console.log(`INCIDENTE EM ${service} | STATUS: ${status}, AINDA ATIVO...`);
             return;
@@ -162,4 +161,4 @@ export class IncidentMonitor {
 // const duduTheKing = new JogadorDeBasquete("100", 200, 2.00, true, "Dudu", "Cleveland");
 
 // duduTheKing.chamaJogador()
- // jogadorQualquer.expulsaJogadorMuitoRuim() 
+// jogadorQualquer.expulsaJogadorMuitoRuim() 
