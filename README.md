@@ -1,33 +1,11 @@
-# D O W N
+#  Downdetector Monitoring Bot for Slack 
 
-# D E T E C T O R
+![DownDetector-logo](https://github.com/eduardotashiro/downdetector-slack/blob/main/.github/assets/banner.png?raw=true) 
 
-# S L A C K 
+# Why this project exists ?!
 
-```
-            _,.-------------.._            
-         ,-'        j          `-.         
-       ,'        .-'               `.      
-      /          |                   '     
-     /         ,-'                    `    
-    .         j                         \  
-   .          |                          \ 
-   : ._       |   _....._                 .
-   |   -.     L-''       `.               :
-   | `.  \  .'             `.             |
-  /.\  `, Y'                 :           ,|
- /.  :  | \                  |         ,' |
-\.    " :  `\                |      ,--   |
- \    .'     '-..___,..      |    _/      :
-  \  `.      ___   ...._     '-../        '
-.-'    \    /| \_/ | | |      ,'         / 
-|       `--' |    '' |'|     /         .'  
-|            |      /. |    /       _,'    
-|-.-.....__..|     F-DT`...:...--'''       
-|_|_|_L.L.T._/     |                       
-\_|_|_L.T-''/      |                       
- |                /                        
-/             _.-'                         
-:         _..'                             
-\__...--''                                 
-```
+### This project was created to monitor service instability reported on Downdetector and automatically notify a Slack channel when three or more services enter a warning state. If a service reaches a danger status, the alert is sent immediately. The goal is to provide early visibility of potential outages that may impact support, operations, or engineering teams 🙂
+
+ > ⚠️ **WIP** 
+
+
