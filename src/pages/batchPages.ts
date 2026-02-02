@@ -40,7 +40,7 @@ export async function checkAllServices() {
     let browser;
     try {
         session = await client.browser.session.create({
-            country: "US",
+            country:"CA",
             type: "hosted",
         });
 
