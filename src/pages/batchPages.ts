@@ -43,8 +43,8 @@ export async function checkAllServices() {
     let browser;
     try {
         session = await client.browser.session.create({
-    type: "hosted",  // ← Adiciona de volta
-    nodeId: "thank-position-lens",        });
+            type: "hosted"
+        });
 
         console.log("Session:", session.sessionId);
         console.log("CDP URL:", session.cdpUrl);
