@@ -42,9 +42,7 @@ export async function checkAllServices() {
     let session;
     let browser;
     try {
-        session = await client.browser.session.create({
-            type: "hosted"
-        });
+        session = await client.browser.session.create();
 
         console.log("Session:", session.sessionId);
         console.log("CDP URL:", session.cdpUrl);
