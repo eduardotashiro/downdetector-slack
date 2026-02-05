@@ -28,12 +28,11 @@ const SERVICES: ServicesList[] = [
     { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" }
 ];
 
-const min: number = 1;
-const seg: number = 60;
-const ms: number = 1000;
-function RandomDelay(): number {
-  return Math.floor(Math.random() * min * seg * ms);
+
+function randomDelay(minMs = 3000, maxMs = 8000) {
+    return Math.floor(Math.random() * (maxMs - minMs) + minMs);
 }
+
 export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 
@@ -61,36 +60,35 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
     try {
         session = await client.browser.session.create();
-
         console.log("Session:", session.sessionId);
         console.log("CDP URL:", session.cdpUrl);
-
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
-
 
         for (const service of SERVICES) {
             const context = await browser.newContext();
             const page = await context.newPage();
             try {
                 const data = await checkServiceStatus(page, service);
+
                 if (!data) {
                     console.warn(`${service.name}: data not available`);
                     continue;
                 }
-                if (data) {
-                    results.push({
-                        name: service.name,
-                        url: service.url,
-                        data
-                    });
-                    console.log(`💀 ${service.name}: ${data.status}`);
-                }
+
+                results.push({
+                    name: service.name,
+                    url: service.url,
+                    data
+                });
+                console.log(`💀 ${service.name}: ${data.status}`);
+
             } catch (error: any) {
                 console.log(`${service.name}: ${error.message}`);
             } finally {
                 await page.close();
+                await context.close();
             }
-            await delay(RandomDelay());
+            await delay(randomDelay());
         }
     } catch (error) {
         console.error("Session error:", error);
