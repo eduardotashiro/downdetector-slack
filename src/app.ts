@@ -2,6 +2,7 @@ import { App, LogLevel } from "@slack/bolt";
 import { CheckAll } from "./slack/batchNotifier.js";
 import { config } from "./config/env.js";
 import cron from "node-cron";
+import { delay } from "./pages/batchPages.js";
 
 export const app = new App({
   signingSecret: config.slack.signingSecret,
@@ -9,29 +10,29 @@ export const app = new App({
   token: config.slack.botToken,
 });
 
-const randomDelay = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-cron.schedule("*/15 * * * *", async () => {
-  const MIN = 0;
-  const MAX = 3 * 60 * 1000;
-  const initialDelay = randomDelay(MIN, MAX);
-  console.log(`Aguardando ${(initialDelay / 1000 / 60).toFixed(1)} min...`);
-  await sleep(initialDelay);
-
-  const timestamp = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-  console.log(`Iniciando monitoramento: ${timestamp}`);
-
-  try {
-    await CheckAll();
-    console.log(`Monitoramento finalizado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
-
-  } catch (error) {
-    console.error(`Erro no monitoramento:`, error);
-  }
-},
+cron.schedule("*/5 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
 );
+
+
+async function run() {
+  try {
+    console.log(`Contagem iniciada: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+    const min:number = 2
+    const seg: number = 60
+    const ms: number = 1000
+    const randomDelay = Math.floor(Math.random() * min * seg * ms)
+    await delay(randomDelay)
+    console.log(`Monitoramento iniciado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+    await CheckAll();
+    console.log(`Monitoramento finalizado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+  } catch (error) {
+    console.error(`Erro no monitoramento:`, error);
+  }
+}
+
+
+
