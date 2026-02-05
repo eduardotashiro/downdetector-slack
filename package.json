@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "engines": {
-    "node": "24"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "npx tsx watch ./src/server.ts",
@@ -20,7 +20,7 @@
     "@slack/bolt": "^4.6.0",
     "dotenv": "^17.2.3",
     "node-cron": "^4.2.1",
-    "playwright": "^1.57.0"
+    "playwright": "1.58.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

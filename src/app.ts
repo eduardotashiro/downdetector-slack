@@ -10,12 +10,11 @@ export const app = new App({
 });
 
 
-cron.schedule("*/5 * * * *", run,
+cron.schedule("*/15 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
 );
-
 
 async function run() {
   try {
