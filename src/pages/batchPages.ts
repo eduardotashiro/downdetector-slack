@@ -32,34 +32,23 @@ const SERVICES: ServicesList[] = [
 export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 
-async function waitForServiceProperties(page: Page, timeout = 15000): Promise<ServiceProperties | undefined> {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-        const data = await page.evaluate(() => window.DD?.currentServiceProperties);
-        if (data) {
-            return data;
-        }
-        await delay(500);
-    }
-    return undefined;
+async function waitForServiceProperties(page: Page, timeout = 30000): Promise<ServiceProperties> {
+    await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout });
+    return await page.evaluate(() => { return window.DD!.currentServiceProperties;});
 }
 
 async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | undefined> {
     await page.goto(service.url, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "networkidle",
         timeout: 30000,
     });
-    const data = await waitForServiceProperties(page);
-    if (!data) {
-        throw new Error("ServiceProperties not found");
-    }
-    return data;
+    return await waitForServiceProperties(page);
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
     let browser: Browser | undefined;
-    let session;
+    let session: any;
 
     try {
         session = await client.browser.session.create();
