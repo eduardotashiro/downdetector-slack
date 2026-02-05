@@ -39,7 +39,7 @@ async function waitForServiceProperties(page: Page, timeout = 30000): Promise<Se
 
 async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | undefined> {
     await page.goto(service.url, {
-        waitUntil: "networkidle",
+        waitUntil: "domcontentloaded",
         timeout: 30000,
     });
     return await waitForServiceProperties(page);
