@@ -28,16 +28,25 @@ const SERVICES: ServicesList[] = [
     { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" }
 ];
 
-
+const min: number = 1;
+const seg: number = 60;
+const ms: number = 1000;
+function RandomDelay(): number {
+  return Math.floor(Math.random() * min * seg * ms);
+}
 export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 
-async function waitForServiceProperties(page: Page, timeout = 30000): Promise<ServiceProperties> {
-    await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout });
-    return await page.evaluate(() => { return window.DD!.currentServiceProperties;});
+async function waitForServiceProperties(page: Page, timeout = 30000): Promise<ServiceProperties | null> {
+    try {
+        await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout });
+        return await page.evaluate(() => { return window.DD!.currentServiceProperties; });
+    } catch (error) {
+        return null
+    }
 }
 
-async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | undefined> {
+async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | null> {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded",
         timeout: 30000,
@@ -58,12 +67,16 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
-        const context = browser.contexts()[0];
 
         for (const service of SERVICES) {
+            const context = await browser.newContext();
             const page = await context.newPage();
             try {
                 const data = await checkServiceStatus(page, service);
+                if (!data) {
+                    console.warn(`${service.name}: data not available`);
+                    continue;
+                }
                 if (data) {
                     results.push({
                         name: service.name,
@@ -77,7 +90,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             } finally {
                 await page.close();
             }
-            await delay(1000);
+            await delay(RandomDelay());
         }
     } catch (error) {
         console.error("Session error:", error);
