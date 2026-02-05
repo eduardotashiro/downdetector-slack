@@ -7,6 +7,8 @@ RUN npm ci
 
 COPY . .
 
+RUN npm run build
+
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
