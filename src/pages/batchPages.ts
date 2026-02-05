@@ -29,7 +29,7 @@ const SERVICES: ServicesList[] = [
 ];
 
 
-function randomDelay(minMs = 3000, maxMs = 8000) {
+function randomDelay(minMs = 1000, maxMs = 5000) {
     return Math.floor(Math.random() * (maxMs - minMs) + minMs);
 }
 
