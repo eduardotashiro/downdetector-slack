@@ -29,14 +29,14 @@ const SERVICES: ServicesList[] = [
 ];
 
 
-function randomDelay(minMs = 2000, maxMs = 7000) {
+function randomDelay(minMs = 3000, maxMs = 8000) {
     return Math.floor(Math.random() * (maxMs - minMs) + minMs);
 }
 
 export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 
-async function waitForServiceProperties(page: Page, timeout = 30000): Promise<ServiceProperties | null> {
+async function waitForServiceProperties(page: Page, timeout: number = 30000): Promise<ServiceProperties | null> {
     try {
         await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout });
         return await page.evaluate(() => { return window.DD!.currentServiceProperties; });
