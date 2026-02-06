@@ -2,46 +2,51 @@ import { chromium, Page, Browser } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
 import type { ServiceProperties } from "../types/downdetector.js";
+import { ServiceName, ServiceURL } from "../slack/types.js";
 
 const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
 });
 
 interface ServicesResult {
-    name: string,
-    url: string,
+    name: ServiceName,
+    url: ServiceURL,
     data: ServiceProperties
 }
+
 interface ServicesList {
-    name: string,
-    url: string
+    name: ServiceName,
+    url: ServiceURL
 }
 
 const SERVICES: ServicesList[] = [
-    { name: "Pix", url: "https://downdetector.com.br/fora-do-ar/pix/" },
-    { name: "Banco Itaú", url: "https://downdetector.com.br/fora-do-ar/banco-itau/" },
-    { name: "Bradesco", url: "https://downdetector.com.br/fora-do-ar/bradesco/" },
-    { name: "Santander", url: "https://downdetector.com.br/fora-do-ar/santander/" },
-    { name: "Nubank", url: "https://downdetector.com.br/fora-do-ar/nubank/" },
-    { name: "Banco do Brasil", url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/" },
-    { name: "Mercado Pago", url: "https://downdetector.com.br/fora-do-ar/mercadopago/" },
-    { name: "Pic Pay", url: "https://downdetector.com.br/fora-do-ar/picpay/" }
+    { name: ServiceName.PIX, url: ServiceURL.PIX },
+    { name: ServiceName.ITAU, url: ServiceURL.ITAU },
+    { name: ServiceName.BRADESCO, url: ServiceURL.BRADESCO },
+    { name: ServiceName.SANTANDER, url: ServiceURL.SANTANDER },
+    { name: ServiceName.NUBANK, url: ServiceURL.NUBANK },
+    { name: ServiceName.BANCO_DO_BRASIL, url: ServiceURL.BANCO_DO_BRASIL },
+    { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
+    { name: ServiceName.PICPAY, url: ServiceURL.PICPAY }
 ];
 
-
-// function randomDelay(minMs = 3000, maxMs = 8000) {
-//     return Math.floor(Math.random() * (maxMs - minMs) + minMs);
-// }
-
-export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
-
-
-async function waitForServiceProperties(page: Page, timeout: number = 30000): Promise<ServiceProperties | null> {
+async function waitForServiceProperties(page: Page): Promise<ServiceProperties | null> {
     try {
-        await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout });
-        return await page.evaluate(() => { return window.DD!.currentServiceProperties; });
+        let data = await page.evaluate(() => window.DD?.currentServiceProperties);
+
+        if (data) {
+            console.log(`>>>>>>`);
+            return data;
+        }
+
+        await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout: 10000 });
+        data = await page.evaluate(() => window.DD!.currentServiceProperties);
+        console.log(`zzzzzz`);
+
+        return data;
     } catch (error) {
-        return null
+        console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
+        return null;
     }
 }
 
@@ -65,17 +70,19 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
         const context = browser.contexts()[0]
+
         for (const service of SERVICES) {
             const page = await context.newPage();
             try {
                 const data = await checkServiceStatus(page, service);
 
-                  if (data) {
+                if (data) {
                     results.push({
                         name: service.name,
                         url: service.url,
                         data
                     });
+
                     console.log(`💀 ${service.name}: ${data.status}`);
                 }
             } catch (error: any) {
@@ -83,7 +90,6 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             } finally {
                 await page.close();
             }
-            // await delay(randomDelay());
         }
     } catch (error) {
         console.error("Session error:", error);
