@@ -18,6 +18,17 @@ const itauMonitor = new IncidentMonitor(client, config.slack.channel);
 const mercadoPagoMonitor = new IncidentMonitor(client, config.slack.channel);
 const picpayMonitor = new IncidentMonitor(client, config.slack.channel);
 
+const monitors = {
+    [ServiceName.PIX]: pixMonitor,
+    [ServiceName.NUBANK]: nubankMonitor,
+    [ServiceName.BRADESCO]: bradescoMonitor,
+    [ServiceName.SANTANDER]: santanderMonitor,
+    [ServiceName.BANCO_DO_BRASIL]: bbMonitor,
+    [ServiceName.ITAU]: itauMonitor,
+    [ServiceName.MERCADO_PAGO]: mercadoPagoMonitor,
+    [ServiceName.PICPAY]: picpayMonitor
+};
+
 export async function CheckAll() {
 
     const servicesResult = await checkAllServices();
@@ -26,32 +37,12 @@ export async function CheckAll() {
         warningStatus.collect(services);
     }
 
-    for (const services of servicesResult) {
-        if (services.name === ServiceName.PIX) {
-            await pixMonitor.handle(services);
+    await Promise.all(servicesResult.map(async (services) => {
+        const handler = monitors[services.name];
+        if (handler) {
+            await handler.handle(services);
         }
-        else if (services.name === ServiceName.NUBANK) {
-            await nubankMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.BRADESCO) {
-            await bradescoMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.SANTANDER) {
-            await santanderMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.BANCO_DO_BRASIL) {
-            await bbMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.ITAU) {
-            await itauMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.MERCADO_PAGO) {
-            await mercadoPagoMonitor.handle(services);
-        }
-        else if (services.name === ServiceName.PICPAY) {
-            await picpayMonitor.handle(services);
-        }
-    }
+    }));
 
     await warningStatus.check();
 
