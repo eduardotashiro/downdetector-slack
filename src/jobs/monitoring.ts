@@ -3,7 +3,7 @@ import cron from "node-cron";
 
 
 
-cron.schedule("*/1 * * * *", run,
+cron.schedule("*/5 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
