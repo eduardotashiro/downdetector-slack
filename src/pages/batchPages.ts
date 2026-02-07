@@ -33,13 +33,12 @@ const SERVICES: ServicesList[] = [
 async function waitForServiceProperties(page: Page): Promise<ServiceProperties | null> {
     try {
         let data = await page.evaluate(() => window.DD?.currentServiceProperties);
-
         if (data) {
             console.log(`>>>>>>`);
             return data;
         }
 
-        await page.waitForFunction(() => window.DD?.currentServiceProperties, { timeout: 10000 });
+        await page.waitForFunction(() => window.DD?.currentServiceProperties);
         data = await page.evaluate(() => window.DD!.currentServiceProperties);
         console.log(`zzzzzz`);
 
@@ -52,8 +51,7 @@ async function waitForServiceProperties(page: Page): Promise<ServiceProperties |
 
 async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | null> {
     await page.goto(service.url, {
-        waitUntil: "domcontentloaded",
-        timeout: 30000,
+        waitUntil: "domcontentloaded"
     });
     return await waitForServiceProperties(page);
 }
@@ -70,6 +68,9 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
         const context = browser.contexts()[0]
+
+        context.setDefaultTimeout(10000);
+        context.setDefaultNavigationTimeout(10000);
 
         for (const service of SERVICES) {
             const page = await context.newPage();
