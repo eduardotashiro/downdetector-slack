@@ -26,10 +26,9 @@ This bot was created to **proactively monitor service instability** reported on 
 
 ### Problem It Solves
 - ✅ Real-time alerts when services experience problems
-- ✅ Automated monitoring every 5 minutes
+- ✅ Automated monitoring 
 - ✅ Centralized notifications in Slack
 - ✅ Early warning system for technical teams
-- ✅ Cost-optimized with 10s timeout strategy
 
 ---
 
@@ -38,7 +37,6 @@ This bot was created to **proactively monitor service instability** reported on 
 -  **Automated Monitoring**: Checks 8 major Brazilian financial services every 5 minutes
 -  **Slack Notifications**: Sends formatted alerts to designated channels
 -  **Status Tracking**: Monitors `success`, `warning`, and `danger` states
-- **Fast Execution**: Optimized timeouts (10s) to minimize costs
 -  **Smart Detection**: Tracks incidents from start to resolution
 -  **Batch Alerts**: Sends collective warnings when 3+ services are affected
 -  **Docker Ready**: Containerized deployment with Railway support
@@ -48,16 +46,16 @@ This bot was created to **proactively monitor service instability** reported on 
 <details>
 <summary>Click to expand monitored services</summary>
 
-| Service | Description |
-|---------|-------------|
-|  **PIX** | Brazilian instant payment system |
-|  **Itaú** | Largest private bank in Brazil |
-|  **Bradesco** | Major retail bank |
-|  **Santander** | International banking group |
-|  **Nubank** | Leading digital bank |
-|  **Banco do Brasil** | State-owned bank |
-|  **Mercado Pago** | Payment platform |
-|  **PicPay** | Digital wallet |
+| Service | 
+|--------|
+| **PIX** | 
+| **Itaú** 
+| **Bradesco**
+| **Santander** 
+| **Nubank** 
+| **Banco do Brasil** 
+| **Mercado Pago** 
+| **PicPay** 
 
 </details>
 
@@ -75,10 +73,10 @@ graph TB
     Server --> Job[Monitoring Job]
     Job --> Scraper[Batch Pages<br/>Playwright Scraper]
     
-    Scraper --> Browser{BrowserCash<br/>Cloud Browser}
-    Browser --> DD1[Downdetector.br/pix]
-    Browser --> DD2[Downdetector.br/itau]
-    Browser --> DD3[Downdetector.br/...]
+    Scraper --> Browser{Cloud Browser}
+    Browser --> DD1[downdetector.com.br/pix]
+    Browser --> DD2[downdetector.com.br/itau]
+    Browser --> DD3[downdetector.com.br/...]
     
     DD1 --> Data{Extract Status}
     DD2 --> Data
@@ -257,10 +255,12 @@ console.log(Mock.status); // 'success' | 'warning' | 'danger'
 ```
 
 ### Cron Schedule
-Default: Every 5 minutes
+
+Default: 4 minutes.
 ```typescript
 // src/jobs/monitoring.ts
-cron.schedule("*/5 * * * *", run, {
+//Lower intervals can trigger concurrent sessions.
+cron.schedule("*/4 * * * *", run, {
   timezone: "America/Sao_Paulo"
 });
 ```
