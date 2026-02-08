@@ -2,8 +2,13 @@ import { CheckAll } from "../slack/batchNotifier.js";
 import cron from "node-cron";
 
 
-//não diminua mais que isso 
-cron.schedule("*/4 * * * *", run,
+// (*/5... não diminua 
+cron.schedule("*/5 6-23 * * *", run,
+  {
+    timezone: "America/Sao_Paulo"
+  }
+);
+cron.schedule("*/5 0-1 * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
