@@ -20,14 +20,14 @@ interface ServicesList {
 }
 
 const SERVICES: ServicesList[] = [
+    { name: ServiceName.PICPAY, url: ServiceURL.PICPAY },
+    { name: ServiceName.NUBANK, url: ServiceURL.NUBANK },
     { name: ServiceName.PIX, url: ServiceURL.PIX },
+    { name: ServiceName.SANTANDER, url: ServiceURL.SANTANDER },
     { name: ServiceName.ITAU, url: ServiceURL.ITAU },
     { name: ServiceName.BRADESCO, url: ServiceURL.BRADESCO },
-    { name: ServiceName.SANTANDER, url: ServiceURL.SANTANDER },
-    { name: ServiceName.NUBANK, url: ServiceURL.NUBANK },
     { name: ServiceName.BANCO_DO_BRASIL, url: ServiceURL.BANCO_DO_BRASIL },
-    { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
-    { name: ServiceName.PICPAY, url: ServiceURL.PICPAY }
+    { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO }
 ];
 
 async function waitForServiceProperties(page: Page): Promise<ServiceProperties | null> {
@@ -62,9 +62,16 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
     let session: any;
 
     try {
-        session = await client.browser.session.create();
+
+        session = await client.browser.session.create({ 
+            windowSize: "1920x1080",
+            type: "consumer_distributed"
+        });
+
         console.log("Session:", session.sessionId);
         console.log("CDP URL:", session.cdpUrl);
+        console.log("Node:", session.servedBy);
+
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
         const context = browser.contexts()[0]
