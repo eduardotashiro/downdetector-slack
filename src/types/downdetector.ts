@@ -1,4 +1,5 @@
 export interface ServiceProperties {
+    id: number;
     status: string;
     company: string;
     max: number;
