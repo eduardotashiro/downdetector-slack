@@ -8,7 +8,7 @@ const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
 });
 
-interface ServicesResult {
+export interface ServicesResult {
     name: ServiceName,
     url: ServiceURL,
     data: ServiceProperties
