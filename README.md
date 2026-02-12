@@ -38,7 +38,8 @@ This bot was created to **proactively monitor service instability** reported on 
 -  **Slack Notifications**: Sends formatted alerts to designated channels
 -  **Status Tracking**: Monitors `success`, `warning`, and `danger` states
 -  **Smart Detection**: Tracks incidents from start to resolution
--  **Batch Alerts**: Sends collective warnings when 3+ services are affected
+-  **Batch Alerts**: Sends collective warnings when 3+ services are affected **within a 5-minute window**
+-  **Time-Window Filtering**: Prevents false positives from isolated warnings at different times
 -  **Docker Ready**: Containerized deployment with Railway support
 
 ### Monitored Services
@@ -83,7 +84,7 @@ graph TB
     DD3 --> Data
     
     Data --> Notifier[Batch Notifier]
-    Notifier --> Warning[Warning Collector<br/>3+ services]
+    Notifier --> Warning[Warning Collector<br/>3+ services in 5min<br/>Time-windowed detection]
     Notifier --> Incident[Incident Monitors<br/>Per service]
     
     Warning --> Slack1[Slack Channel<br/>Batch Alert]
@@ -147,6 +148,43 @@ graph LR
 ```
 
 </details>
+
+---
+
+---
+
+##  How Alerts Work
+
+### Individual Service Alerts
+Each service has its own incident monitor that tracks status changes:
+- ☠️ **Critical Alert**: Sent when service enters `danger` state
+- 🎉 **Resolution Alert**: Sent when service returns to `success`
+
+### Batch Warnings
+The system uses a **5-minute sliding time window** to detect widespread issues:
+
+**Trigger Conditions:**
+-  3 or more services in `warning` state
+-  All warnings occurred within the last 5 minutes
+-  Prevents false positives from isolated incidents
+
+**Example:**
+```
+23:30 - PIX enters warning
+23:32 - Santander enters warning  
+23:34 - Nubank enters warning
+✔️ ALERT SENT (3 services affected simultaneously)
+
+23:30 - PIX enters warning
+23:40 - Santander enters warning (PIX warning expired)
+23:45 - Nubank enters warning
+✖️ NO ALERT (warnings not simultaneous)
+```
+
+**Why This Matters:**
+- Reduces noise from sporadic issues
+- Highlights actual system-wide instability
+- Teams only get alerted for meaningful incidents
 
 ---
 
@@ -256,13 +294,22 @@ console.log(Mock.status); // 'success' | 'warning' | 'danger'
 
 ### Cron Schedule
 
-Default: 4 minutes.
+Default: 5 minutes.
 ```typescript
 // src/jobs/monitoring.ts
-//Lower intervals can trigger concurrent sessions.
-cron.schedule("*/4 * * * *", run, {
-  timezone: "America/Sao_Paulo"
-});
+
+// 6AM-11PM: Business hours monitoring
+cron.schedule("*/5 6-23 * * *", run,
+  {
+    timezone: "America/Sao_Paulo"
+  }
+);
+// 12AM-1AM: Late-night critical period
+cron.schedule("*/5 0-1 * * *", run,
+  {
+    timezone: "America/Sao_Paulo"
+  }
+);
 ```
 
 </details>
