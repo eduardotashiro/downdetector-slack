@@ -3,16 +3,12 @@ import cron from "node-cron";
 
 
 // (*/5... não diminua 
-cron.schedule("*/5 6-23 * * *", run,
+cron.schedule("*/5 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
 );
-cron.schedule("*/5 0-1 * * *", run,
-  {
-    timezone: "America/Sao_Paulo"
-  }
-);
+
 
 
 async function run() {
