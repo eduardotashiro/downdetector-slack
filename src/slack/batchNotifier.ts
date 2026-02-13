@@ -6,17 +6,18 @@ import { WebClient } from "@slack/web-api";
 import { config } from "../config/env.js";
 
 const client = new WebClient(config.slack.botToken);
+const channel = config.slack.channel
 
-const warningStatus = new WarningCollector(client, config.slack.channel);
+const warningStatus = new WarningCollector(client, channel);
 
-const pixMonitor = new IncidentMonitor(client, config.slack.channel);
-const nubankMonitor = new IncidentMonitor(client, config.slack.channel);
-const bradescoMonitor = new IncidentMonitor(client, config.slack.channel);
-const santanderMonitor = new IncidentMonitor(client, config.slack.channel);
-const bbMonitor = new IncidentMonitor(client, config.slack.channel);
-const itauMonitor = new IncidentMonitor(client, config.slack.channel);
-const mercadoPagoMonitor = new IncidentMonitor(client, config.slack.channel);
-const picpayMonitor = new IncidentMonitor(client, config.slack.channel);
+const pixMonitor = new IncidentMonitor(client, channel);
+const nubankMonitor = new IncidentMonitor(client, channel);
+const bradescoMonitor = new IncidentMonitor(client, channel);
+const santanderMonitor = new IncidentMonitor(client, channel);
+const bbMonitor = new IncidentMonitor(client, channel);
+const itauMonitor = new IncidentMonitor(client, channel);
+const mercadoPagoMonitor = new IncidentMonitor(client, channel);
+const picpayMonitor = new IncidentMonitor(client, channel);
 
 const monitors = {
     [ServiceName.PIX]: pixMonitor,
