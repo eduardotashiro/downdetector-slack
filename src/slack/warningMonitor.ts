@@ -1,16 +1,16 @@
-import { ServiceStatus } from "./types.js";
+import { ServiceStatus, ServiceName, ServiceURL } from "./types.js";
 import { WebClient } from "@slack/web-api";
 import { ServicesResult } from "../pages/batchPages.js";
 
 export class WarningCollector {
     private maxWarnings: number = 3;
-    private timeWindow: number = 5 * 60 * 1000; 
+    private timeWindow: number = 5 * 60 * 1000; // two sessions time
 
     private servicesInWarning: {
-        name: string,
-        url: string,
-        serviceID: number,
-        firstSeenAt: number 
+        name: ServiceName,
+        url: ServiceURL,
+        id: number,
+        firstSeenAt: number
     }[] = [];
 
     private client: WebClient;
@@ -22,57 +22,50 @@ export class WarningCollector {
     }
 
     collect(services: ServicesResult): void {
-        const { name, url, data: { status, id: serviceID } } = services;
+        const { name, url, data: { status, id } } = services;
 
         if (status !== ServiceStatus.WARNING) {
-            // Remove da lista se voltou ao normal
-            this.servicesInWarning = this.servicesInWarning.filter(
-                s => s.serviceID !== serviceID
-            );
+            this.removeService(id);
             return;
         }
 
-        // Verifica se já está na lista
         const alreadyExists = this.servicesInWarning.some(
-            s => s.serviceID === serviceID
+            s => s.id === id
         );
 
         if (!alreadyExists) {
             this.servicesInWarning.push({
                 name,
                 url,
-                serviceID,
+                id,
                 firstSeenAt: Date.now()
             });
         }
     }
 
     async check(): Promise<void> {
-        const now = Date.now();
+        this.cleanOldWarnings();
 
-        // Remove warnings fora da janela de tempo
-        this.servicesInWarning = this.servicesInWarning.filter(
-            service => now - service.firstSeenAt <= this.timeWindow
-        );
-
-        // Só alerta se tiver 3+ warnings DENTRO da janela
         if (this.servicesInWarning.length >= this.maxWarnings) {
-            let servicesList = "";
+            const servicesList = this.servicesInWarning.map(service => `• <${service.url}|${service.name}>`).join("\n")
 
-            for (const service of this.servicesInWarning) {
-                const minutesAgo = Math.floor((now - service.firstSeenAt) / 60000);
-                servicesList += `• <${service.url}|${service.name}> (há ${minutesAgo}min)\n`;
-            }
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços (últimos 5min).*\n${servicesList}*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
-            });
+                text: `:warning: *Instabilidade geral detectada em ${this.servicesInWarning.length} serviços em warning simultaneamente.*\n${servicesList}*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
 
-            console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS NA JANELA DE 5MIN)`);
-            
-            // Limpa a lista após alertar
+            console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS SIMULTANEAMENTE)`);
+
             this.servicesInWarning = [];
         }
+    }
+
+    private cleanOldWarnings(): void {
+        const now = Date.now();
+        this.servicesInWarning = this.servicesInWarning.filter(service => now - service.firstSeenAt <= this.timeWindow)
+    }
+
+    private removeService(id: number) {
+        this.servicesInWarning = this.servicesInWarning.filter(s => s.id !== id);
     }
 }
