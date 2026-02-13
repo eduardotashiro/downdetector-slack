@@ -294,22 +294,13 @@ console.log(Mock.status); // 'success' | 'warning' | 'danger'
 
 ### Cron Schedule
 
-Default: 5 minutes.
+**Frequency:** Every 5 minutes, 24/7
 ```typescript
 // src/jobs/monitoring.ts
-
-// 6AM-11PM: Business hours monitoring
-cron.schedule("*/5 6-23 * * *", run,
-  {
-    timezone: "America/Sao_Paulo"
-  }
-);
-// 12AM-1AM: Late-night critical period
-cron.schedule("*/5 0-1 * * *", run,
-  {
-    timezone: "America/Sao_Paulo"
-  }
-);
+// monitoring (24/7)
+cron.schedule("*/5 * * * *", run, {
+  timezone: "America/Sao_Paulo"
+});
 ```
 
 </details>
