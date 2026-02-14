@@ -1,5 +1,6 @@
 import { ServiceStatus } from "./types.js";
 import { WebClient } from "@slack/web-api";
+import { ServicesResult } from "../pages/batchPages.js";
 
 //form
 export class IncidentMonitor {
@@ -18,9 +19,8 @@ export class IncidentMonitor {
         this.channel = channel
     }
     //metho
-    async handle(services: any): Promise<void> {
-        const status = services.data.status
-        const service = services.name
+    async handle(services: ServicesResult): Promise<void> {
+        const { name, url, data: { status } } = services
 
         if (status === ServiceStatus.DANGER && !this.incident) {
             this.incident = {
@@ -31,11 +31,11 @@ export class IncidentMonitor {
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:alert: *Nível Crítico - ${service}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${services.url} | Ver no Downdetector>`
+                text: `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${url} | Ver no Downdetector>`
             });
 
             this.incident.alertSent = true;
-            console.log(`STATUS ${ServiceStatus.DANGER} PARA ${service} ENVIADO NO SLACK !`);
+            console.log(`STATUS ${ServiceStatus.DANGER} PARA ${name} ENVIADO NO SLACK !`);
             return;
         }
 
@@ -56,16 +56,16 @@ export class IncidentMonitor {
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:white_check_mark: *Normalizado* - *${service}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${incidentStart}\n• *Fim:* ${endOfIncident}\n• *Duração:* ${timeText}\n\n<${services.url} | Ver no Downdetector>`
+                text: `:white_check_mark: *Normalizado* - *${name}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${incidentStart}\n• *Fim:* ${endOfIncident}\n• *Duração:* ${timeText}\n\n<${url} | Ver no Downdetector>`
             });
-            console.log(`INCIDENTE NO ${service} RESOLVIDO ! DURAÇÃO: ${timeText}`);
+            console.log(`INCIDENTE NO ${name} RESOLVIDO ! DURAÇÃO: ${timeText}`);
 
             this.incident = null;
             return;
         }
 
         if ((status === ServiceStatus.DANGER) && this.incident) {
-            console.log(`INCIDENTE EM ${service} | STATUS: ${status}, AINDA ATIVO...`);
+            console.log(`INCIDENTE EM ${name} | STATUS: ${status}, AINDA ATIVO...`);
             return;
         }
     }
