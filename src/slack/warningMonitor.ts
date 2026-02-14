@@ -47,12 +47,11 @@ export class WarningCollector {
         this.cleanOldWarnings();
 
         if (this.servicesInWarning.length >= this.maxWarnings) {
-            const servicesList = this.servicesInWarning.map(service => `• <${service.url}|${service.name}>`).join("\n")
-
+            const servicesList = this.servicesInWarning.map(service => `• <${service.url} | ${service.name}>`).join("\n")
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:warning: *Instabilidade geral detectada em ${this.servicesInWarning.length} serviços em warning simultaneamente.*\n${servicesList}*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
+                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços simultaneamente.*\n\n${servicesList}\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
 
             console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS SIMULTANEAMENTE)`);
 
