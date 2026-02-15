@@ -1,4 +1,4 @@
-import { checkAllServices } from "../pages/batchPages.js";
+import { checkAllServices } from "../services/downdetectorService.js";
 import { IncidentMonitor } from "./incidentMonitor.js";
 import { WarningCollector } from "./warningMonitor.js";
 import { ServiceName } from "./types.js";

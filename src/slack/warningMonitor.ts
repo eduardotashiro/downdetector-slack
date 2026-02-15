@@ -1,6 +1,6 @@
 import { ServiceStatus, ServiceName, ServiceURL } from "./types.js";
 import { WebClient } from "@slack/web-api";
-import { ServicesResult } from "../pages/batchPages.js";
+import { ServicesResult } from "../services/downdetectorService.js";
 
 export class WarningCollector {
     private maxWarnings: number = 3;

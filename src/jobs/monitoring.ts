@@ -1,4 +1,4 @@
-import { CheckAll } from "../slack/batchNotifier.js";
+import { CheckAll } from "../slack/notificationOrchestrator.js";
 import cron from "node-cron";
 
 
