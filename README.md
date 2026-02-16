@@ -190,11 +190,11 @@ The system uses a **5-minute sliding time window** to detect widespread issues:
 <details>
 <summary>Click to see Slack notifications examples</summary>
 
-### Critical Alert
-![Critical Alert Example](.github/assets/alert-critical.png)
-
 ### Batch Warning
 ![Batch Warning Example](.github/assets/alert-batch.png)
+
+### Critical Alert
+![Critical Alert Example](.github/assets/alert-critical.png)
 
 ### Resolution
 ![Resolution Example](.github/assets/alert-resolved.png)
