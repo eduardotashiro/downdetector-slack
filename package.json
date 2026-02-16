@@ -11,7 +11,8 @@
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "vitest"
+    "test:watch": "vitest",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "Eduardo Tashiro",
