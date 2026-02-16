@@ -51,7 +51,7 @@ export class WarningCollector {
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços simultaneamente.*\n\n${servicesList}\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
+                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços simultaneamente.*\n\n${servicesList}\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
 
             console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS SIMULTANEAMENTE)`);
 
