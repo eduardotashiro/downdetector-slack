@@ -4,7 +4,7 @@ import { ServicesResult } from "../services/downdetectorService.js";
 
 export class WarningCollector {
     private maxWarnings: number = 3;
-    private timeWindow: number = 10 * 60 * 1000;
+    // private timeWindow: number = 10 * 60 * 1000;
     private globalWarningActive: boolean = false;
 
     private servicesInWarning: {
@@ -43,9 +43,9 @@ export class WarningCollector {
     }
 
     async check(): Promise<void> {
-        this.cleanOldWarnings();
-
+        // this.cleanOldWarnings();
         const totalWarnings = this.servicesInWarning.length;
+        console.log(`[GLOBAL WARNING] total=${totalWarnings} active=${this.globalWarningActive}`);
 
 
         if (totalWarnings >= this.maxWarnings && !this.globalWarningActive) {
@@ -61,19 +61,19 @@ export class WarningCollector {
             // this.servicesInWarning = [];
             this.globalWarningActive = true;
 
-            
+
         }
-        
+
         if (totalWarnings < this.maxWarnings && this.globalWarningActive) {
             console.log("[GLOBAL WARNING] ESTADO NORMALIZADO");
             this.globalWarningActive = false;
         }
     }
 
-    private cleanOldWarnings(): void {
-        const now = Date.now();
-        this.servicesInWarning = this.servicesInWarning.filter(service => now - service.firstSeenAt <= this.timeWindow)
-    }
+    // private cleanOldWarnings(): void {
+    //     const now = Date.now();
+    //     this.servicesInWarning = this.servicesInWarning.filter(service => now - service.firstSeenAt <= this.timeWindow)
+    // }
 
     private removeService(id: number) {
         this.servicesInWarning = this.servicesInWarning.filter(s => s.id !== id);
