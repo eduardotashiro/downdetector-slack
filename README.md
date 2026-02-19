@@ -26,16 +26,19 @@
 This bot was created to **proactively monitor service instability** reported on [Downdetector Brasil](https://downdetector.com.br/) and **automatically notify Slack channels** about potential issues affecting Brazilian financial services.
 
 ### Problem It Solves
-✔️ Real-time alerts when services experience problems  
-✔️ Automated monitoring 
-✔️ Centralized notifications in Slack  
-✔️ Early warning system for technical teams  
+✔️ Real-time alerts when services experience problems 
+
+✔️ Automated monitoring
+
+✔️ Centralized notifications in **Slack**
+
+✔️ Early warning system for technical teams 
 
 ---
 
 ## Features
 
-- **Automated Monitoring**: Checks 8 major financial services every 5 minutes
+- **Automated Monitoring**: Checks 8 major financial services every 10 minutes
 - **Slack Notifications**: Sends formatted alerts to designated channels
 - **Status Tracking**: Monitors `success`, `warning`, and `danger` states
 - **Smart Detection**: Tracks incidents from start to resolution
@@ -335,10 +338,10 @@ npm start
 
 ### Cron Schedule
 
-**Frequency:** Every 5 minutes, 24/7
+**Frequency:** Every 10 minutes, 24/7
 ```typescript
 // src/jobs/monitoring.ts
-cron.schedule("*/5 * * * *", run, {
+cron.schedule("*/10 * * * *", run, {
   timezone: "America/Sao_Paulo"
 });
 ```
