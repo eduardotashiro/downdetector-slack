@@ -4,7 +4,7 @@ import { ServicesResult } from "../services/downdetectorService.js";
 
 export class WarningCollector {
     private maxWarnings: number = 3;
-    private timeWindow: number = 5 * 60 * 1000; // two sessions time
+    private timeWindow: number = 10 * 60 * 1000;
 
     private servicesInWarning: {
         name: ServiceName,
@@ -29,9 +29,7 @@ export class WarningCollector {
             return;
         }
 
-        const alreadyExists = this.servicesInWarning.some(
-            s => s.id === id
-        );
+        const alreadyExists = this.servicesInWarning.some(s => s.id === id);
 
         if (!alreadyExists) {
             this.servicesInWarning.push({
@@ -51,7 +49,8 @@ export class WarningCollector {
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços simultaneamente.*\n\n${servicesList}\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`});
+                text: `:warning: *Instabilidade detectada em ${this.servicesInWarning.length} serviços simultaneamente.*\n\n${servicesList}\n\n*Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
+            });
 
             console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS SIMULTANEAMENTE)`);
 
