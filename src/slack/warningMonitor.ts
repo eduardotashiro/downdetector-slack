@@ -5,6 +5,7 @@ import { ServicesResult } from "../services/downdetectorService.js";
 export class WarningCollector {
     private maxWarnings: number = 3;
     private timeWindow: number = 10 * 60 * 1000;
+    private globalWarningActive: boolean = false;
 
     private servicesInWarning: {
         name: ServiceName,
@@ -44,7 +45,10 @@ export class WarningCollector {
     async check(): Promise<void> {
         this.cleanOldWarnings();
 
-        if (this.servicesInWarning.length >= this.maxWarnings) {
+        const totalWarnings = this.servicesInWarning.length;
+
+
+        if (totalWarnings >= this.maxWarnings && !this.globalWarningActive) {
             const servicesList = this.servicesInWarning.map(service => `• <${service.url} | ${service.name}>`).join("\n")
 
             await this.client.chat.postMessage({
@@ -54,7 +58,15 @@ export class WarningCollector {
 
             console.log(`[GLOBAL WARNING] ALERTA ENVIADO (${this.servicesInWarning.length} SERVIÇOS SIMULTANEAMENTE)`);
 
-            this.servicesInWarning = [];
+            // this.servicesInWarning = [];
+            this.globalWarningActive = true;
+
+            
+        }
+        
+        if (totalWarnings < this.maxWarnings && this.globalWarningActive) {
+            console.log("[GLOBAL WARNING] ESTADO NORMALIZADO");
+            this.globalWarningActive = false;
         }
     }
 
