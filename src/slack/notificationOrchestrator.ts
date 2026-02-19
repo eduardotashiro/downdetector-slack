@@ -1,6 +1,6 @@
 import { checkAllServices } from "../services/downdetectorService.js";
 import { IncidentMonitor } from "./incidentMonitor.js";
-import { WarningCollector } from "./warningMonitor.js";
+// import { WarningCollector } from "./warningMonitor.js";
 import { ServiceName } from "./types.js";
 import { WebClient } from "@slack/web-api";
 import { config } from "../config/env.js";
@@ -8,7 +8,7 @@ import { config } from "../config/env.js";
 const client = new WebClient(config.slack.botToken);
 const channel = config.slack.channel
 
-const warningStatus = new WarningCollector(client, channel);
+// const warningStatus = new WarningCollector(client, channel);
 
 const pixMonitor = new IncidentMonitor(client, channel);
 const nubankMonitor = new IncidentMonitor(client, channel);
@@ -34,9 +34,9 @@ export async function CheckAll() {
 
     const servicesResult = await checkAllServices();
 
-    for (const services of servicesResult) {
-        warningStatus.collect(services);
-    }
+    // for (const services of servicesResult) {
+    //     warningStatus.collect(services);
+    // }
 
     await Promise.all(servicesResult.map(async (services) => {
         const handler = monitors[services.name];
@@ -45,6 +45,6 @@ export async function CheckAll() {
         }
     }));
 
-    await warningStatus.check();
+    // await warningStatus.check();
 
 }
