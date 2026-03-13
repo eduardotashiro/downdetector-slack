@@ -62,7 +62,6 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
     let session: any;
 
     try {
-
         session = await client.browser.session.create({ 
             windowSize: "1920x1080",
             type:"hosted"
