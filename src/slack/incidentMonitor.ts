@@ -6,7 +6,7 @@ import { ServicesResult } from "../services/downdetectorService.js";
 export class IncidentMonitor {
     private incident: {
         startedAt: number;
-        level: ServiceStatus;
+        level: boolean;
         alertSent: boolean;
     } | null = null;
 
@@ -20,12 +20,12 @@ export class IncidentMonitor {
     }
     //metho
     async handle(services: ServicesResult): Promise<void> {
-        const { name, url, data: { status } } = services
+        const { name, url, data } = services
 
-        if (status === ServiceStatus.DANGER && !this.incident) {
+        if (data && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
-                level: status,
+                level: data,
                 alertSent: false
             }
 

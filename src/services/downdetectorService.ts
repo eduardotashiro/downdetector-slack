@@ -1,7 +1,7 @@
 import { chromium, Page, Browser } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-import type { ServiceProperties } from "../types/downdetector.js";
+import type { ServiceStatus } from "../types/downdetector.js";
 import { ServiceName, ServiceURL } from "../slack/types.js";
 
 const client = new BrowsercashSDK({
@@ -11,7 +11,7 @@ const client = new BrowsercashSDK({
 export interface ServicesResult {
     name: ServiceName,
     url: ServiceURL,
-    data: ServiceProperties
+    data: boolean
 }
 
 interface ServicesList {
@@ -30,30 +30,29 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO }
 ];
 
-async function waitForServiceProperties(page: Page): Promise<ServiceProperties | null> {
+async function waitForServiceProperties(page: Page): Promise<ServiceStatus | null> {
     try {
-        let data = await page.evaluate(() => window.DD?.currentServiceProperties);
+        let data = await page.evaluate(() => window.PogoConfig?.outage); //window.DD?.currentServiceProperties
         if (data) {
             console.log(`>>>>>>`);
             return data;
         }
-        // window.PogoConfig = {"template":"status","service":"pix","category":"Payments, Cards and Transaction Networks","outage":false}; F** DD  nem para me falar que mudou como expoem os daddos 
-        await page.waitForFunction(() => window.DD?.currentServiceProperties);
-        data = await page.evaluate(() => window.DD!.currentServiceProperties);
+        await page.waitForFunction(() => window.PogoConfig?.outage);
+        data = await page.evaluate(() =>window.PogoConfig?.outage);
         console.log(`zzzzzz`);
+        return data || null;
 
-        return data;
     } catch (error) {
         console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
         return null;
     }
 }
 
-async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceProperties | null> {
+async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceStatus | null> {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded"
     });
-    return await waitForServiceProperties(page);
+    return await waitForServiceProperties(page);  //true orfalse ?
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
@@ -87,10 +86,10 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
                     results.push({
                         name: service.name,
                         url: service.url,
-                        data
+                        data //true orfalse ?
                     });
 
-                    console.log(`💀 ${service.name}: ${data.status}`);
+                    console.log(`💀 ${service.name}: ${data}`);
                 }
             } catch (error: any) {
                 console.log(`${service.name}: ${error.message}`);
