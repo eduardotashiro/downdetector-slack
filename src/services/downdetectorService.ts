@@ -37,7 +37,7 @@ async function waitForServiceProperties(page: Page): Promise<ServiceProperties |
             console.log(`>>>>>>`);
             return data;
         }
-
+        // window.PogoConfig = {"template":"status","service":"pix","category":"Payments, Cards and Transaction Networks","outage":false}; F** DD  nem para me falar que mudou como expoem os daddos 
         await page.waitForFunction(() => window.DD?.currentServiceProperties);
         data = await page.evaluate(() => window.DD!.currentServiceProperties);
         console.log(`zzzzzz`);
@@ -62,9 +62,9 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
     let session: any;
 
     try {
-        session = await client.browser.session.create({ 
+        session = await client.browser.session.create({
             windowSize: "1920x1080",
-            type:"hosted"
+            type: "hosted"
         });
 
         console.log("Session:", session.sessionId);
