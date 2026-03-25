@@ -1,16 +1,16 @@
-import {test,expect } from "vitest"
+// import {test,expect } from "vitest"
 
-// @example
+// // @example
 
-// Define a simple test
-test('should add two numbers', () => {
-  expect((1 + 2)).toBe(3);
-});
+// // Define a simple test
+// test('should add two numbers', () => {
+//   expect((1 + 2)).toBe(3);
+// });
 
 
-// Define a test with options
-test('should subtract two numbers', { retry: 3 }, () => {
-  expect((5 - 2)).toBe(3);
-});
+// // Define a test with options
+// test('should subtract two numbers', { retry: 3 }, () => {
+//   expect((5 - 2)).toBe(3);
+// });
 
-//WIP
+// //WIP
