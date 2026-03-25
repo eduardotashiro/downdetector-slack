@@ -1,4 +1,4 @@
-import { ServiceStatus } from "./types.js";
+// import { ServiceStatuss } from "./types.js";
 import { WebClient } from "@slack/web-api";
 import { ServicesResult } from "../services/downdetectorService.js";
 
@@ -6,7 +6,6 @@ import { ServicesResult } from "../services/downdetectorService.js";
 export class IncidentMonitor {
     private incident: {
         startedAt: number;
-        level: boolean;
         alertSent: boolean;
     } | null = null;
 
@@ -20,12 +19,11 @@ export class IncidentMonitor {
     }
     //metho
     async handle(services: ServicesResult): Promise<void> {
-        const { name, url, data } = services
+        const { name, url, outage } = services
 
-        if (data && !this.incident) {
+        if (outage && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
-                level: data,
                 alertSent: false
             }
 
@@ -35,11 +33,11 @@ export class IncidentMonitor {
             });
 
             this.incident.alertSent = true;
-            console.log(`STATUS ${ServiceStatus.DANGER} PARA ${name} ENVIADO NO SLACK !`);
+            console.log(`STATUS ${outage} PARA ${name} ENVIADO NO SLACK !`);
             return;
         }
 
-        if (status === ServiceStatus.SUCCESS && this.incident && this.incident.alertSent) {
+        if (!outage && this.incident && this.incident.alertSent) {
             const time = Date.now() - this.incident.startedAt
             const minutes = Math.floor(time / 60000);
             const hours = Math.floor(minutes / 60);
@@ -64,9 +62,13 @@ export class IncidentMonitor {
             return;
         }
 
-        if ((status === ServiceStatus.DANGER) && this.incident) {
-            console.log(`INCIDENTE EM ${name} | STATUS: ${status}, AINDA ATIVO...`);
+        if (outage && this.incident) {
+            console.log(`INCIDENTE EM ${name} | STATUS: ${outage}, AINDA ATIVO...`);
             return;
+        }
+
+        if (!outage && !this.incident) {
+            console.log(`${name} FUNCIONANDO NORMALMENTE !!!`)
         }
     }
 }

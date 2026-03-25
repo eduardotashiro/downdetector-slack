@@ -1,7 +1,7 @@
 import { chromium, Page, Browser } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-import type { ServiceStatus } from "../types/downdetector.js";
+// import type { ServiceStatus } from "../types/downdetector.js";
 import { ServiceName, ServiceURL } from "../slack/types.js";
 
 const client = new BrowsercashSDK({
@@ -11,7 +11,7 @@ const client = new BrowsercashSDK({
 export interface ServicesResult {
     name: ServiceName,
     url: ServiceURL,
-    data: boolean
+    outage: boolean
 }
 
 interface ServicesList {
@@ -30,9 +30,9 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO }
 ];
 
-async function waitForServiceProperties(page: Page): Promise<ServiceStatus | null> {
+async function waitForServiceProperties(page: Page): Promise<boolean | null> {
     try {
-        let data = await page.evaluate(() => window.PogoConfig?.outage); //window.DD?.currentServiceProperties
+        let data = await page.evaluate(() => window.PogoConfig?.outage); 
         if (data) {
             console.log(`>>>>>>`);
             return data;
@@ -48,11 +48,11 @@ async function waitForServiceProperties(page: Page): Promise<ServiceStatus | nul
     }
 }
 
-async function checkServiceStatus(page: Page, service: ServicesList): Promise<ServiceStatus | null> {
+async function checkServiceStatus(page: Page, service: ServicesList): Promise<boolean | null> {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded"
     });
-    return await waitForServiceProperties(page);  //true orfalse ?
+    return await waitForServiceProperties(page); 
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
@@ -80,16 +80,16 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         for (const service of SERVICES) {
             const page = await context.newPage();
             try {
-                const data = await checkServiceStatus(page, service);
+                const outage = await checkServiceStatus(page, service);
 
-                if (data) {
+                if (outage) {
                     results.push({
                         name: service.name,
                         url: service.url,
-                        data //true orfalse ?
+                        outage: outage!
                     });
 
-                    console.log(`💀 ${service.name}: ${data}`);
+                    console.log(`💀 ${service.name}: ${outage}`);
                 }
             } catch (error: any) {
                 console.log(`${service.name}: ${error.message}`);
