@@ -6,7 +6,7 @@ export enum ServiceName {
     PICPAY = "Pic Pay",
     ITAU = "Banco Itaú",
     NUBANK = "Nubank",
-    MERCADO_PAGO = "Mercado Pago"
+    MERCADO_PAGO = "Mercado Pago",
 }
 
 export enum ServiceURL {

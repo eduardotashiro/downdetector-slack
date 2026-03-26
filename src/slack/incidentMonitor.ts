@@ -1,4 +1,3 @@
-// import { ServiceStatuss } from "./types.js";
 import { WebClient } from "@slack/web-api";
 import { ServicesResult } from "../services/downdetectorService.js";
 
@@ -21,7 +20,7 @@ export class IncidentMonitor {
     async handle(services: ServicesResult): Promise<void> {
         const { name, url, outage } = services
 
-        if (outage && !this.incident) {
+        if (outage !== null && outage == true && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
                 alertSent: false
@@ -37,7 +36,7 @@ export class IncidentMonitor {
             return;
         }
 
-        if (!outage && this.incident && this.incident.alertSent) {
+        if (outage !== null && outage == false && this.incident && this.incident.alertSent) {
             const time = Date.now() - this.incident.startedAt
             const minutes = Math.floor(time / 60000);
             const hours = Math.floor(minutes / 60);
@@ -62,13 +61,17 @@ export class IncidentMonitor {
             return;
         }
 
-        if (outage && this.incident) {
+        if (outage !== null && outage === true && this.incident) {
             console.log(`INCIDENTE EM ${name} | STATUS: ${outage}, AINDA ATIVO...`);
             return;
         }
 
-        if (!outage && !this.incident) {
+        if (outage !== null && outage === false && !this.incident) {
             console.log(`${name} FUNCIONANDO NORMALMENTE !!!`)
+        }
+
+        if (outage == null) {
+            console.log("outage null x.x")
         }
     }
 }

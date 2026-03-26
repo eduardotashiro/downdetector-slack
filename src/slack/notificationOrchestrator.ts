@@ -25,7 +25,7 @@ const monitors = {
     [ServiceName.BANCO_DO_BRASIL]: bbMonitor,
     [ServiceName.ITAU]: itauMonitor,
     [ServiceName.MERCADO_PAGO]: mercadoPagoMonitor,
-    [ServiceName.PICPAY]: picpayMonitor
+    [ServiceName.PICPAY]: picpayMonitor,
 };
 
 export async function CheckAll() {

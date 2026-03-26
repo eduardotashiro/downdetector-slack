@@ -1,7 +1,6 @@
 import { chromium, Page, Browser } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-// import type { ServiceStatus } from "../types/downdetector.js";
 import { ServiceName, ServiceURL } from "../slack/types.js";
 
 const client = new BrowsercashSDK({
@@ -27,21 +26,32 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.ITAU, url: ServiceURL.ITAU },
     { name: ServiceName.BRADESCO, url: ServiceURL.BRADESCO },
     { name: ServiceName.BANCO_DO_BRASIL, url: ServiceURL.BANCO_DO_BRASIL },
-    { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO }
+    { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
 async function waitForServiceProperties(page: Page): Promise<boolean | null> {
     try {
-        let data = await page.evaluate(() => window.PogoConfig?.outage); 
-        if (data) {
+        let data = await page.evaluate(() => {
+            if (window.PogoConfig && window.PogoConfig.outage !== undefined) {
+                return window.PogoConfig.outage;
+            }
+            return null;
+        });
+
+        if (data !== null) {
             console.log(`>>>>>>`);
             return data;
         }
-        await page.waitForFunction(() => window.PogoConfig?.outage);
-        data = await page.evaluate(() =>window.PogoConfig?.outage);
-        console.log(`zzzzzz`);
-        return data || null;
 
+        await page.waitForFunction(() => window.PogoConfig && window.PogoConfig.outage !== undefined);
+        data = await page.evaluate(() => {
+            if (window.PogoConfig && window.PogoConfig.outage !== undefined) {
+                return window.PogoConfig.outage;
+            }
+            console.log(`zzzzzz`);
+            return data;
+        });
+        return data;
     } catch (error) {
         console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
         return null;
@@ -52,7 +62,7 @@ async function checkServiceStatus(page: Page, service: ServicesList): Promise<bo
     await page.goto(service.url, {
         waitUntil: "domcontentloaded"
     });
-    return await waitForServiceProperties(page); 
+    return await waitForServiceProperties(page);
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
@@ -72,24 +82,26 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
         browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
-        const context = browser.contexts()[0]
+        const context = browser.contexts()[0];
 
-        context.setDefaultTimeout(10000);
-        context.setDefaultNavigationTimeout(10000);
+        context.setDefaultTimeout(15000);
+        context.setDefaultNavigationTimeout(15000);
 
         for (const service of SERVICES) {
             const page = await context.newPage();
             try {
                 const outage = await checkServiceStatus(page, service);
 
-                if (outage) {
+                if (outage !== null)  {
                     results.push({
                         name: service.name,
                         url: service.url,
-                        outage: outage!
+                        outage: outage
                     });
 
                     console.log(`💀 ${service.name}: ${outage}`);
+                } else {
+                    console.log(`SEM STATUS ! :c`);
                 }
             } catch (error: any) {
                 console.log(`${service.name}: ${error.message}`);
