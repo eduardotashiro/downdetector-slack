@@ -67,32 +67,33 @@ async function checkServiceStatus(page: Page, service: ServicesList): Promise<bo
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
-    let browser: Browser | undefined;
-    let session: any;
 
-    try {
-        session = await client.browser.session.create({
-            windowSize: "1920x1080",
-            type: "hosted"
-        });
+    for (const service of SERVICES) {
+        let browser: Browser | undefined;
+        let session: any;
 
-        console.log("Session:", session.sessionId);
-        console.log("CDP URL:", session.cdpUrl);
-        console.log("Node:", session.servedBy);
+        try {
+            session = await client.browser.session.create({
+                windowSize: "1920x1080",
+                type: "hosted"
+            });
 
-        browser = await chromium.connectOverCDP(session.cdpUrl as string);
+            console.log("Session:", session.sessionId);
+            console.log("CDP URL:", session.cdpUrl);
+            console.log("Node:", session.servedBy);
 
-        const context = browser.contexts()[0];
+            browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
-        context.setDefaultTimeout(15000);
-        context.setDefaultNavigationTimeout(15000);
+            const context = browser.contexts()[0];
 
-        for (const service of SERVICES) {
+            context.setDefaultTimeout(10000);
+            context.setDefaultNavigationTimeout(10000);
+
             const page = await context.newPage();
             try {
                 const outage = await checkServiceStatus(page, service);
 
-                if (outage !== null)  {
+                if (outage !== null) {
                     results.push({
                         name: service.name,
                         url: service.url,
@@ -108,16 +109,16 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             } finally {
                 await page.close();
             }
-        }
-    } catch (error) {
-        console.error("Session error:", error);
-    } finally {
-        if (browser) {
-            await browser.close();
-        }
-        if (session) {
-            await client.browser.session.stop({ sessionId: session.sessionId });
-            console.log("Session stopp:", session.sessionId);
+        } catch (error) {
+            console.error(`Session error (${service.name}):`, error);
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+            if (session) {
+                await client.browser.session.stop({ sessionId: session.sessionId });
+                console.log("Session stopp:", session.sessionId);
+            }
         }
     }
     return results;
