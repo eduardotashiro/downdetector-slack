@@ -78,8 +78,8 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
                 type: "hosted"
             });
 
-            console.log("Session:", session.sessionId);
-            console.log("CDP URL:", session.cdpUrl);
+            // console.log("Session:", session.sessionId);
+            // console.log("CDP URL:", session.cdpUrl);
             console.log("Node:", session.servedBy);
 
             browser = await chromium.connectOverCDP(session.cdpUrl as string);
