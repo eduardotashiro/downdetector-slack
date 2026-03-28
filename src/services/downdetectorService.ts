@@ -74,8 +74,8 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
         try {
             session = await client.browser.session.create({
-                windowSize: "1920x1080",
-                type: "hosted"
+                windowSize: "390x844", //para iphone os cara passam um pano
+                type: "consumer_distributed"
             });
 
             // console.log("Session:", session.sessionId);
@@ -84,7 +84,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
             browser = await chromium.connectOverCDP(session.cdpUrl as string);
 
-            const context = browser.contexts()[0];
+            const context = browser.contexts()[0] || (await browser.newContext());
 
             context.setDefaultTimeout(10000);
             context.setDefaultNavigationTimeout(10000);
@@ -102,7 +102,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
                     console.log(`💀 ${service.name}: ${outage}`);
                 } else {
-                    console.log(`SEM STATUS ! :c`);
+                    console.log(`${service.name} SEM STATUS ! (X.X)`);
                 }
             } catch (error: any) {
                 console.log(`${service.name}: ${error.message}`);
@@ -117,7 +117,6 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             }
             if (session) {
                 await client.browser.session.stop({ sessionId: session.sessionId });
-                console.log("Session stopp:", session.sessionId);
             }
         }
     }
