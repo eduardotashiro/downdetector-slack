@@ -32,7 +32,7 @@ export class IncidentMonitor {
             });
 
             this.incident.alertSent = true;
-            console.log(`STATUS ${outage} PARA ${name} ENVIADO NO SLACK !`);
+            console.log(`STATUS ${outage}🔴 PARA ${name} ENVIADO NO SLACK !`);
             return;
         }
 
@@ -67,7 +67,7 @@ export class IncidentMonitor {
         }
 
         if (outage !== null && outage === false && !this.incident) {
-            console.log(`${name} FUNCIONANDO NORMALMENTE !!!`)
+            console.log(`${name} 🟢`)
         }
 
         if (outage == null) {
