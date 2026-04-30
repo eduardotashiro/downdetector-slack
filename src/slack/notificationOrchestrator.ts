@@ -16,6 +16,8 @@ const bbMonitor = new IncidentMonitor(client, channel);
 const itauMonitor = new IncidentMonitor(client, channel);
 const mercadoPagoMonitor = new IncidentMonitor(client, channel);
 const picpayMonitor = new IncidentMonitor(client, channel);
+const vivoMonitor = new IncidentMonitor(client, channel)
+const vpn = new IncidentMonitor(client, channel)
 
 const monitors = {
     [ServiceName.PIX]: pixMonitor,
@@ -26,6 +28,9 @@ const monitors = {
     [ServiceName.ITAU]: itauMonitor,
     [ServiceName.MERCADO_PAGO]: mercadoPagoMonitor,
     [ServiceName.PICPAY]: picpayMonitor,
+    [ServiceName.VIVO]: vivoMonitor,
+    [ServiceName.VPN] : vpn
+
 };
 
 export async function CheckAll() {

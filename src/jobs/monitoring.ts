@@ -3,13 +3,11 @@ import cron from "node-cron";
 
 
 // (*/5... não diminua 
-cron.schedule("*/5 * * * *", run,
+cron.schedule("*/3 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
 );
-
-
 
 async function run() {
   try {
@@ -19,4 +17,4 @@ async function run() {
   } catch (error) {
     console.error(`Erro no monitoramento:`, error);
   }
-};
+}

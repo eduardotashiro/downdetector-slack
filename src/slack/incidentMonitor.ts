@@ -1,10 +1,12 @@
 import { WebClient } from "@slack/web-api";
 import { ServicesResult } from "../services/downdetectorService.js";
+import { ServiceStatus } from "./types.js";
 
 //form
 export class IncidentMonitor {
     private incident: {
         startedAt: number;
+        level: ServiceStatus;
         alertSent: boolean;
     } | null = null;
 
@@ -18,11 +20,12 @@ export class IncidentMonitor {
     }
     //metho
     async handle(services: ServicesResult): Promise<void> {
-        const { name, url, outage } = services
+        const { name, url, outage:status } = services
 
-        if (outage !== null && outage == true && !this.incident) {
+        if (status === ServiceStatus.DANGER && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
+                level: status,
                 alertSent: false
             }
 
@@ -32,11 +35,11 @@ export class IncidentMonitor {
             });
 
             this.incident.alertSent = true;
-            console.log(`STATUS ${outage}🔴 PARA ${name} ENVIADO NO SLACK !`);
+            console.log(`STATUS ${ServiceStatus.DANGER} 🔴 PARA ${name} ENVIADO NO SLACK !`);
             return;
         }
 
-        if (outage !== null && outage == false && this.incident && this.incident.alertSent) {
+        if (status === ServiceStatus.SUCCESS && this.incident && this.incident.alertSent) {
             const time = Date.now() - this.incident.startedAt
             const minutes = Math.floor(time / 60000);
             const hours = Math.floor(minutes / 60);
@@ -61,17 +64,17 @@ export class IncidentMonitor {
             return;
         }
 
-        if (outage !== null && outage === true && this.incident) {
-            console.log(`INCIDENTE EM ${name} | STATUS: ${outage}, AINDA ATIVO...`);
+        if ((status === ServiceStatus.DANGER) && this.incident) {
+            console.log(`INCIDENTE EM ${name} | STATUS: ${status}, AINDA ATIVO...`);
             return;
         }
 
-        if (outage !== null && outage === false && !this.incident) {
+        if (status === ServiceStatus.SUCCESS && !this.incident) {
             console.log(`${name} 🟢`)
         }
 
-        if (outage == null) {
-            console.log("outage null x.x")
+        if (status === ServiceStatus.WARNING) {
+            console.log(`${name} 🟡`)
         }
     }
 }

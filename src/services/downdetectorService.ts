@@ -1,7 +1,7 @@
 import { chromium, Page, Browser } from "playwright";
 import BrowsercashSDK from "@browsercash/sdk";
 import { config } from "../config/env.js";
-import { ServiceName, ServiceURL } from "../slack/types.js";
+import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 
 const client = new BrowsercashSDK({
     apiKey: config.api.apiKey,
@@ -10,7 +10,7 @@ const client = new BrowsercashSDK({
 export interface ServicesResult {
     name: ServiceName,
     url: ServiceURL,
-    outage: boolean
+    outage: string 
 }
 
 interface ServicesList {
@@ -29,36 +29,32 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
-async function waitForServiceProperties(page: Page): Promise<boolean | null> {
+async function waitForServiceProperties(page: Page): Promise<string | null> {
     try {
-        let data = await page.evaluate(() => {
-            if (window.PogoConfig && window.PogoConfig.outage !== undefined) {
-                return window.PogoConfig.outage;
-            }
-            return null;
+     
+        let bodyText = await page.evaluate(() => {
+            return document.body.innerText.toLowerCase();
         });
 
-        if (data !== null) {
-            console.log(`>>>>>>`);
-            return data;
+         if (bodyText.includes("user reports show problems with")) {
+            return ServiceStatus.DANGER;
         }
 
-        await page.waitForFunction(() => window.PogoConfig && window.PogoConfig.outage !== undefined);
-        data = await page.evaluate(() => {
-            if (window.PogoConfig && window.PogoConfig.outage !== undefined) {
-                return window.PogoConfig.outage;
-            }
-            console.log(`zzzzzz`);
-            return data;
-        });
-        return data;
+        if (bodyText.includes("user reports show no current problems")) {
+            return ServiceStatus.SUCCESS
+        }
+        
+        if (bodyText.includes("user reports show possible problems")) {
+            return ServiceStatus.WARNING
+        }
+        return null;
     } catch (error) {
         console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
-        return null;
+        return null
     }
 }
 
-async function checkServiceStatus(page: Page, service: ServicesList): Promise<boolean | null> {
+async function checkServiceStatus(page: Page, service: ServicesList): Promise<string | null> {
     await page.goto(service.url, {
         waitUntil: "domcontentloaded"
     });
@@ -93,11 +89,11 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             try {
                 const outage = await checkServiceStatus(page, service);
 
-                if (outage !== null) {
+                if (outage) {
                     results.push({
                         name: service.name,
                         url: service.url,
-                        outage: outage
+                        outage:  outage
                     });
 
                     console.log(`💀 ${service.name}: ${outage}`);

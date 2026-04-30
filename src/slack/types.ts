@@ -1,3 +1,9 @@
+export enum ServiceStatus {
+    SUCCESS = "success",
+    DANGER = "danger",
+    WARNING = "warning"
+}
+
 export enum ServiceName {
     BANCO_DO_BRASIL = "Banco do Brasil",
     BRADESCO = "Bradesco",
@@ -7,6 +13,8 @@ export enum ServiceName {
     ITAU = "Banco Itaú",
     NUBANK = "Nubank",
     MERCADO_PAGO = "Mercado Pago",
+    VIVO = "Vivo",
+    VPN ="vpn"
 }
 
 export enum ServiceURL {
@@ -17,5 +25,8 @@ export enum ServiceURL {
     PICPAY = "https://downdetector.com.br/fora-do-ar/picpay/",
     ITAU = "https://downdetector.com.br/fora-do-ar/banco-itau/",
     NUBANK = "https://downdetector.com.br/fora-do-ar/nubank/",
-    MERCADO_PAGO = "https://downdetector.com.br/fora-do-ar/mercadopago/"
+    MERCADO_PAGO = "https://downdetector.com.br/fora-do-ar/mercadopago/",
+    VIVO = "https://downdetector.com.br/fora-do-ar/vivo/",
+    VPN = "https://downdetector.com/status/express-vpn/"
 }
+
