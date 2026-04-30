@@ -1,17 +1,17 @@
 import { vi, it, describe, expect } from "vitest";
 import { IncidentMonitor } from "../incidentMonitor.js";
-import { ServiceName, ServiceURL } from "../types.js";
+import { ServiceName, ServiceURL, ServiceStatus } from "../types.js";
 
 const payloadDanger = {
     name: ServiceName.BRADESCO,
     url: ServiceURL.BRADESCO,
-    outage: true
+    outage: ServiceStatus.DANGER
 }
 
 const payloadSuccess = {
     name: ServiceName.BRADESCO,
     url: ServiceURL.BRADESCO,
-    outage: false
+    outage: ServiceStatus.SUCCESS
 }
 
 describe("IncidentMonitor", () => {
@@ -61,5 +61,4 @@ describe("IncidentMonitor", () => {
 
         expect(mockPostMessage).toHaveBeenCalledTimes(2);
     })
-
 })
