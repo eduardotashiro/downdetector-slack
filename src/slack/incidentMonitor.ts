@@ -72,17 +72,8 @@ export class IncidentMonitor {
         if (status === ServiceStatus.SUCCESS && !this.incident) {
             console.log(`${name} 🟢`)
         }
-
-        if (status === ServiceStatus.WARNING) {
-            console.log(`${name} 🟡`)
-        }
     }
 }
-
-
-
-
-
 
 
 
@@ -138,35 +129,3 @@ export class IncidentMonitor {
 
 
 
-
-// class JogadorDeBasquete {
-//     velocidade: number;
-//     habilidade: number;
-//     altura: float;
-//     enterrada: boolean;
-//     nome: string;
-//     time: string;
-
-
-//     constructor(velocidade: number,habilidade: number, altura: float , enterrada: boolean, nome: string, time : string) {
-//         this.velocidade = velocidade;
-//         this.habilidade = habilidade;
-//         this.altura = altura;
-//         this.enterrada = enterrada;
-//         this.nome = string;
-//         this.time = string;
-//     }
-
-//     chamaJogador() {
-//         console.log(`chamando o jogador ${this.nome} para jogar no ${this.time}...`);
-//     }
-//    expulsaJogadorMuitoRuim(){
-//          console.log(`não sobra nada pro ${this.nome}`)
-//       }
-// }
-
-// const jogadorQualquer = new JogadorDeBasquete(1, 2, 1.50, false, "joao", "Bauru");
-// const duduTheKing = new JogadorDeBasquete("100", 200, 2.00, true, "Dudu", "Cleveland");
-
-// duduTheKing.chamaJogador()
-// jogadorQualquer.expulsaJogadorMuitoRuim() 

@@ -12,9 +12,7 @@ export enum ServiceName {
     PICPAY = "Pic Pay",
     ITAU = "Banco Itaú",
     NUBANK = "Nubank",
-    MERCADO_PAGO = "Mercado Pago",
-    VIVO = "Vivo",
-    VPN ="vpn"
+    MERCADO_PAGO = "Mercado Pago"
 }
 
 export enum ServiceURL {
@@ -25,8 +23,6 @@ export enum ServiceURL {
     PICPAY = "https://downdetector.com.br/fora-do-ar/picpay/",
     ITAU = "https://downdetector.com.br/fora-do-ar/banco-itau/",
     NUBANK = "https://downdetector.com.br/fora-do-ar/nubank/",
-    MERCADO_PAGO = "https://downdetector.com.br/fora-do-ar/mercadopago/",
-    VIVO = "https://downdetector.com.br/fora-do-ar/vivo/",
-    VPN = "https://downdetector.com/status/express-vpn/"
+    MERCADO_PAGO = "https://downdetector.com.br/fora-do-ar/mercadopago/"
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "downdetector-slack",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Monitor Downdetector | Slack",
   "main": "dist/server.js",
   "type": "module",
@@ -11,6 +11,7 @@
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "test:alert": "npx tsx src/scripts/testAlert.ts",
     "test:watch": "vitest",
     "test": "vitest run"
   },
@@ -18,11 +19,11 @@
   "author": "Eduardo Tashiro",
   "license": "ISC",
   "dependencies": {
-    "@browsercash/sdk": "^0.6.0",
     "@slack/bolt": "^4.6.0",
-    "dotenv": "^17.2.3",
+    "camoufox-js": "^0.12.0",
+    "dotenv": "^17.4.2",
     "node-cron": "^4.2.1",
-    "playwright": "1.58.0"
+    "playwright": "1.60.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

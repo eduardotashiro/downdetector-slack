@@ -7,9 +7,3 @@ export const app = new App({
   logLevel: LogLevel.INFO,
   token: config.slack.botToken,
 });
-
-
-
-
-
-

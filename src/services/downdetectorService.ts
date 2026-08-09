@@ -1,16 +1,12 @@
-import { chromium, Page, Browser } from "playwright";
-import BrowsercashSDK from "@browsercash/sdk";
-import { config } from "../config/env.js";
+// src/services/downdetectorService.ts
+import { Camoufox } from "camoufox-js";
+import type { Browser, Page } from "playwright";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
-
-const client = new BrowsercashSDK({
-    apiKey: config.api.apiKey,
-});
 
 export interface ServicesResult {
     name: ServiceName,
     url: ServiceURL,
-    outage: string 
+    outage: string
 }
 
 interface ServicesList {
@@ -29,73 +25,96 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
+// Espera o desafio do Cloudflare desaparecer da página.
+async function waitForCloudflareChallenge(page: Page): Promise<void> {
+    try {
+        await page.waitForFunction(
+            () => !document.title.toLowerCase().includes("just a moment") &&
+                  !document.body?.innerText?.toLowerCase().includes("performing security verification"),
+            { timeout: 15000 }
+        );
+    } catch {
+        // Se não sair do challenge em 15s, segue mesmo assim.
+    }
+
+    // O Cloudflare faz um reload completo da página depois de aprovar o
+    // acesso. Espera esse reload assentar antes de tentar ler o conteúdo,
+    // senão o document.body pode estar momentaneamente null no meio da troca.
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+    await page.waitForTimeout(1000);
+}
+
+// Lê o texto da página com algumas tentativas, caso o DOM ainda esteja
+// se estabilizando logo após o reload do Cloudflare.
+async function readBodyTextWithRetry(page: Page, attempts = 3): Promise<string> {
+    for (let i = 0; i < attempts; i++) {
+        try {
+            return await page.evaluate(() => document.body.innerText.toLowerCase());
+        } catch (error) {
+            if (i === attempts - 1) throw error;
+            await page.waitForTimeout(500);
+        }
+    }
+    return "";
+}
+
 async function waitForServiceProperties(page: Page): Promise<string | null> {
     try {
-     
-        let bodyText = await page.evaluate(() => {
-            return document.body.innerText.toLowerCase();
-        });
+        const bodyText = await readBodyTextWithRetry(page);
 
-         if (bodyText.includes("user reports show problems with")) {
+        if (bodyText.includes("user reports show problems with")) {
             return ServiceStatus.DANGER;
         }
-
         if (bodyText.includes("user reports show no current problems")) {
-            return ServiceStatus.SUCCESS
+            return ServiceStatus.SUCCESS;
         }
-        
         if (bodyText.includes("user reports show possible problems")) {
-            return ServiceStatus.WARNING
+            return ServiceStatus.WARNING;
         }
         return null;
     } catch (error) {
         console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
-        return null
+        return null;
     }
 }
 
 async function checkServiceStatus(page: Page, service: ServicesList): Promise<string | null> {
-    await page.goto(service.url, {
-        waitUntil: "domcontentloaded"
-    });
-    return await waitForServiceProperties(page);
+    await page.goto(service.url, { waitUntil: "domcontentloaded" });
+    await waitForCloudflareChallenge(page);
+    const outage = await waitForServiceProperties(page);
+
+    if (!outage) {
+        try {
+            await page.screenshot({ path: `debug/${service.name}.png` });
+        } catch {
+            // pasta debug/ pode não existir — não é crítico.
+        }
+    }
+
+    return outage;
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
+    let browser: Browser | undefined;
 
-    for (const service of SERVICES) {
-        let browser: Browser | undefined;
-        let session: any;
+    try {
+        browser = (await Camoufox({
+            headless: true,
+            block_webrtc: true,
+            window: [1280, 800],
+        })) as Browser;
 
-        try {
-            session = await client.browser.session.create({
-                windowSize: "390x844", //para iphone os cara passam um pano
-                type: "consumer_distributed"
-            });
+        for (const service of SERVICES) {
+            const page = await browser.newPage();
+            page.setDefaultTimeout(15000);
+            page.setDefaultNavigationTimeout(15000);
 
-            // console.log("Session:", session.sessionId);
-            // console.log("CDP URL:", session.cdpUrl);
-            console.log("Node:", session.servedBy);
-
-            browser = await chromium.connectOverCDP(session.cdpUrl as string);
-
-            const context = browser.contexts()[0] || (await browser.newContext());
-
-            context.setDefaultTimeout(10000);
-            context.setDefaultNavigationTimeout(10000);
-
-            const page = await context.newPage();
             try {
                 const outage = await checkServiceStatus(page, service);
 
                 if (outage) {
-                    results.push({
-                        name: service.name,
-                        url: service.url,
-                        outage:  outage
-                    });
-
+                    results.push({ name: service.name, url: service.url, outage });
                     console.log(`💀 ${service.name}: ${outage}`);
                 } else {
                     console.log(`${service.name} SEM STATUS ! (X.X)`);
@@ -105,16 +124,12 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             } finally {
                 await page.close();
             }
-        } catch (error) {
-            console.error(`Session error (${service.name}):`, error);
-        } finally {
-            if (browser) {
-                await browser.close();
-            }
-            if (session) {
-                await client.browser.session.stop({ sessionId: session.sessionId });
-            }
+        }
+    } finally {
+        if (browser) {
+            await browser.close();
         }
     }
+
     return results;
 }

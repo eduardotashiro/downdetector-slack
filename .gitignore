@@ -7,3 +7,4 @@ dist/
 *.txt
 cookies.json
 teste.ts
+debug/
