@@ -1,4 +1,3 @@
-// src/services/downdetectorService.ts
 import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";

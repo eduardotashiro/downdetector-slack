@@ -1,4 +1,3 @@
-// src/scripts/testAlert.ts
 import { WebClient } from "@slack/web-api";
 import { IncidentMonitor } from "../slack/incidentMonitor.js";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
