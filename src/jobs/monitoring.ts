@@ -2,8 +2,8 @@ import { CheckAll } from "../slack/notificationOrchestrator.js";
 import cron from "node-cron";
 
 
-// (*/4... não diminua 
-cron.schedule("*/4 * * * *", run,
+// (*/3... não diminua 
+cron.schedule("*/3 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
