@@ -11,6 +11,7 @@
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "postinstall": "npx camoufox-js fetch",
     "test:alert": "npx tsx src/scripts/testAlert.ts",
     "test:watch": "vitest",
     "test": "vitest run"
