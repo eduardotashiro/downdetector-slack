@@ -6,9 +6,7 @@ RUN apt-get update && apt-get install -y xvfb build-essential && rm -rf /var/lib
 
 COPY package*.json ./
 
-RUN npm ci --ignore-scripts
-
-RUN npx camoufox-js fetch
+RUN npm ci
 
 COPY . .
 
