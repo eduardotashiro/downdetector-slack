@@ -2,13 +2,15 @@ import { CheckAll } from "../slack/notificationOrchestrator.js";
 import cron from "node-cron";
 
 
-// (*/3... não diminua 
-cron.schedule("*/3 * * * *", run,
+// (*/4... // não diminuir o intervalo abaixo de 4 minutos
+cron.schedule("*/4 * * * *", run,
   {
     timezone: "America/Sao_Paulo"
   }
 );
-// CheckAll();
+
+run();
+
 async function run() {
   try {
     console.log(`Monitoramento iniciado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);

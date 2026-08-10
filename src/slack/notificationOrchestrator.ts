@@ -17,7 +17,7 @@ const itauMonitor = new IncidentMonitor(client, channel);
 const mercadoPagoMonitor = new IncidentMonitor(client, channel);
 const picpayMonitor = new IncidentMonitor(client, channel);
 
-const monitors = {
+const monitors: Record<ServiceName, IncidentMonitor> = {
     [ServiceName.PIX]: pixMonitor,
     [ServiceName.NUBANK]: nubankMonitor,
     [ServiceName.BRADESCO]: bradescoMonitor,
