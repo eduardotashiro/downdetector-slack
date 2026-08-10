@@ -1,5 +1,5 @@
 import { Camoufox } from "camoufox-js";
-import type { Browser, Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 
 export interface ServicesResult {
@@ -24,73 +24,83 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
-// Espera o desafio do Cloudflare desaparecer da página.
-async function waitForCloudflareChallenge(page: Page): Promise<void> {
+async function clickTurnstile(page: Page): Promise<boolean> {
     try {
-        await page.waitForFunction(
-            () => !document.title.toLowerCase().includes("just a moment") &&
-                  !document.body?.innerText?.toLowerCase().includes("performing security verification"),
-            { timeout: 15000 }
-        );
+        const frame = page.frameLocator('iframe[src*="challenges.cloudflare"]');
+        await frame
+            .locator('input[type="checkbox"], .ctp-checkbox-label, [role="checkbox"]')
+            .first()
+            .click({ timeout: 4000 });
+        return true;
     } catch {
-        // Se não sair do challenge em 15s, segue mesmo assim.
+        return false;
     }
-
-    // O Cloudflare faz um reload completo da página depois de aprovar o
-    // acesso. Espera esse reload assentar antes de tentar ler o conteúdo,
-    // senão o document.body pode estar momentaneamente null no meio da troca.
-    await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(1000);
 }
 
-// Lê o texto da página com algumas tentativas, caso o DOM ainda esteja
-// se estabilizando logo após o reload do Cloudflare.
-async function readBodyTextWithRetry(page: Page, attempts = 3): Promise<string> {
-    for (let i = 0; i < attempts; i++) {
-        try {
-            return await page.evaluate(() => document.body.innerText.toLowerCase());
-        } catch (error) {
-            if (i === attempts - 1) throw error;
-            await page.waitForTimeout(500);
+async function waitForRealContent(page: Page): Promise<boolean> {
+    const deadline = Date.now() + 60000;
+
+    while (Date.now() < deadline) {
+        const body = await page
+            .evaluate(() => document.body?.innerText?.toLowerCase() || "")
+            .catch(() => "");
+
+        if (body.includes("relatos dos usuários") ||
+            body.includes("relatar um problema") ||
+            body.includes("user reports show") ||
+            body.includes("report a problem")) {
+            return true;
         }
+
+        const clicked = await clickTurnstile(page);
+        await new Promise(r => setTimeout(r, clicked ? 5000 : 2000));
     }
-    return "";
+
+    return false;
 }
 
-async function waitForServiceProperties(page: Page): Promise<string | null> {
+async function detectStatus(page: Page): Promise<string | null> {
     try {
-        const bodyText = await readBodyTextWithRetry(page);
+        const body = await page.evaluate(() => document.body?.innerText?.toLowerCase() || "");
 
-        if (bodyText.includes("user reports show problems with")) {
-            return ServiceStatus.DANGER;
-        }
-        if (bodyText.includes("user reports show no current problems")) {
+        if (body.includes("não mostram problemas") ||
+            body.includes("no current problems")) {
             return ServiceStatus.SUCCESS;
         }
-        if (bodyText.includes("user reports show possible problems")) {
+        if (body.includes("possíveis problemas") ||
+            body.includes("possible problems")) {
             return ServiceStatus.WARNING;
         }
+        if (body.includes("mostram problemas") ||
+            body.includes("show problems with")) {
+            return ServiceStatus.DANGER;
+        }
         return null;
-    } catch (error) {
-        console.log(`waitForServiceProperties, Erro: ${(error as Error).message}`);
+    } catch {
         return null;
     }
 }
 
-async function checkServiceStatus(page: Page, service: ServicesList): Promise<string | null> {
-    await page.goto(service.url, { waitUntil: "domcontentloaded" });
-    await waitForCloudflareChallenge(page);
-    const outage = await waitForServiceProperties(page);
+async function tryOnce(context: BrowserContext, service: ServicesList): Promise<{ status: string | null; page: Page }> {
+    const page = await context.newPage();
+    page.setDefaultTimeout(30000);
+    page.setDefaultNavigationTimeout(60000);
 
-    if (!outage) {
-        try {
-            await page.screenshot({ path: `debug/${service.name}.png` });
-        } catch {
-            // pasta debug/ pode não existir — não é crítico.
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7' });
+
+    try {
+        await page.goto(service.url, { waitUntil: "domcontentloaded", timeout: 60000 });
+        const loaded = await waitForRealContent(page);
+        if (!loaded) {
+            return { status: null, page };
         }
-    }
 
-    return outage;
+        const status = await detectStatus(page);
+        return { status, page };
+
+    } catch {
+        return { status: null, page };
+    }
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
@@ -99,36 +109,53 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 
     try {
         browser = (await Camoufox({
-            headless: true,
+            headless: false,
             block_webrtc: true,
             window: [1280, 800],
+            os: "linux",
+            humanize: true,
+            geoip: true,
+            fonts: ["Arial", "Times New Roman", "Helvetica", "DejaVu Sans"],
+            navigator: {
+                platform: "Linux x86_64",
+                hardware_concurrency: 4,
+                device_memory: 8
+            }
         })) as Browser;
 
-        for (const service of SERVICES) {
-            const page = await browser.newPage();
-            page.setDefaultTimeout(15000);
-            page.setDefaultNavigationTimeout(15000);
+        // cookie cf_clearance vale pra todos
+        const context = await browser.newContext();
 
-            try {
-                const outage = await checkServiceStatus(page, service);
+        try {
+            for (const service of SERVICES) {
 
-                if (outage) {
-                    results.push({ name: service.name, url: service.url, outage });
-                    console.log(`💀 ${service.name}: ${outage}`);
+                let { status, page } = await tryOnce(context, service);
+
+                if (!status) {
+                    await page.close().catch(() => { });
+                    console.log(`${service.name}: retry após falha...`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    const retry = await tryOnce(context, service);
+                    status = retry.status;
+                    page = retry.page;
+                }
+
+                if (status) {
+                    results.push({ name: service.name, url: service.url, outage: status });
                 } else {
                     console.log(`${service.name} SEM STATUS ! (X.X)`);
                 }
-            } catch (error: any) {
-                console.log(`${service.name}: ${error.message}`);
-            } finally {
-                await page.close();
+
+                await page.close().catch(() => { });
+                await new Promise(r => setTimeout(r, 1000));
             }
+        } finally {
+            await context.close().catch(() => { });
         }
     } finally {
         if (browser) {
             await browser.close();
         }
     }
-
     return results;
 }

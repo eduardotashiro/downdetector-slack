@@ -2,7 +2,6 @@ import { WebClient } from "@slack/web-api";
 import { ServicesResult } from "../services/downdetectorService.js";
 import { ServiceStatus } from "./types.js";
 
-//form
 export class IncidentMonitor {
     private incident: {
         startedAt: number;
@@ -13,14 +12,13 @@ export class IncidentMonitor {
     private client: WebClient;
     private channel: string;
 
-    //ing form
     constructor(client: WebClient, channel: string) {
         this.client = client;
         this.channel = channel
     }
-    //metho
+
     async handle(services: ServicesResult): Promise<void> {
-        const { name, url, outage:status } = services
+        const { name, url, outage: status } = services
 
         if (status === ServiceStatus.DANGER && !this.incident) {
             this.incident = {
@@ -64,6 +62,11 @@ export class IncidentMonitor {
             return;
         }
 
+        if (status === ServiceStatus.WARNING) {
+            console.log(`⚠️ ${name}: possíveis problemas (warning)`);
+            return;
+        }
+
         if ((status === ServiceStatus.DANGER) && this.incident) {
             console.log(`INCIDENTE EM ${name} | STATUS: ${status}, AINDA ATIVO...`);
             return;
@@ -74,58 +77,3 @@ export class IncidentMonitor {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// class Bolo {
-//     sabor: string;
-//     peso: number;
-
-//     constructor(sabor: string, peso: number) {
-//         this.sabor = sabor;
-//         this.peso = peso;
-//     }
-
-//     assar() {
-//         console.log(`Assando bolo de ${this.sabor}...`);
-//     }
-// }
-
-// const boloChocolate = new Bolo("chocolate", 500);
-// const boloMorango = new Bolo("morango", 300);
-
-// boloChocolate.assar();
-// boloMorango.assar();   
-
-
-
-
-
-
-
-
