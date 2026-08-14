@@ -35,4 +35,4 @@ COPY . .
 RUN npm run build
 
 # 2>/dev/null (Errors from xkbcomp are not fatal to the X server)
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x800x24 -ac 2>/dev/null & sleep 2 && node dist/server.js"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node dist/server.js"]

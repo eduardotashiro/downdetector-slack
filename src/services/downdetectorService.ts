@@ -1,16 +1,16 @@
 import { Camoufox } from "camoufox-js";
-import type { Browser, BrowserContext, Page } from "playwright";
+import type { Browser, Page } from "playwright";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 
 export interface ServicesResult {
-    name: ServiceName,
-    url: ServiceURL,
-    outage: string
+    name: ServiceName;
+    url: ServiceURL;
+    outage: string;
 }
 
 interface ServicesList {
-    name: ServiceName,
-    url: ServiceURL
+    name: ServiceName;
+    url: ServiceURL;
 }
 
 const SERVICES: ServicesList[] = [
@@ -24,138 +24,222 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
-async function clickTurnstile(page: Page): Promise<boolean> {
-    try {
-        const frame = page.frameLocator('iframe[src*="challenges.cloudflare"]');
-        await frame
-            .locator('input[type="checkbox"], .ctp-checkbox-label, [role="checkbox"]')
-            .first()
-            .click({ timeout: 4000 });
-        return true;
-    } catch {
-        return false;
-    }
-}
+async function waitForRealContent(page: Page, maxWait: number = 15000): Promise<boolean> {
 
-async function waitForRealContent(page: Page): Promise<boolean> {
-    const deadline = Date.now() + 60000;
+    const deadline = Date.now() + maxWait;
 
     while (Date.now() < deadline) {
+
         const body = await page
             .evaluate(() => document.body?.innerText?.toLowerCase() || "")
             .catch(() => "");
 
-        if (body.includes("relatos dos usuários") ||
+        if (
+            body.includes("relatos dos usuários") ||
             body.includes("relatar um problema") ||
             body.includes("user reports show") ||
-            body.includes("report a problem")) {
+            body.includes("report a problem")
+        ) {
             return true;
         }
 
-        const clicked = await clickTurnstile(page);
-        await new Promise(r => setTimeout(r, clicked ? 5000 : 2000));
+        if (
+            body.includes("verificando") ||
+            body.includes("verifying") ||
+            body.includes("segurança") ||
+            body.includes("confirme que é humano")
+        ) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     return false;
 }
 
 async function detectStatus(page: Page): Promise<string | null> {
-    try {
-        const body = await page.evaluate(() => document.body?.innerText?.toLowerCase() || "");
 
-        if (body.includes("não mostram problemas") ||
-            body.includes("no current problems")) {
+    try {
+
+        const body = await page.evaluate(
+            () => document.body?.innerText?.toLowerCase() || ""
+        );
+
+        if (
+            body.includes("não mostram problemas") ||
+            body.includes("no current problems")
+        ) {
             return ServiceStatus.SUCCESS;
         }
-        if (body.includes("possíveis problemas") ||
-            body.includes("possible problems")) {
+
+        if (
+            body.includes("possíveis problemas") ||
+            body.includes("possible problems")
+        ) {
             return ServiceStatus.WARNING;
         }
-        if (body.includes("mostram problemas") ||
-            body.includes("show problems with")) {
+
+        if (
+            body.includes("mostram problemas") ||
+            body.includes("show problems with")
+        ) {
             return ServiceStatus.DANGER;
         }
+
         return null;
+
     } catch {
         return null;
     }
 }
 
-async function tryOnce(context: BrowserContext, service: ServicesList): Promise<{ status: string | null; page: Page }> {
-    const page = await context.newPage();
-    page.setDefaultTimeout(30000);
-    page.setDefaultNavigationTimeout(60000);
+async function checkSingleService(browser: Browser, service: ServicesList): Promise<string | null> {
 
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7' });
+    const name = service.name;
+    const url = service.url;
+
+    let page: Page | undefined;
 
     try {
-        await page.goto(service.url, { waitUntil: "domcontentloaded", timeout: 60000 });
-        const loaded = await waitForRealContent(page);
+
+        console.log(`💀 ${name}...`);
+
+        page = await browser.newPage();
+
+        await page.setExtraHTTPHeaders({
+            "Accept-Language":
+                "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        });
+
+        await page.goto(url, {
+            waitUntil: "domcontentloaded",
+            timeout: 45000,
+        });
+
+        const loaded = await waitForRealContent(
+            page,
+            15000
+        );
+
         if (!loaded) {
-            return { status: null, page };
+            console.log("❌");
+            return null;
         }
 
         const status = await detectStatus(page);
-        return { status, page };
 
-    } catch {
-        return { status: null, page };
+        if (status === ServiceStatus.SUCCESS) {
+            console.log("✅");
+        } else if (status === ServiceStatus.WARNING) {
+            console.log("⚠️");
+        } else if (status === ServiceStatus.DANGER) {
+            console.log("🔴");
+        } else {
+            console.log("❓");
+        }
+
+        return status;
+
+    } catch (error) {
+
+        const message =
+            error instanceof Error
+                ? error.message
+                : String(error);
+
+        console.log(`❌ (${message.slice(0, 30)})`);
+
+        return null;
+
+    } finally {
+
+        if (page) {
+            await page.close().catch(() => {});
+        }
     }
 }
 
 export async function checkAllServices(): Promise<ServicesResult[]> {
+
     const results: ServicesResult[] = [];
+
+    const startTotal = Date.now();
+
     let browser: Browser | undefined;
 
     try {
+
+        console.log("Iniciando Camoufox...");
+
         browser = (await Camoufox({
-            headless: false,
-            block_webrtc: true,
-            window: [1280, 800],
+            headless: "virtual",
             os: "linux",
             humanize: true,
             geoip: true,
-            fonts: ["Arial", "Times New Roman", "Helvetica", "DejaVu Sans"],
-            navigator: {
-                platform: "Linux x86_64",
-                hardware_concurrency: 4,
-                device_memory: 8
-            }
+            block_webrtc: true,
+            window: [1920, 1080],
         })) as Browser;
 
-        // cookie cf_clearance vale pra todos
-        const context = await browser.newContext();
+        console.log("Camoufox iniciado!");
 
-        try {
-            for (const service of SERVICES) {
+        const servicesToCheck = [...SERVICES];
 
-                let { status, page } = await tryOnce(context, service);
+        servicesToCheck.sort(() => Math.random() - 0.5);
 
-                if (!status) {
-                    await page.close().catch(() => { });
-                    console.log(`${service.name}: retry após falha...`);
-                    await new Promise(r => setTimeout(r, 2000));
-                    const retry = await tryOnce(context, service);
-                    status = retry.status;
-                    page = retry.page;
-                }
+        for (let i = 0; i < servicesToCheck.length; i++) {
 
-                if (status) {
-                    results.push({ name: service.name, url: service.url, outage: status });
-                } else {
-                    console.log(`${service.name} SEM STATUS ! (X.X)`);
-                }
+            const service = servicesToCheck[i];
 
-                await page.close().catch(() => { });
-                await new Promise(r => setTimeout(r, 1000));
+            let status = await checkSingleService(
+                browser,
+                service
+            );
+
+            if (!status) {
+
+                await new Promise(resolve =>
+                    setTimeout(resolve, 1500)
+                );
+
+                status = await checkSingleService(
+                    browser,
+                    service
+                );
             }
-        } finally {
-            await context.close().catch(() => { });
+
+            if (status) {
+
+                results.push({
+                    name: service.name,
+                    url: service.url,
+                    outage: status,
+                });
+            }
+
+            if (i < servicesToCheck.length - 1) {
+
+                const delay = Math.random() * (3000 - 1500) + 1500;
+
+                await new Promise(resolve =>
+                    setTimeout(resolve, delay)
+                );
+            }
         }
+
     } finally {
+
         if (browser) {
-            await browser.close();
+            await browser.close().catch(() => {});
         }
     }
+
+    const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
+
+    console.log(
+        `\n📊 ${results.length}/${SERVICES.length} serviços | ⏱️ ${totalTime}s`
+    );
+
     return results;
 }
