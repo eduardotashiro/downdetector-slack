@@ -1,6 +1,7 @@
 import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
+import { errorMonitor } from "../slack/errorMonitor/index.js";
 
 export interface ServicesResult {
     name: ServiceName;
@@ -156,7 +157,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
     } finally {
 
         if (page) {
-            await page.close().catch(() => {});
+            await page.close().catch(() => { });
         }
     }
 }
@@ -228,10 +229,15 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             }
         }
 
+        if (results.length === 0) {
+            const errorMessage = `Nenhum serviço foi verificado com sucesso.`;
+            await errorMonitor.handle(errorMessage);
+        }
+
     } finally {
 
         if (browser) {
-            await browser.close().catch(() => {});
+            await browser.close().catch(() => { });
         }
     }
 
