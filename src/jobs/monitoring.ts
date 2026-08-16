@@ -1,22 +1,25 @@
 import { CheckAll } from "../slack/notificationOrchestrator.js";
-import cron from "node-cron";
 
-
-// (*/4... // não diminuir o intervalo abaixo de 4 minutos
-cron.schedule("*/4 * * * *", run,
-  {
-    timezone: "America/Sao_Paulo"
-  }
-);
-
-run();
+function getRandomDelay(minMinutes: number, maxMinutes: number): number {
+    const minMs = minMinutes * 60000;
+    const maxMs = maxMinutes * 60000;
+    const randomMs = Math.random() * (maxMs - minMs + 1) + minMs;
+    const delayMs = Math.floor(randomMs);
+    return delayMs;
+}
 
 async function run() {
-  try {
-    console.log(`Monitoramento iniciado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
-    await CheckAll();
-    console.log(`Monitoramento finalizado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
-  } catch (error) {
-    console.error(`Erro no monitoramento:`, error);
-  }
+    try {
+        console.log(`Monitoramento iniciado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+        await CheckAll();
+        console.log(`Monitoramento finalizado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`);
+    } catch (error) {
+        console.error(`Erro no monitoramento:`, error);
+    }
+    const delayMs = getRandomDelay(2, 4);
+    console.log(`⏳ Próxima verificação em ~${Math.round(delayMs / 60000)} minutos...`);
+    setTimeout(run, delayMs);
 }
+
+console.log('mi suerte cambiara en cualquier momento');
+run();
