@@ -5,3 +5,10 @@ dist
 README.md
 Dockerfile
 .env
+grafana
+.vscode
+*.log
+*.txt
+cookies.json
+debug/
+.github
