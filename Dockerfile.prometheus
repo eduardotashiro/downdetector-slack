@@ -1,0 +1,5 @@
+FROM prom/prometheus:latest
+
+COPY grafana/prometheus/prometheus.railway.yml /etc/prometheus/prometheus.yml
+
+CMD ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
