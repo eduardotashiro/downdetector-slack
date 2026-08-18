@@ -2,4 +2,4 @@ FROM grafana/grafana:latest
 
 COPY grafana/provisioning /etc/grafana/provisioning
 COPY grafana/logos /usr/share/grafana/public/img/logos
-COPY grafana/provisioning/datasources/prometheus.railway.yml /etc/grafana/provisioning/datasources/prometheus.yml
+COPY grafana/railway/prometheus-datasource.yml /etc/grafana/provisioning/datasources/prometheus.yml
