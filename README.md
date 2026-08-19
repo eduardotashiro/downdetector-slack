@@ -228,7 +228,7 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 
 ## Arquitetura
 
-<details open>
+<details>
 <summary>Clique para expandir/recolher diagrama</summary>
 
 ### Fluxo do sistema
@@ -542,7 +542,7 @@ O job também roda uma vez imediatamente ao subir, sem precisar esperar o primei
 
 ## Observabilidade
 
-<details open>
+<details>
 <summary>Clique para expandir/recolher</summary>
 
 O bot expõe métricas no formato Prometheus e vem com um dashboard Grafana pronto, provisionado automaticamente — sem precisar configurar nada manualmente.
@@ -851,7 +851,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 ## Arquitectura
 
-<details open>
+<details>
 <summary>Haz clic para expandir/colapsar el diagrama</summary>
 
 ### Flujo del sistema
@@ -1161,7 +1161,7 @@ El job también corre una vez inmediatamente al iniciar, sin necesidad de espera
 
 ## Observabilidad
 
-<details open>
+<details>
 <summary>Haz clic para expandir/colapsar</summary>
 
 El bot expone métricas en formato Prometheus y viene con un dashboard de Grafana listo, provisionado automáticamente — sin necesidad de configurar nada manualmente.
