@@ -21,5 +21,5 @@ async function run() {
     setTimeout(run, delayMs);
 }
 
-console.log('mi suerte cambiara en cualquier momento');
+console.log('Monitoramento iniciado');
 run();
