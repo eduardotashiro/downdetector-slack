@@ -1,0 +1,161 @@
+{
+  "title": "Downdetector Slack Bot",
+  "uid": "downdetector-bot",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 4,
+  "refresh": "10s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/pix.png\" style=\"max-height:90px;max-width:85%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/nubank.png\" style=\"max-height:90px;max-width:85%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/picpay.png\" style=\"max-height:90px;max-width:85%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/mercadopago.png\" style=\"max-height:120px;max-width:95%;object-fit:contain;\" /></div>" } },
+
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"pix\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 6, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"nubank\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"pic_pay\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 18, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"mercado_pago\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 0, "y": 6 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/santander.png\" style=\"max-height:126px;max-width:95%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 6, "y": 6 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/itau.png\" style=\"max-height:90px;max-width:85%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 12, "y": 6 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/bradesco.png\" style=\"max-height:90px;max-width:85%;object-fit:contain;\" /></div>" } },
+    { "type": "text", "gridPos": { "h": 4, "w": 6, "x": 18, "y": 6 }, "options": { "mode": "html", "content": "<div style=\"display:flex;align-items:center;justify-content:center;height:100%;\"><img src=\"/public/img/logos/bancodobrasil.png\" style=\"max-height:110px;max-width:90%;object-fit:contain;\" /></div>" } },
+
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"santander\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 6, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"banco_itau\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 12, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"bradesco\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+    {
+      "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 18, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [{ "expr": "downdetector_service_status{service=\"banco_do_brasil\"}", "refId": "A" }],
+      "fieldConfig": { "defaults": {
+        "mappings": [
+          { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
+          { "type": "value", "options": { "1": { "text": "WARNING", "color": "yellow" } } },
+          { "type": "value", "options": { "2": { "text": "DANGER", "color": "red" } } }
+        ],
+        "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 2 }] },
+        "noValue": "SEM DADOS"
+      } },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value" }
+    },
+
+    {
+      "type": "timeseries",
+      "title": "Histórico de Status (últimas horas)",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "targets": [
+        { "expr": "downdetector_service_status{service=\"pix\"}", "legendFormat": "Pix", "refId": "A" },
+        { "expr": "downdetector_service_status{service=\"nubank\"}", "legendFormat": "Nubank", "refId": "B" },
+        { "expr": "downdetector_service_status{service=\"pic_pay\"}", "legendFormat": "PicPay", "refId": "C" },
+        { "expr": "downdetector_service_status{service=\"mercado_pago\"}", "legendFormat": "Mercado Pago", "refId": "D" },
+        { "expr": "downdetector_service_status{service=\"santander\"}", "legendFormat": "Santander", "refId": "E" },
+        { "expr": "downdetector_service_status{service=\"banco_itau\"}", "legendFormat": "Itaú", "refId": "F" },
+        { "expr": "downdetector_service_status{service=\"bradesco\"}", "legendFormat": "Bradesco", "refId": "G" },
+        { "expr": "downdetector_service_status{service=\"banco_do_brasil\"}", "legendFormat": "Banco do Brasil", "refId": "H" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "spanNulls": true }, "min": 0, "max": 2.5 } },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

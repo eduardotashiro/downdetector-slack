@@ -1,6 +1,9 @@
 import { Camoufox } from "camoufox-js";
-import type { Browser, Page } from "playwright";
+import type { Browser, Page } from "playwright-core";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
+import { errorMonitor } from "../slack/errorMonitor/index.js";
+import { updateServiceStatus } from "../metrics/prometheusClient.js";
+import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
 export interface ServicesResult {
     name: ServiceName;
@@ -156,7 +159,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
     } finally {
 
         if (page) {
-            await page.close().catch(() => {});
+            await page.close().catch(() => { });
         }
     }
 }
@@ -174,7 +177,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         console.log("Iniciando Camoufox...");
 
         browser = (await Camoufox({
-            headless: "virtual",
+            headless: true,
             os: "linux",
             humanize: true,
             geoip: true,
@@ -228,18 +231,34 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             }
         }
 
+        if (results.length === 0) {
+            const errorMessage = `Nenhum serviço foi verificado com sucesso.`;
+            await errorMonitor.handle(errorMessage);
+        }
+
     } finally {
 
         if (browser) {
-            await browser.close().catch(() => {});
+            await browser.close().catch(() => { });
         }
     }
 
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
 
-    console.log(
-        `\n📊 ${results.length}/${SERVICES.length} serviços | ⏱️ ${totalTime}s`
-    );
+    console.log(`\n${results.length}/${SERVICES.length} serviços | ⏱️ ${totalTime}s`);
+
+    const statusMap: { [key: string]: number } = {
+        'success': 0,
+        'warning': 1,
+        'danger': 2
+    };
+
+    for (let i = 0; i < results.length; i++) {
+        const service = normalizeServiceName(results[i].name);
+        const statusValue = results[i].outage;
+        const statusNum = statusMap[statusValue];
+        updateServiceStatus(service, statusNum);
+    }
 
     return results;
 }

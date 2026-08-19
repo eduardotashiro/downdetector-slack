@@ -1,0 +1,5 @@
+FROM grafana/grafana:latest
+
+COPY grafana/provisioning /etc/grafana/provisioning
+COPY grafana/logos /usr/share/grafana/public/img/logos
+COPY grafana/railway/prometheus-datasource.yml /etc/grafana/provisioning/datasources/prometheus.yml

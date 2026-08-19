@@ -5,3 +5,9 @@ dist
 README.md
 Dockerfile
 .env
+.vscode
+*.log
+*.txt
+cookies.json
+debug/
+.github
