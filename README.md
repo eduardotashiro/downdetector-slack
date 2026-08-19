@@ -11,18 +11,20 @@
 [![Slack Bot](https://img.shields.io/badge/Slack-Bot-4A154B?logo=slack&logoColor=white)](https://docs.slack.dev/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.60-45ba4b?logo=playwright)](https://playwright.dev/)
 [![Camoufox](https://img.shields.io/badge/Camoufox-AntiDetection-FF6B35?logo=firefox)](https://camoufox.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
 [![Vitest](https://img.shields.io/badge/Vitest-4.0-6E9F18?logo=vitest)](https://vitest.dev/)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/)
 
 **[🇧🇷 Português](#-português)**
 
-[Configuração](#configuração) • [Uso](#uso) • [Testes](#testes) • [Contribuição](#contribuição)
+[Configuração](#configuração) • [Uso](#uso) • [Observabilidade](#observabilidade) • [Testes](#testes) • [Contribuição](#contribuição)
 
 **Monitoramento automatizado em tempo real de serviços financeiros brasileiros usando Downdetector**
 
 **[🇨🇱 Español](#-español)**
 
-[Configuración](#configuración) • [Modo de Uso](#modo-de-uso) • [Pruebas](#pruebas) • [Contribución](#contribución)
+[Configuración](#configuración) • [Modo de Uso](#modo-de-uso) • [Observabilidad](#observabilidad) • [Pruebas](#pruebas) • [Contribución](#contribución)
 
 **Monitoreo automatizado en tiempo real de los servicios financieros brasileños mediante Downdetector**
 
@@ -59,11 +61,11 @@ O Downdetector é protegido pelo **Cloudflare Turnstile**, que bloqueia scraping
 - **Parsing PT-BR**: o status é identificado a partir dos textos exibidos pelo Downdetector em português, com fallback para algumas expressões em inglês
 - **Adaptação de idioma**: o navegador envia `Accept-Language` priorizando português do Brasil
 - **Retry automático**: uma consulta que falha recebe uma segunda tentativa antes de ser descartada
-- **Cron a cada 4 minutos**: o monitoramento executa uma vez ao iniciar e depois continuamente
-- **Docker + Railway**: execução containerizada com Xvfb
+- **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
+- **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
+- **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
+- **Docker + Railway**: execução containerizada com Xvfb, com Dockerfiles independentes para o bot, o Prometheus e o Grafana
 - **Testes**: testes unitários com Vitest e script manual para testar alertas no Slack
-
-> 🔭 **Roadmap**: observabilidade com **Prometheus + Grafana** (métricas de uptime por serviço, tempo de resposta do scraper, histórico de incidentes), ainda não implementado.
 
 ---
 
@@ -146,9 +148,9 @@ npm test
 npm run build
 ```
 
-Após o push (ou reinício do container), o novo serviço passa a ser monitorado automaticamente no próximo ciclo do cron.
+Após o push (ou reinício do container), o novo serviço passa a ser monitorado automaticamente no próximo ciclo.
 
-> 💡 **Dica:** não esqueça de atualizar também a tabela [Serviços monitorados](#serviços-monitorados) deste README para documentar o novo serviço pros próximos contribuidores.
+> 💡 **Dica:** não esqueça de atualizar também a tabela [Serviços monitorados](#serviços-monitorados) e, se quiser vê-lo no Grafana, adicione um novo painel `stat` em `grafana/provisioning/dashboards/downdetector.json` apontando pra label normalizada do serviço (veja [Observabilidade](#observabilidade)).
 
 </details>
 
@@ -233,7 +235,7 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 
 ```mermaid
 graph TB
-    Start([Cron Job<br/>4min]) --> Server[server.ts<br/>Entry Point]
+    Start([Loop contínuo<br/>~2-4min]) --> Server[server.ts<br/>Entry Point]
     Server --> Job[Monitoring Job]
     Job --> Orchestrator[notificationOrchestrator.ts<br/>CheckAll Function]
 
@@ -249,9 +251,14 @@ graph TB
     Results --> Orchestrator
 
     Orchestrator --> Incident[Incident Monitors<br/>8 monitores individuais]
+    Orchestrator --> Metrics[prom-client<br/>downdetector_service_status]
 
-    Incident --> Slack1[Slack<br/>☠️ Alerta Crítico]
-    Incident --> Slack2[Slack<br/>🎉 Resolução]
+    Incident --> Slack1[Slack<br/>Alerta Crítico]
+    Incident --> Slack2[Slack<br/>Resolução]
+
+    Metrics --> Endpoint["/metrics<br/>Express endpoint"]
+    Endpoint --> Prom[(Prometheus<br/>scrape 15s)]
+    Prom --> Grafana[(Grafana<br/>Dashboard público)]
 
     Slack1 --> End([Time Notificado])
     Slack2 --> End
@@ -262,6 +269,9 @@ graph TB
     style Xvfb fill:#9C27B0,color:#fff
     style Turnstile fill:#f59e0b,color:#fff
     style Incident fill:#e1bee7
+    style Metrics fill:#e1bee7
+    style Prom fill:#E6522C,color:#fff
+    style Grafana fill:#F46800,color:#fff
     style Slack1 fill:#4A154B,color:#fff
     style Slack2 fill:#4A154B,color:#fff
     style End fill:#e8f5e9
@@ -273,8 +283,8 @@ graph TB
 graph LR
     subgraph "Camada de Aplicação"
         Server[server.ts<br/>Entry Point]
-        App[app.ts<br/>Config do Slack]
-        Job[jobs/monitoring.ts<br/>Cron 4min]
+        App[app.ts<br/>Config do Slack + Express]
+        Job[jobs/monitoring.ts<br/>Loop com delay aleatório]
     end
 
     subgraph "Camada de Orquestração"
@@ -284,6 +294,12 @@ graph LR
 
     subgraph "Camada de Dados"
         Scraper[downdetectorService.ts<br/>Camoufox + Playwright]
+    end
+
+    subgraph "Observabilidade"
+        Metrics[prometheusClient.ts<br/>Gauge por serviço]
+        PromSvc[(Prometheus<br/>container próprio)]
+        GrafanaSvc[(Grafana<br/>container próprio)]
     end
 
     subgraph "Serviços Externos"
@@ -298,21 +314,29 @@ graph LR
 
     Orchestrator --> Scraper
     Orchestrator --> Incident
+    Orchestrator --> Metrics
 
     Scraper --> Camoufox
     Camoufox --> Downdetector
 
     Incident --> SlackAPI
 
+    App -- "/metrics" --> Metrics
+    PromSvc -- "scrape :3000/metrics" --> App
+    GrafanaSvc -- "PromQL" --> PromSvc
+
     style Server fill:#4CAF50,color:#fff
     style App fill:#4CAF50,color:#fff
     style Job fill:#4CAF50,color:#fff
     style Orchestrator fill:#FFD700,color:#000
     style Incident fill:#FFD700,color:#000
+    style Metrics fill:#FFD700,color:#000
     style Scraper fill:#2196F3,color:#fff
     style Downdetector fill:#FF9800,color:#fff
     style SlackAPI fill:#4A154B,color:#fff
     style Camoufox fill:#9C27B0,color:#fff
+    style PromSvc fill:#E6522C,color:#fff
+    style GrafanaSvc fill:#F46800,color:#fff
 ```
 
 </details>
@@ -326,11 +350,11 @@ graph LR
 
 Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças de status:
 
-| Status no Downdetector | O que significa | Ação no Slack |
-|------------------------|-----------------|---------------|
-| 🟢 **Success** | Relatos dos usuários **não indicam problemas** com o serviço | Nenhuma ação (estado normal) |
-| 🟡 **Warning** | Relatos mostram **possíveis problemas** com o serviço | ⚠️ Apenas logado (sem alerta) |
-| 🔴 **Danger** | Relatos mostram **problemas confirmados** com o serviço | ☠️ **Alerta Crítico** enviado imediatamente |
+| Status no Downdetector | O que significa | Ação no Slack | Valor no Grafana |
+|------------------------|-----------------|---------------|-------------------|
+| 🟢 **Success** | Relatos dos usuários **não indicam problemas** com o serviço | Nenhuma ação (estado normal) | `0` |
+| 🟡 **Warning** | Relatos mostram **possíveis problemas** com o serviço | ⚠️ Apenas logado (sem alerta) | `1` |
+| 🔴 **Danger** | Relatos mostram **problemas confirmados** com o serviço | ☠️ **Alerta Crítico** enviado imediatamente | `2` |
 
 </details>
 
@@ -376,7 +400,7 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 ### Pré-requisitos
 - Node.js 20+
 - App do Slack com Bot Token ([crie um aqui](https://api.slack.com/apps))
-- Docker (roda o mesmo ambiente com Xvfb usado no Railway)
+- Docker (roda o mesmo ambiente com Xvfb usado no Railway, além de Prometheus e Grafana)
 
 ### Instalação
 
@@ -389,7 +413,7 @@ git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
-2. **Instale as dependências** (isso também baixa o binário do Camoufox)
+2. **Instale as dependências** (isso também baixa o binário do Camoufox, via `postinstall`)
 ```bash
 npm install
 ```
@@ -402,6 +426,7 @@ Crie um arquivo `.env`:
 SLACK_BOT_TOKEN=xoxb-seu-bot-token-aqui
 SLACK_SIGNING_SECRET=seu-signing-secret-aqui
 CHANNEL_ID=id-do-seu-canal-do-slack
+USER_ID=id-do-seu-usuario-para-alertas-de-erro
 
 # Servidor
 PORT=3000
@@ -440,24 +465,45 @@ npm start
 
 O Camoufox roda em modo **headed** (não headless) aqui, pois passa pelo Cloudflare de forma bem mais confiável. Como não tem monitor físico, a imagem Docker roda ele dentro de um display virtual (Xvfb).
 
-**Build e execução local:**
+**Só o bot (build e execução local):**
 ```bash
 docker build -t downdetector-slack .
 docker run --rm -it --env-file .env downdetector-slack
 ```
 
-Não precisa mapear porta pois o serviço nunca recebe tráfego HTTP de entrada, só faz requisições de saída pro Downdetector e pro Slack.
+**Stack completa local (bot + Prometheus + Grafana) via Docker Compose:**
+```bash
+docker compose up --build
+```
+Isso sobe três containers na mesma rede (`monitoring`):
+- `bot` → expõe `:3000` (inclui `/metrics`)
+- `prometheus` → `:9090`, faz scrape do bot a cada 15s
+- `grafana` → `:3001`, já vem com o datasource e o dashboard provisionados automaticamente (login padrão `admin` / `admin`, definido em `docker-compose.yml`)
 
-**Deploy no Railway:**
+Não precisa mapear porta do bot em produção, pois ele nunca recebe tráfego HTTP externo além do scrape do Prometheus (`/metrics`) e das requisições de saída pro Downdetector e pro Slack.
+
+**Deploy no Railway (3 serviços a partir do mesmo repositório):**
+
+O projeto usa três Dockerfiles separados para permitir o deploy independente de cada peça no Railway:
+
+| Serviço | Dockerfile | Observações |
+|---------|-----------|--------------|
+| **bot** | `Dockerfile` | Roda o scraper, o Slack e expõe `/metrics` |
+| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, aponta pro hostname interno `bot.railway.internal:3000` |
+| **grafana** | `Dockerfile.grafana` | Usa `grafana/railway/prometheus-datasource.yml`, aponta pro hostname interno `prometheus.railway.internal:9090` |
+
+Passos:
 1. Suba seu código pro GitHub
-2. Conecte o repositório ao Railway
-3. Adicione as variáveis de ambiente no painel:
+2. No Railway, crie **três serviços** a partir do mesmo repositório, cada um apontando pro respectivo Dockerfile (em *Settings → Build → Dockerfile Path*)
+3. No serviço **bot**, adicione as variáveis de ambiente:
    - `SLACK_BOT_TOKEN`
    - `SLACK_SIGNING_SECRET`
    - `CHANNEL_ID`
+   - `USER_ID`
    - `PORT`
-4. Mantenha o serviço em **1 réplica**, rodar mais de uma significa alertas duplicados pro mesmo incidente
-5. O Railway faz deploy automático a cada push na `main`
+4. Mantenha o serviço **bot** em **1 réplica**, rodar mais de uma significa alertas duplicados pro mesmo incidente
+5. Como os três serviços estão no mesmo projeto Railway, eles se enxergam pela rede interna (`*.railway.internal`) sem precisar expor portas publicamente — exceto o Grafana, que você pode tornar público em *Settings → Networking* pra acessar o dashboard
+6. O Railway faz deploy automático a cada push na `main`, em todos os serviços configurados
 
 </details>
 
@@ -480,17 +526,63 @@ npm run build
 npm start
 ```
 
-**Agendamento do Cron:**
+**Agendamento do ciclo de monitoramento:**
 ```typescript
 // src/jobs/monitoring.ts
-cron.schedule("*/4 * * * *", run, {
-  timezone: "America/Sao_Paulo"
-});
+// roda uma vez ao iniciar e se reagenda com um delay aleatório entre 2 e 4 minutos
 ```
 
-O job também roda uma vez imediatamente ao subir, sem precisar esperar o primeiro ciclo agendado.
+O job também roda uma vez imediatamente ao subir, sem precisar esperar o primeiro ciclo.
 
-⚠️ Não diminua o intervalo para menos de alguns minutos. Um ciclo completo (8 serviços, incluindo retries) pode levar alguns minutos para terminar. Se o cron iniciar uma nova execução antes que o ciclo anterior seja finalizado, os processos poderão rodar simultaneamente e os logs ficarão misturados. Ajuste o intervalo de acordo com a quantidade de serviços monitorados.
+⚠️ Um ciclo completo (8 serviços, incluindo retries) pode levar alguns minutos para terminar. O delay aleatório entre execuções ajuda a evitar padrões de tráfego previsíveis e dá tempo suficiente pro ciclo anterior terminar antes do próximo começar.
+
+</details>
+
+---
+
+## Observabilidade
+
+<details open>
+<summary>Clique para expandir/recolher</summary>
+
+O bot expõe métricas no formato Prometheus e vem com um dashboard Grafana pronto, provisionado automaticamente — sem precisar configurar nada manualmente.
+
+### Métrica exposta
+
+O endpoint `GET /metrics` expõe a métrica `downdetector_service_status`, um `Gauge` por serviço, definido em [`src/metrics/prometheusClient.ts`](src/metrics/prometheusClient.ts):
+
+```
+# HELP downdetector_service_status Status do serviço monitorado pelo Downdetector: 0 = success, 1 = warning, 2 = danger
+# TYPE downdetector_service_status gauge
+downdetector_service_status{service="pix"} 0
+downdetector_service_status{service="nubank"} 0
+downdetector_service_status{service="banco_itau"} 2
+```
+
+O label `service` é gerado a partir do nome do serviço, normalizado (minúsculo, sem acento, espaços viram `_`) pela função `normalizeServiceName()`.
+
+### Dashboard Grafana
+
+
+![dashboard](.github/assets/grafana/dashboard.png)
+
+
+O dashboard [`downdetector.json`](grafana/provisioning/dashboards/downdetector.json) é carregado automaticamente pelo provider configurado em [`dashboards.yml`](grafana/provisioning/dashboards/dashboards.yml), e mostra:
+- Um painel `stat` por serviço, com cor verde/amarelo/vermelho de acordo com o status atual (`SUCCESS` / `WARNING` / `DANGER`)
+- Um painel `timeseries` com o histórico de status de todos os serviços nas últimas horas
+
+O datasource do Prometheus também é provisionado automaticamente:
+- Localmente, via [`grafana/provisioning/datasources/prometheus.yml`](grafana/provisioning/datasources/prometheus.yml) (`http://prometheus:9090`)
+- No Railway, via [`grafana/railway/prometheus-datasource.yml`](grafana/railway/prometheus-datasource.yml) (`http://prometheus.railway.internal:9090`)
+
+### Rodando localmente
+
+```bash
+docker compose up --build
+```
+- Grafana: [http://localhost:3001](http://localhost:3001) (login `admin` / `admin`)
+- Prometheus: [http://localhost:9090](http://localhost:9090)
+- Métricas cruas do bot: [http://localhost:3000/metrics](http://localhost:3000/metrics)
 
 </details>
 
@@ -560,10 +652,7 @@ npm run build         # Verifica se o build funciona
 
 Esse projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) pra detalhes.
 
-
-
 ---
-
 ---
 
 # 🇨🇱 Español
@@ -595,11 +684,11 @@ Downdetector está protegido por **Cloudflare Turnstile**, que bloquea el scrapi
 - **Parsing PT-BR**: el estado se identifica a partir de los textos que muestra Downdetector en portugués, con fallback a algunas expresiones en inglés
 - **Adaptación de idioma**: el navegador envía `Accept-Language` priorizando portugués de Brasil
 - **Reintento automático**: una consulta que falla recibe un segundo intento antes de descartarse
-- **Cron cada 4 minutos**: el monitoreo se ejecuta una vez al iniciar y luego continuamente
-- **Docker + Railway**: ejecución en contenedores con Xvfb
+- **Ciclo continuo con retraso aleatorio**: el monitoreo corre una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
+- **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), vía `prom-client`
+- **Dashboard Grafana**: panel provisionado automáticamente con el estado en tiempo real de todos los servicios monitoreados
+- **Docker + Railway**: ejecución en contenedores con Xvfb, con Dockerfiles independientes para el bot, Prometheus y Grafana
 - **Pruebas**: pruebas unitarias con Vitest y script manual para probar alertas en Slack
-
-> 🔭 **Roadmap**: observabilidad con **Prometheus + Grafana** (métricas de uptime por servicio, tiempo de respuesta del scraper, historial de incidentes), aún no implementado.
 
 ---
 
@@ -682,9 +771,9 @@ npm test
 npm run build
 ```
 
-Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse automáticamente en el próximo ciclo del cron.
+Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse automáticamente en el próximo ciclo.
 
-> 💡 **Tip:** no olvides actualizar también la tabla [Servicios monitoreados](#servicios-monitoreados) de este README para documentar el nuevo servicio para los próximos contribuidores.
+> 💡 **Tip:** no olvides actualizar también la tabla [Servicios monitoreados](#servicios-monitoreados) y, si quieres verlo en Grafana, agrega un nuevo panel `stat` en `grafana/provisioning/dashboards/downdetector.json` apuntando a la etiqueta normalizada del servicio (ver [Observabilidad](#observabilidad)).
 
 </details>
 
@@ -769,7 +858,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 ```mermaid
 graph TB
-    Start([Cron Job<br/>4min]) --> Server[server.ts<br/>Punto de entrada]
+    Start([Ciclo continuo<br/>~2-4min]) --> Server[server.ts<br/>Punto de entrada]
     Server --> Job[Monitoring Job]
     Job --> Orchestrator[notificationOrchestrator.ts<br/>Función CheckAll]
 
@@ -785,9 +874,14 @@ graph TB
     Results --> Orchestrator
 
     Orchestrator --> Incident[Incident Monitors<br/>8 monitores individuales]
+    Orchestrator --> Metrics[prom-client<br/>downdetector_service_status]
 
-    Incident --> Slack1[Slack<br/>☠️ Alerta Crítica]
-    Incident --> Slack2[Slack<br/>🎉 Resolución]
+    Incident --> Slack1[Slack<br/>Alerta Crítica]
+    Incident --> Slack2[Slack<br/>Resolución]
+
+    Metrics --> Endpoint["/metrics<br/>Endpoint Express"]
+    Endpoint --> Prom[(Prometheus<br/>scrape 15s)]
+    Prom --> Grafana[(Grafana<br/>Dashboard público)]
 
     Slack1 --> End([Equipo Notificado])
     Slack2 --> End
@@ -798,6 +892,9 @@ graph TB
     style Xvfb fill:#9C27B0,color:#fff
     style Turnstile fill:#f59e0b,color:#fff
     style Incident fill:#e1bee7
+    style Metrics fill:#e1bee7
+    style Prom fill:#E6522C,color:#fff
+    style Grafana fill:#F46800,color:#fff
     style Slack1 fill:#4A154B,color:#fff
     style Slack2 fill:#4A154B,color:#fff
     style End fill:#e8f5e9
@@ -809,8 +906,8 @@ graph TB
 graph LR
     subgraph "Capa de Aplicación"
         Server[server.ts<br/>Punto de entrada]
-        App[app.ts<br/>Config de Slack]
-        Job[jobs/monitoring.ts<br/>Cron 4min]
+        App[app.ts<br/>Config de Slack + Express]
+        Job[jobs/monitoring.ts<br/>Ciclo con retraso aleatorio]
     end
 
     subgraph "Capa de Orquestación"
@@ -820,6 +917,12 @@ graph LR
 
     subgraph "Capa de Datos"
         Scraper[downdetectorService.ts<br/>Camoufox + Playwright]
+    end
+
+    subgraph "Observabilidad"
+        Metrics[prometheusClient.ts<br/>Gauge por servicio]
+        PromSvc[(Prometheus<br/>contenedor propio)]
+        GrafanaSvc[(Grafana<br/>contenedor propio)]
     end
 
     subgraph "Servicios Externos"
@@ -834,21 +937,29 @@ graph LR
 
     Orchestrator --> Scraper
     Orchestrator --> Incident
+    Orchestrator --> Metrics
 
     Scraper --> Camoufox
     Camoufox --> Downdetector
 
     Incident --> SlackAPI
 
+    App -- "/metrics" --> Metrics
+    PromSvc -- "scrape :3000/metrics" --> App
+    GrafanaSvc -- "PromQL" --> PromSvc
+
     style Server fill:#4CAF50,color:#fff
     style App fill:#4CAF50,color:#fff
     style Job fill:#4CAF50,color:#fff
     style Orchestrator fill:#FFD700,color:#000
     style Incident fill:#FFD700,color:#000
+    style Metrics fill:#FFD700,color:#000
     style Scraper fill:#2196F3,color:#fff
     style Downdetector fill:#FF9800,color:#fff
     style SlackAPI fill:#4A154B,color:#fff
     style Camoufox fill:#9C27B0,color:#fff
+    style PromSvc fill:#E6522C,color:#fff
+    style GrafanaSvc fill:#F46800,color:#fff
 ```
 
 </details>
@@ -862,11 +973,11 @@ graph LR
 
 Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de estado:
 
-| Estado en Downdetector | Qué significa | Acción en Slack |
-|------------------------|-----------------|---------------|
-| 🟢 **Success** | Los reportes de usuarios **no indican problemas** con el servicio | Ninguna acción (estado normal) |
-| 🟡 **Warning** | Los reportes muestran **posibles problemas** con el servicio | ⚠️ Solo se registra en el log (sin alerta) |
-| 🔴 **Danger** | Los reportes muestran **problemas confirmados** con el servicio | ☠️ **Alerta Crítica** enviada de inmediato |
+| Estado en Downdetector | Qué significa | Acción en Slack | Valor en Grafana |
+|------------------------|-----------------|---------------|--------------------|
+| 🟢 **Success** | Los reportes de usuarios **no indican problemas** con el servicio | Ninguna acción (estado normal) | `0` |
+| 🟡 **Warning** | Los reportes muestran **posibles problemas** con el servicio | ⚠️ Solo se registra en el log (sin alerta) | `1` |
+| 🔴 **Danger** | Los reportes muestran **problemas confirmados** con el servicio | ☠️ **Alerta Crítica** enviada de inmediato | `2` |
 
 </details>
 
@@ -891,7 +1002,7 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 <details>
 <summary>Haz clic para ver cómo aparecen las alertas en Slack</summary>
 
-> ℹLas alertas del bot siempre se envían **en portugués**, sin importar el idioma de este README, el texto está fijo en [incidentMonitor.ts](src/slack/incidentMonitor.ts).
+> ℹ️ Las alertas del bot siempre se envían **en portugués**, sin importar el idioma de este README, el texto está fijo en [incidentMonitor.ts](src/slack/incidentMonitor.ts).
 
 #### ☠️ Alerta Crítica (cuando el servicio entra en `danger`)
 ![Ejemplo de Alerta Crítica](.github/assets/pt-BR/alert-critical.png)
@@ -908,7 +1019,7 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 ### Requisitos previos
 - Node.js 20+
 - App de Slack con Bot Token ([créala aquí](https://api.slack.com/apps))
-- Docker (ejecuta el mismo entorno con Xvfb usado en Railway)
+- Docker (ejecuta el mismo entorno con Xvfb usado en Railway, además de Prometheus y Grafana)
 
 ### Instalación
 
@@ -921,7 +1032,7 @@ git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
-2. **Instala las dependencias** (esto también descarga el binario de Camoufox)
+2. **Instala las dependencias** (esto también descarga el binario de Camoufox, vía `postinstall`)
 ```bash
 npm install
 ```
@@ -934,6 +1045,7 @@ Crea un archivo `.env`:
 SLACK_BOT_TOKEN=xoxb-tu-bot-token-aqui
 SLACK_SIGNING_SECRET=tu-signing-secret-aqui
 CHANNEL_ID=id-de-tu-canal-de-slack
+USER_ID=id-de-tu-usuario-para-alertas-de-error
 
 # Servidor
 PORT=3000
@@ -972,24 +1084,45 @@ npm start
 
 Camoufox se ejecuta en modo **headed** (no headless) aquí, porque pasa Cloudflare de forma mucho más confiable. Como no hay pantalla física, la imagen de Docker lo ejecuta dentro de un display virtual (Xvfb).
 
-**Build y ejecución local:**
+**Solo el bot (build y ejecución local):**
 ```bash
 docker build -t downdetector-slack .
 docker run --rm -it --env-file .env downdetector-slack
 ```
 
-No hace falta mapear ningún puerto pues el servicio nunca recibe tráfico HTTP entrante, solo hace peticiones salientes a Downdetector y a Slack.
+**Stack completo local (bot + Prometheus + Grafana) vía Docker Compose:**
+```bash
+docker compose up --build
+```
+Esto levanta tres contenedores en la misma red (`monitoring`):
+- `bot` → expone `:3000` (incluye `/metrics`)
+- `prometheus` → `:9090`, hace scrape del bot cada 15s
+- `grafana` → `:3001`, ya viene con el datasource y el dashboard provisionados automáticamente (login por defecto `admin` / `admin`, definido en `docker-compose.yml`)
 
-**Despliegue en Railway:**
+No hace falta mapear el puerto del bot en producción, pues nunca recibe tráfico HTTP externo salvo el scrape de Prometheus (`/metrics`) y las peticiones salientes a Downdetector y a Slack.
+
+**Despliegue en Railway (3 servicios desde el mismo repositorio):**
+
+El proyecto usa tres Dockerfiles separados para permitir el despliegue independiente de cada pieza en Railway:
+
+| Servicio | Dockerfile | Notas |
+|---------|-----------|--------------|
+| **bot** | `Dockerfile` | Corre el scraper, Slack y expone `/metrics` |
+| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, apunta al hostname interno `bot.railway.internal:3000` |
+| **grafana** | `Dockerfile.grafana` | Usa `grafana/railway/prometheus-datasource.yml`, apunta al hostname interno `prometheus.railway.internal:9090` |
+
+Pasos:
 1. Sube tu código a GitHub
-2. Conecta el repositorio a Railway
-3. Agrega las variables de entorno en el panel:
+2. En Railway, crea **tres servicios** desde el mismo repositorio, cada uno apuntando a su respectivo Dockerfile (en *Settings → Build → Dockerfile Path*)
+3. En el servicio **bot**, agrega las variables de entorno:
    - `SLACK_BOT_TOKEN`
    - `SLACK_SIGNING_SECRET`
    - `CHANNEL_ID`
+   - `USER_ID`
    - `PORT`
-4. Mantén el servicio en **1 réplica** pues ejecutar más de una significa alertas duplicadas para el mismo incidente
-5. Railway despliega automáticamente en cada push a `main`
+4. Mantén el servicio **bot** en **1 réplica**, pues ejecutar más de una significa alertas duplicadas para el mismo incidente
+5. Como los tres servicios están en el mismo proyecto de Railway, se comunican por la red interna (`*.railway.internal`) sin necesidad de exponer puertos públicamente — excepto Grafana, que puedes hacer público en *Settings → Networking* para acceder al dashboard
+6. Railway despliega automáticamente en cada push a `main`, en todos los servicios configurados
 
 </details>
 
@@ -1012,17 +1145,62 @@ npm run build
 npm start
 ```
 
-**Programación del Cron:**
+**Programación del ciclo de monitoreo:**
 ```typescript
 // src/jobs/monitoring.ts
-cron.schedule("*/4 * * * *", run, {
-  timezone: "America/Sao_Paulo"
-});
+// corre una vez al iniciar y se reprograma con un retraso aleatorio de entre 2 y 4 minutos
 ```
 
-El job también corre una vez inmediatamente al iniciar, sin necesidad de esperar el primer ciclo programado.
+El job también corre una vez inmediatamente al iniciar, sin necesidad de esperar el primer ciclo.
 
-⚠️ No reduzcas el intervalo a menos de unos minutos. Un ciclo completo (8 servicios, incluyendo los reintentos) puede tardar varios minutos en finalizar. Si el cron inicia una nueva ejecución antes de que termine el ciclo anterior, ambos procesos podrían ejecutarse al mismo tiempo y los logs se mezclarían. Ajusta el intervalo según la cantidad de servicios monitoreados.
+⚠️ Un ciclo completo (8 servicios, incluyendo los reintentos) puede tardar varios minutos en finalizar. El retraso aleatorio entre ejecuciones ayuda a evitar patrones de tráfico predecibles y da tiempo suficiente para que el ciclo anterior termine antes de que comience el siguiente.
+
+</details>
+
+---
+
+## Observabilidad
+
+<details open>
+<summary>Haz clic para expandir/colapsar</summary>
+
+El bot expone métricas en formato Prometheus y viene con un dashboard de Grafana listo, provisionado automáticamente — sin necesidad de configurar nada manualmente.
+
+### Métrica expuesta
+
+El endpoint `GET /metrics` expone la métrica `downdetector_service_status`, un `Gauge` por servicio, definido en [`src/metrics/prometheusClient.ts`](src/metrics/prometheusClient.ts):
+
+```
+# HELP downdetector_service_status Status do serviço monitorado pelo Downdetector: 0 = success, 1 = warning, 2 = danger
+# TYPE downdetector_service_status gauge
+downdetector_service_status{service="pix"} 0
+downdetector_service_status{service="nubank"} 0
+downdetector_service_status{service="banco_itau"} 2
+```
+
+La etiqueta `service` se genera a partir del nombre del servicio, normalizado (minúsculas, sin acentos, espacios convertidos en `_`) mediante la función `normalizeServiceName()`.
+
+### Dashboard de Grafana
+
+![dashboard](.github/assets/grafana/dashboard.png)
+
+El dashboard [`downdetector.json`](grafana/provisioning/dashboards/downdetector.json) se carga automáticamente mediante el provider configurado en [`dashboards.yml`](grafana/provisioning/dashboards/dashboards.yml), y muestra:
+- Un panel `stat` por servicio, con color verde/amarillo/rojo según el estado actual (`SUCCESS` / `WARNING` / `DANGER`)
+- Un panel `timeseries` con el historial de estados de todos los servicios en las últimas horas
+
+El datasource de Prometheus también se provisiona automáticamente:
+- Localmente, vía [`grafana/provisioning/datasources/prometheus.yml`](grafana/provisioning/datasources/prometheus.yml) (`http://prometheus:9090`)
+- En Railway, vía [`grafana/railway/prometheus-datasource.yml`](grafana/railway/prometheus-datasource.yml) (`http://prometheus.railway.internal:9090`)
+
+### Corriendo localmente
+
+```bash
+docker compose up --build
+```
+- Grafana: [http://localhost:3001](http://localhost:3001) (login `admin` / `admin`)
+- Prometheus: [http://localhost:9090](http://localhost:9090)
+- Métricas crudas del bot: [http://localhost:3000/metrics](http://localhost:3000/metrics)
+
 
 </details>
 
