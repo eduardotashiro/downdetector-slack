@@ -5,7 +5,6 @@ import { ServiceStatus } from "./types.js";
 export class IncidentMonitor {
     private incident: {
         startedAt: number;
-        level: ServiceStatus;
         alertSent: boolean;
     } | null = null;
 
@@ -23,7 +22,6 @@ export class IncidentMonitor {
         if (status === ServiceStatus.DANGER && !this.incident) {
             this.incident = {
                 startedAt: Date.now(),
-                level: status,
                 alertSent: false
             }
 
