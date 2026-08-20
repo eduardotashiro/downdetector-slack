@@ -9,11 +9,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Slack Bot](https://img.shields.io/badge/Slack-Bot-4A154B?logo=slack&logoColor=white)](https://docs.slack.dev/)
-[![Playwright](https://img.shields.io/badge/Playwright-1.60-45ba4b?logo=playwright)](https://playwright.dev/)
 [![Camoufox](https://img.shields.io/badge/Camoufox-AntiDetection-FF6B35?logo=firefox)](https://camoufox.com/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
-[![Vitest](https://img.shields.io/badge/Vitest-4.0-6E9F18?logo=vitest)](https://vitest.dev/)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/)
 
 **[🇧🇷 Português](#-português)**
@@ -150,7 +148,7 @@ npm run build
 
 Após o push (ou reinício do container), o novo serviço passa a ser monitorado automaticamente no próximo ciclo.
 
-> 💡 **Dica:** não esqueça de atualizar também a tabela [Serviços monitorados](#serviços-monitorados) e, se quiser vê-lo no Grafana, adicione um novo painel `stat` em `grafana/provisioning/dashboards/downdetector.json` apontando pra label normalizada do serviço (veja [Observabilidade](#observabilidade)).
+> 💡 **Dica:** não esqueça de atualizar também a tabela [Serviços monitorados](#serviços-monitorados) e, se quiser vê-lo no Grafana, adicione um novo painel `stat` em [downdetector.json](grafana/provisioning/dashboards/downdetector.json) apontando pra label normalizada do serviço (veja [Observabilidade](#observabilidade)).
 
 </details>
 
@@ -218,13 +216,97 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 | `WARNING` | `possíveis problemas` | `possible problems` | `posibles problemas` |
 | `DANGER` | `mostram problemas` | `show problems with` | `muestran problemas` |
 
-> ⚠️ **Atenção:** a ordem das verificações importa! A frase de `SUCCESS` contém a substring `"mostram problemas"`, que também aparece em `DANGER`. Por isso `SUCCESS` precisa ser verificado **antes** de `DANGER`, senão todo serviço OK seria classificado como em crise.
+> ⚠️ **Atenção:** a ordem das verificações importa! No PT-BR e no ES-CL, a frase de `SUCCESS` contém a frase de `DANGER` como substring (ex: `"não mostram problemas"` contém `"mostram problemas"`). Por isso `SUCCESS` é verificado **antes** de `DANGER` no código — se você adaptar para outro idioma, verifique se as frases do seu idioma têm esse mesmo tipo de sobreposição antes de definir a ordem dos `if`.
 
 > 💡 **Dica de debug:** se o parser deixar de reconhecer um status (o Downdetector pode mudar os textos com o tempo), abra a página no seu navegador, inspecione o texto exibido e atualize as expressões da função `detectStatus()` conforme necessário.
 
 </details>
 
 ---
+
+## Estrutura do projeto
+
+<details>
+<summary>Clique para expandir a árvore de arquivos</summary>
+
+
+```
+├── .github
+│   ├── assets
+│   │   ├── es-CL
+│   │   │   ├── dd-danger.png
+│   │   │   ├── dd-success.png
+│   │   │   └── dd-warning.png
+│   │   ├── grafana
+│   │   │   └── dashboard.png
+│   │   ├── pt-BR
+│   │   │   ├── alert-critical.png
+│   │   │   ├── alert-resolved.png
+│   │   │   ├── dd-danger.png
+│   │   │   ├── dd-success.png
+│   │   │   └── dd-warning.png
+│   │   └── banner.png
+│   └── workflows
+│       └── ci.yaml
+├── grafana
+│   ├── logos
+│   │   ├── bancodobrasil.png
+│   │   ├── bradesco.png
+│   │   ├── itau.png
+│   │   ├── mercadopago.png
+│   │   ├── nubank.png
+│   │   ├── picpay.png
+│   │   ├── pix.png
+│   │   └── santander.png
+│   ├── prometheus
+│   │   ├── prometheus.railway.yml
+│   │   └── prometheus.yml
+│   ├── provisioning
+│   │   ├── dashboards
+│   │   │   ├── dashboards.yml
+│   │   │   └── downdetector.json
+│   │   └── datasources
+│   │       └── prometheus.yml
+│   └── railway
+│       └── prometheus-datasource.yml
+├── src
+│   ├── config
+│   │   └── env.ts
+│   ├── jobs
+│   │   └── monitoring.ts
+│   ├── metrics
+│   │   └── prometheusClient.ts
+│   ├── scripts
+│   │   └── testAlert.ts
+│   ├── services
+│   │   └── downdetectorService.ts
+│   ├── slack
+│   │   ├── __tests__
+│   │   │   ├── fixtures.ts
+│   │   │   └── incidentMonitor.spec.ts
+│   │   ├── errorMonitor
+│   │   │   ├── errorMonitor.ts
+│   │   │   └── index.ts
+│   │   ├── incidentMonitor.ts
+│   │   ├── manifest.json
+│   │   ├── notificationOrchestrator.ts
+│   │   └── types.ts
+│   ├── app.ts
+│   └── server.ts
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── Dockerfile.grafana
+├── Dockerfile.prometheus
+├── LICENSE
+├── README.md
+├── docker-compose.yml
+├── package-lock.json
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
+```
+</details>
 
 ## Arquitetura
 
@@ -420,7 +502,13 @@ npm install
 
 3. **Configure as variáveis de ambiente**
 
-Crie um arquivo `.env`:
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+cp .env.example .env
+```
+Depois, edite o arquivo `.env`:
+
 ```env
 # Configuração do Slack
 SLACK_BOT_TOKEN=xoxb-seu-bot-token-aqui
@@ -478,7 +566,7 @@ docker compose up --build
 Isso sobe três containers na mesma rede (`monitoring`):
 - `bot` → expõe `:3000` (inclui `/metrics`)
 - `prometheus` → `:9090`, faz scrape do bot a cada 15s
-- `grafana` → `:3001`, já vem com o datasource e o dashboard provisionados automaticamente (login padrão `admin` / `admin`, definido em `docker-compose.yml`)
+- `grafana` → `:3001`, já vem com o datasource e o dashboard provisionados automaticamente login padrão `admin` / `admin`, definido em [docker-compose.yml](docker-compose.yml)
 
 Não precisa mapear porta do bot em produção, pois ele nunca recebe tráfego HTTP externo além do scrape do Prometheus (`/metrics`) e das requisições de saída pro Downdetector e pro Slack.
 
@@ -773,7 +861,7 @@ npm run build
 
 Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse automáticamente en el próximo ciclo.
 
-> 💡 **Tip:** no olvides actualizar también la tabla [Servicios monitoreados](#servicios-monitoreados) y, si quieres verlo en Grafana, agrega un nuevo panel `stat` en `grafana/provisioning/dashboards/downdetector.json` apuntando a la etiqueta normalizada del servicio (ver [Observabilidad](#observabilidad)).
+> 💡 **Tip:** no olvides actualizar también la tabla [Servicios monitoreados](#servicios-monitoreados) y, si quieres verlo en Grafana, agrega un nuevo panel `stat` en [downdetector.json](grafana/provisioning/dashboards/downdetector.json) apuntando a la etiqueta normalizada del servicio (ver [Observabilidad](#observabilidad)).
 
 </details>
 
@@ -841,13 +929,97 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 | `WARNING` | `possíveis problemas` | `possible problems` | `posibles problemas` |
 | `DANGER` | `mostram problemas` | `show problems with` | `muestran problemas` |
 
-> ⚠️ **Atención:** ¡el orden de las verificaciones importa! La frase de `SUCCESS` contiene la substring `"mostram problemas"`, que también aparece en `DANGER`. Por eso `SUCCESS` debe verificarse **antes** que `DANGER`, si no todo servicio OK sería clasificado como en crisis.
+⚠️ **Atención:** ¡El orden de las comprobaciones importa! En PT-BR y ES-CL, la frase `SUCCESS` contiene la frase `DANGER` como subcadena (por ejemplo, `"show no problems"` contiene `"show problems"`). Por lo tanto, `SUCCESS` se comprueba **antes** de `DANGER` en el código. Si lo adaptas a otro idioma, comprueba si las frases en tu idioma tienen este mismo tipo de superposición antes de definir el orden de las sentencias `if`.
 
 > 💡 **Tip de debug:** si el parser deja de reconocer un estado (Downdetector puede cambiar los textos con el tiempo), abre la página en tu navegador, inspecciona el texto mostrado y actualiza las expresiones de la función `detectStatus()` según sea necesario.
 
 </details>
 
 ---
+
+## Estructura del proyecto
+
+<details>
+<summary>Haz clic para expandir el árbol de archivos</summary>
+
+
+```
+├── .github
+│   ├── assets
+│   │   ├── es-CL
+│   │   │   ├── dd-danger.png
+│   │   │   ├── dd-success.png
+│   │   │   └── dd-warning.png
+│   │   ├── grafana
+│   │   │   └── dashboard.png
+│   │   ├── pt-BR
+│   │   │   ├── alert-critical.png
+│   │   │   ├── alert-resolved.png
+│   │   │   ├── dd-danger.png
+│   │   │   ├── dd-success.png
+│   │   │   └── dd-warning.png
+│   │   └── banner.png
+│   └── workflows
+│       └── ci.yaml
+├── grafana
+│   ├── logos
+│   │   ├── bancodobrasil.png
+│   │   ├── bradesco.png
+│   │   ├── itau.png
+│   │   ├── mercadopago.png
+│   │   ├── nubank.png
+│   │   ├── picpay.png
+│   │   ├── pix.png
+│   │   └── santander.png
+│   ├── prometheus
+│   │   ├── prometheus.railway.yml
+│   │   └── prometheus.yml
+│   ├── provisioning
+│   │   ├── dashboards
+│   │   │   ├── dashboards.yml
+│   │   │   └── downdetector.json
+│   │   └── datasources
+│   │       └── prometheus.yml
+│   └── railway
+│       └── prometheus-datasource.yml
+├── src
+│   ├── config
+│   │   └── env.ts
+│   ├── jobs
+│   │   └── monitoring.ts
+│   ├── metrics
+│   │   └── prometheusClient.ts
+│   ├── scripts
+│   │   └── testAlert.ts
+│   ├── services
+│   │   └── downdetectorService.ts
+│   ├── slack
+│   │   ├── __tests__
+│   │   │   ├── fixtures.ts
+│   │   │   └── incidentMonitor.spec.ts
+│   │   ├── errorMonitor
+│   │   │   ├── errorMonitor.ts
+│   │   │   └── index.ts
+│   │   ├── incidentMonitor.ts
+│   │   ├── manifest.json
+│   │   ├── notificationOrchestrator.ts
+│   │   └── types.ts
+│   ├── app.ts
+│   └── server.ts
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── Dockerfile.grafana
+├── Dockerfile.prometheus
+├── LICENSE
+├── README.md
+├── docker-compose.yml
+├── package-lock.json
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
+```
+</details>
 
 ## Arquitectura
 
@@ -1039,7 +1211,13 @@ npm install
 
 3. **Configura las variables de entorno**
 
-Crea un archivo `.env`:
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+cp .env.example .env
+```
+Luego, edita el archivo `.env`:
+
 ```env
 # Configuración de Slack
 SLACK_BOT_TOKEN=xoxb-tu-bot-token-aqui
@@ -1097,7 +1275,7 @@ docker compose up --build
 Esto levanta tres contenedores en la misma red (`monitoring`):
 - `bot` → expone `:3000` (incluye `/metrics`)
 - `prometheus` → `:9090`, hace scrape del bot cada 15s
-- `grafana` → `:3001`, ya viene con el datasource y el dashboard provisionados automáticamente (login por defecto `admin` / `admin`, definido en `docker-compose.yml`)
+- `grafana` → `:3001`, ya viene con el datasource y el dashboard provisionados automáticamente login por defecto `admin` / `admin`, definido en `[docker-compose.yml](docker-compose.yml)
 
 No hace falta mapear el puerto del bot en producción, pues nunca recibe tráfico HTTP externo salvo el scrape de Prometheus (`/metrics`) y las peticiones salientes a Downdetector y a Slack.
 
