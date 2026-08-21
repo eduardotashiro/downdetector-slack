@@ -59,10 +59,12 @@ O Downdetector é protegido pelo **Cloudflare Turnstile**, que bloqueia scraping
 - **Adaptação de idioma**: o navegador envia `Accept-Language` priorizando português do Brasil
 - **Retry automático**: uma consulta que falha recebe uma segunda tentativa antes de ser descartada
 - **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
+- **Alertas de erro internos**: se nenhum serviço puder ser verificado em um ciclo, o bot envia uma mensagem efêmera de erro (visível só para você) diretamente no Slack, via [**scraperErrorAlert.ts**](src/slack/scraperErrorAlert.ts)
 - **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
 - **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
 - **Docker + Railway**: execução containerizada com Xvfb, com Dockerfiles independentes para o bot, o Prometheus e o Grafana
 - **Testes**: testes unitários com Vitest e script manual para testar alertas no Slack
+
 
 ---
 
@@ -230,25 +232,25 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 
 
 ```
-├── .github
-│   ├── assets
-│   │   ├── es-CL
+├── .github/
+│   ├── assets/
+│   │   ├── es-CL/
 │   │   │   ├── dd-danger.png
 │   │   │   ├── dd-success.png
 │   │   │   └── dd-warning.png
-│   │   ├── grafana
+│   │   ├── grafana/
 │   │   │   └── dashboard.png
-│   │   ├── pt-BR
+│   │   ├── pt-BR/
 │   │   │   ├── alert-critical.png
 │   │   │   ├── alert-resolved.png
 │   │   │   ├── dd-danger.png
 │   │   │   ├── dd-success.png
 │   │   │   └── dd-warning.png
 │   │   └── banner.png
-│   └── workflows
+│   └── workflows/
 │       └── ci.yaml
-├── grafana
-│   ├── logos
+├── grafana/
+│   ├── logos/
 │   │   ├── bancodobrasil.png
 │   │   ├── bradesco.png
 │   │   ├── itau.png
@@ -257,42 +259,41 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 │   │   ├── picpay.png
 │   │   ├── pix.png
 │   │   └── santander.png
-│   ├── prometheus
+│   ├── prometheus/
 │   │   ├── prometheus.railway.yml
 │   │   └── prometheus.yml
-│   ├── provisioning
-│   │   ├── dashboards
+│   ├── provisioning/
+│   │   ├── dashboards/
 │   │   │   ├── dashboards.yml
 │   │   │   └── downdetector.json
-│   │   └── datasources
+│   │   └── datasources/
 │   │       └── prometheus.yml
-│   └── railway
+│   └── railway/
 │       └── prometheus-datasource.yml
-├── src
-│   ├── config
+├── src/
+│   ├── config/
 │   │   └── env.ts
-│   ├── jobs
+│   ├── jobs/
 │   │   └── monitoring.ts
-│   ├── metrics
+│   ├── metrics/
 │   │   └── prometheusClient.ts
-│   ├── scripts
+│   ├── scripts/
 │   │   └── testAlert.ts
-│   ├── services
+│   ├── services/
 │   │   └── downdetectorService.ts
-│   ├── slack
-│   │   ├── __tests__
+│   ├── slack/
+│   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
-│   │   ├── errorMonitor
-│   │   │   ├── errorMonitor.ts
-│   │   │   └── index.ts
 │   │   ├── incidentMonitor.ts
 │   │   ├── manifest.json
 │   │   ├── notificationOrchestrator.ts
+│   │   ├── scraperErrorAlert.ts
 │   │   └── types.ts
 │   ├── app.ts
 │   └── server.ts
 ├── .dockerignore
+├── .env.example
 ├── .gitignore
 ├── Dockerfile
 ├── Dockerfile.grafana
@@ -772,6 +773,7 @@ Downdetector está protegido por **Cloudflare Turnstile**, que bloquea el scrapi
 - **Adaptación de idioma**: el navegador envía `Accept-Language` priorizando portugués de Brasil
 - **Reintento automático**: una consulta que falla recibe un segundo intento antes de descartarse
 - **Ciclo continuo con retraso aleatorio**: el monitoreo corre una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
+- **Alertas de error internas**: si ningún servicio puede verificarse en un ciclo, el bot envía un mensaje efímero de error (visible solo para ti) directamente en Slack, vía [**scraperErrorAlert.ts**](src/slack/scraperErrorAlert.ts)
 - **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), vía `prom-client`
 - **Dashboard Grafana**: panel provisionado automáticamente con el estado en tiempo real de todos los servicios monitoreados
 - **Docker + Railway**: ejecución en contenedores con Xvfb, con Dockerfiles independientes para el bot, Prometheus y Grafana
@@ -943,25 +945,25 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 
 ```
-├── .github
-│   ├── assets
-│   │   ├── es-CL
+├── .github/
+│   ├── assets/
+│   │   ├── es-CL/
 │   │   │   ├── dd-danger.png
 │   │   │   ├── dd-success.png
 │   │   │   └── dd-warning.png
-│   │   ├── grafana
+│   │   ├── grafana/
 │   │   │   └── dashboard.png
-│   │   ├── pt-BR
+│   │   ├── pt-BR/
 │   │   │   ├── alert-critical.png
 │   │   │   ├── alert-resolved.png
 │   │   │   ├── dd-danger.png
 │   │   │   ├── dd-success.png
 │   │   │   └── dd-warning.png
 │   │   └── banner.png
-│   └── workflows
+│   └── workflows/
 │       └── ci.yaml
-├── grafana
-│   ├── logos
+├── grafana/
+│   ├── logos/
 │   │   ├── bancodobrasil.png
 │   │   ├── bradesco.png
 │   │   ├── itau.png
@@ -970,42 +972,41 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 │   │   ├── picpay.png
 │   │   ├── pix.png
 │   │   └── santander.png
-│   ├── prometheus
+│   ├── prometheus/
 │   │   ├── prometheus.railway.yml
 │   │   └── prometheus.yml
-│   ├── provisioning
-│   │   ├── dashboards
+│   ├── provisioning/
+│   │   ├── dashboards/
 │   │   │   ├── dashboards.yml
 │   │   │   └── downdetector.json
-│   │   └── datasources
+│   │   └── datasources/
 │   │       └── prometheus.yml
-│   └── railway
+│   └── railway/
 │       └── prometheus-datasource.yml
-├── src
-│   ├── config
+├── src/
+│   ├── config/
 │   │   └── env.ts
-│   ├── jobs
+│   ├── jobs/
 │   │   └── monitoring.ts
-│   ├── metrics
+│   ├── metrics/
 │   │   └── prometheusClient.ts
-│   ├── scripts
+│   ├── scripts/
 │   │   └── testAlert.ts
-│   ├── services
+│   ├── services/
 │   │   └── downdetectorService.ts
-│   ├── slack
-│   │   ├── __tests__
+│   ├── slack/
+│   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
-│   │   ├── errorMonitor
-│   │   │   ├── errorMonitor.ts
-│   │   │   └── index.ts
 │   │   ├── incidentMonitor.ts
 │   │   ├── manifest.json
 │   │   ├── notificationOrchestrator.ts
+│   │   ├── scraperErrorAlert.ts
 │   │   └── types.ts
 │   ├── app.ts
 │   └── server.ts
 ├── .dockerignore
+├── .env.example
 ├── .gitignore
 ├── Dockerfile
 ├── Dockerfile.grafana
