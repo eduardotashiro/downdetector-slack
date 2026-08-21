@@ -1,7 +1,7 @@
 import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright-core";
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
-import { sendEphemeralMessage } from "../slack/errorMonitor/index.js"
+import { sendEphemeralMessage } from "../slack/scraperErrorAlert.js"
 import { updateServiceStatus } from "../metrics/prometheusClient.js";
 import { normalizeServiceName } from "../metrics/prometheusClient.js";
 

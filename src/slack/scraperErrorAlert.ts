@@ -1,5 +1,5 @@
 import { WebClient, LogLevel } from "@slack/web-api"
-import { config } from "../../config/env.js"
+import { config } from "../config/env.js"
 
 const client = new WebClient(config.slack.botToken, {
   logLevel: LogLevel.DEBUG,
