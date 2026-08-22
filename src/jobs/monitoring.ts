@@ -11,7 +11,15 @@ function getRandomDelay(minMinutes: number, maxMinutes: number): number {
 async function run() {
     try {
         console.log(`Monitoramento iniciado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`);
+
+        const memBefore = process.memoryUsage();
+        console.log(`ANTES - RSS: ${(memBefore.rss / 1024 / 1024).toFixed(1)}MB | Heap: ${(memBefore.heapUsed / 1024 / 1024).toFixed(1)}MB | External: ${(memBefore.external / 1024 / 1024).toFixed(1)}MB`);
+
         await CheckAll();
+
+        const memAfter = process.memoryUsage();
+        console.log(`DEPOIS - RSS: ${(memAfter.rss / 1024 / 1024).toFixed(1)}MB | Heap: ${(memAfter.heapUsed / 1024 / 1024).toFixed(1)}MB | External: ${(memAfter.external / 1024 / 1024).toFixed(1)}MB`);
+
         console.log(`Monitoramento finalizado: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`);
     } catch (error) {
         console.error(`Erro no monitoramento:`, error);
