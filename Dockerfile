@@ -20,9 +20,6 @@ RUN apt-get update && apt-get install -y \
 
 # configura diretório fixo do camoufox
 ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
-ENV DISPLAY=:99
-ENV NODE_DISABLE_COLORS=1
-ENV FORCE_COLOR=0
 
 COPY package*.json ./
 
@@ -34,5 +31,4 @@ COPY . .
 
 RUN npm run build
 
-# 2>/dev/null (Errors from xkbcomp are not fatal to the X server)
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node dist/server.js"]
+CMD ["node", "dist/server.js"]
