@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libcups2 \
       libdrm2 \
       libgbm1 \
-      libasound2t64 \
+      libasound2 \
       libpangocairo-1.0-0 \
       libpango-1.0-0 \
       libcairo2 \
@@ -60,4 +60,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /opt/camoufox /opt/camoufox
 
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node dist/server.js"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node --expose-gc dist/server.js"]
