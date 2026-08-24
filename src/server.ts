@@ -1,11 +1,11 @@
 import "./jobs/monitoring.js";
 import { app } from "./app.js";
-import {metricsEndpoint} from "./metrics/prometheusClient.js";
-import {expressApp} from "./app.js";
+// import {metricsEndpoint} from "./metrics/prometheusClient.js";
+// import {expressApp} from "./app.js";
 
-expressApp.use("/metrics", (_req: any, res: any) => {
-  metricsEndpoint(_req, res);
-});
+// expressApp.use("/metrics", (_req: any, res: any) => {
+//   metricsEndpoint(_req, res);
+// });
 
 
 (async () => {
