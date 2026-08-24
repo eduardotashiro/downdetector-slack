@@ -27,90 +27,53 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
-async function waitForRealContent(page: Page, maxWait: number = 15000): Promise<boolean> {
-
-    const deadline = Date.now() + maxWait;
-
-    while (Date.now() < deadline) {
-
-        const body = await page
-            .evaluate(() => document.body?.innerText?.toLowerCase() || "")
-            .catch(() => "");
-
-        if (
-            body.includes("relatos dos usuários") ||
-            body.includes("relatar um problema") ||
-            body.includes("user reports show") ||
-            body.includes("report a problem")
-        ) {
-            return true;
+async function waitForRealContent(page: Page): Promise<boolean> {
+    try {
+        await page.waitForFunction(() => {
+            const body = document.body?.innerText?.toLowerCase() || ""
+            return body.includes("relatos dos usuários") || body.includes("relatos de usuários")
+        }, { timeout: 10000 })
+        return true
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("tempo esgotado ou erro:", error.message);
+        } else {
+            console.error("erro bizarro:", error)
         }
-
-        if (
-            body.includes("verificando") ||
-            body.includes("verifying") ||
-            body.includes("segurança") ||
-            body.includes("confirme que é humano")
-        ) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        return false;
     }
-
-    return false;
 }
 
-async function detectStatus(page: Page): Promise<string | null> {
-
+async function detectStatus(page: Page): Promise<ServiceStatus | null> {
     try {
-
-        const body = await page.evaluate(
-            () => document.body?.innerText?.toLowerCase() || ""
-        );
-
-        if (
-            body.includes("não mostram problemas") ||
-            body.includes("no current problems")
-        ) {
-            return ServiceStatus.SUCCESS;
-        }
-
-        if (
-            body.includes("possíveis problemas") ||
-            body.includes("possible problems")
-        ) {
-            return ServiceStatus.WARNING;
-        }
-
-        if (
-            body.includes("mostram problemas") ||
-            body.includes("show problems with")
-        ) {
-            return ServiceStatus.DANGER;
-        }
-
+        const JSHandle = await page.waitForFunction(() => {
+            const body = document.body?.innerText?.toLowerCase() || ""
+            if (body.includes("não mostram problemas")) return "success"
+            if (body.includes("possíveis problemas")) return "warning"
+            if (body.includes("mostram problemas")) return "danger"
+            return null
+        }, { timeout: 5000 })
+        const statusString = await JSHandle.jsonValue();
+        if (statusString === "success") return ServiceStatus.SUCCESS
+        if (statusString === "warning") return ServiceStatus.WARNING
+        if (statusString === "danger") return ServiceStatus.DANGER
         return null;
-
-    } catch {
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("tempo esgotado ou erro:", error.message);
+        } else {
+            console.error("erro bizarro:", error)
+        }
         return null;
     }
 }
 
 async function checkSingleService(browser: Browser, service: ServicesList): Promise<string | null> {
-
-    const name = service.name;
-    const url = service.url;
-
+    const { name, url } = service
     let page: Page | undefined;
-
     try {
-
         console.log(`💀 ${name}...`);
-
         page = await browser.newPage();
-
         await page.setExtraHTTPHeaders({
             "Accept-Language":
                 "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -121,10 +84,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
             timeout: 45000,
         });
 
-        const loaded = await waitForRealContent(
-            page,
-            15000
-        );
+        const loaded = await waitForRealContent(page);
 
         if (!loaded) {
             console.log("❌");
@@ -174,7 +134,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         console.log("Iniciando Camoufox...");
 
         browser = (await Camoufox({
-            headless: "virtual",
+            headless: false,
             os: "linux",
             humanize: true,
             geoip: true,
