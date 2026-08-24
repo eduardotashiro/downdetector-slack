@@ -16,6 +16,12 @@ interface ServicesList {
     url: ServiceURL;
 }
 
+const statusMap: Record<string, ServiceStatus> = {
+    success: ServiceStatus.SUCCESS,
+    warning: ServiceStatus.WARNING,
+    danger:  ServiceStatus.DANGER
+}
+
 const SERVICES: ServicesList[] = [
     { name: ServiceName.PICPAY, url: ServiceURL.PICPAY },
     { name: ServiceName.NUBANK, url: ServiceURL.NUBANK },
@@ -51,13 +57,11 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
             if (body.includes("não mostram problemas")) return "success"
             if (body.includes("possíveis problemas")) return "warning"
             if (body.includes("mostram problemas")) return "danger"
-            return null
+            return false
         }, { timeout: 5000 })
         const statusString = await JSHandle.jsonValue();
-        if (statusString === "success") return ServiceStatus.SUCCESS
-        if (statusString === "warning") return ServiceStatus.WARNING
-        if (statusString === "danger") return ServiceStatus.DANGER
-        return null;
+        if (!statusString) return null
+        return statusMap[statusString]
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error("tempo esgotado ou erro:", error.message);
