@@ -59,5 +59,10 @@ COPY package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /opt/camoufox /opt/camoufox
+COPY xvfb.sh ./xvfb.sh
 
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node --expose-gc dist/server.js"]
+RUN chmod +x ./xvfb.sh
+
+ENTRYPOINT ["/bin/bash", "/app/xvfb.sh"]
+
+CMD ["npm", "start"]
