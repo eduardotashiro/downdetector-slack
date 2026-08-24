@@ -27,7 +27,7 @@ export class IncidentMonitor {
 
             await this.client.chat.postMessage({
                 channel: this.channel,
-                text: `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n<${url} | Ver no Downdetector>`
+                text: `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às")}\n\n<${url} | Ver no Downdetector>`
             });
 
             this.incident.alertSent = true;
@@ -47,8 +47,8 @@ export class IncidentMonitor {
             } else if (minutes > 0) {
                 timeText = `${minutes}min`;
             }
-            const incidentStart = new Date(this.incident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
-            const endOfIncident = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+            const incidentStart = new Date(this.incident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às");
+            const endOfIncident = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às");
 
             await this.client.chat.postMessage({
                 channel: this.channel,
@@ -68,10 +68,6 @@ export class IncidentMonitor {
         if ((status === ServiceStatus.DANGER) && this.incident) {
             console.log(`INCIDENTE EM ${name} | STATUS: ${status}, AINDA ATIVO...`);
             return;
-        }
-
-        if (status === ServiceStatus.SUCCESS && !this.incident) {
-            console.log(`${name} 🟢`)
         }
     }
 }
