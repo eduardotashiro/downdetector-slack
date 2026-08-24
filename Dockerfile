@@ -1,34 +1,63 @@
-FROM mcr.microsoft.com/playwright:v1.58.0-noble
+FROM node:24-bookworm-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 \
+      make \
+      g++ \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    xvfb \
-    build-essential \
-    libgtk-3-0 \
-    libdbus-glib-1-2 \
-    libasound2t64 \
-    libxt6 \
-    libx11-xcb1 \
-    libxcb-dri3-0 \
-    libdrm2 \
-    libgbm1 \
-    libxss1 \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    && rm -rf /var/lib/apt/lists/*
-
-# configura diretório fixo do camoufox
-ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
-
 COPY package*.json ./
-
-RUN npm ci
-
-RUN npx camoufox-js fetch
+RUN npm ci && npx camoufox-js fetch
 
 COPY . .
-
 RUN npm run build
 
-CMD ["node", "dist/server.js"]
+
+FROM node:24-bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xvfb \
+      ca-certificates \
+      fonts-liberation \
+      fonts-noto-color-emoji \
+      libgtk-3-0 \
+      libx11-xcb1 \
+      libxcomposite1 \
+      libxcursor1 \
+      libxdamage1 \
+      libxfixes3 \
+      libxi6 \
+      libxrandr2 \
+      libxtst6 \
+      libnss3 \
+      libnspr4 \
+      libatk1.0-0 \
+      libatk-bridge2.0-0 \
+      libcups2 \
+      libdrm2 \
+      libgbm1 \
+      libasound2t64 \
+      libpangocairo-1.0-0 \
+      libpango-1.0-0 \
+      libcairo2 \
+      libdbus-glib-1-2 \
+      libxt6 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
+ENV DISPLAY=:99
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /opt/camoufox /opt/camoufox
+
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 -ac 2>/dev/null & sleep 2 && node dist/server.js"]
