@@ -8,6 +8,7 @@ const client = new WebClient(config.slack.botToken, {
 const channelId = config.slack.channel;
 const userId = config.slack.userId;
 
+// TODO: identificar o motivo do pq aparece apenas em desktop e não em mobile
 export async function sendEphemeralMessage(errorMessage: string): Promise<void> {
 
   const message = `:warning: *Erro no Bot de Monitoramento*\n\n• *Mensagem:* \`${errorMessage}\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n\n`

@@ -1,19 +1,32 @@
 import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright-core";
+import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 import { sendEphemeralMessage } from "../slack/scraperErrorAlert.js"
-import { updateServiceStatus } from "../metrics/prometheusClient.js";
-import { normalizeServiceName } from "../metrics/prometheusClient.js";
+// import { updateServiceStatus } from "../metrics/prometheusClient.js";
+// import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
 export interface ServicesResult {
     name: ServiceName;
     url: ServiceURL;
-    outage: string;
+    outage: ServiceStatus;
 }
 
 interface ServicesList {
     name: ServiceName;
     url: ServiceURL;
+}
+
+const statusMap: Record<string, ServiceStatus> = {
+    success: ServiceStatus.SUCCESS,
+    warning: ServiceStatus.WARNING,
+    danger: ServiceStatus.DANGER
+}
+
+const statusIcon: Record<ServiceStatus, string> = {
+    [ServiceStatus.SUCCESS]: "🟢",
+    [ServiceStatus.WARNING]: "⚠️",
+    [ServiceStatus.DANGER]: "🔴"
 }
 
 const SERVICES: ServicesList[] = [
@@ -27,154 +40,104 @@ const SERVICES: ServicesList[] = [
     { name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
 ];
 
-async function waitForRealContent(page: Page, maxWait: number = 15000): Promise<boolean> {
 
-    const deadline = Date.now() + maxWait;
-
-    while (Date.now() < deadline) {
-
-        const body = await page
-            .evaluate(() => document.body?.innerText?.toLowerCase() || "")
-            .catch(() => "");
-
-        if (
-            body.includes("relatos dos usuários") ||
-            body.includes("relatar um problema") ||
-            body.includes("user reports show") ||
-            body.includes("report a problem")
-        ) {
-            return true;
-        }
-
-        if (
-            body.includes("verificando") ||
-            body.includes("verifying") ||
-            body.includes("segurança") ||
-            body.includes("confirme que é humano")
-        ) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            continue;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
+function shuffleArray(array: ServicesList[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
-
-    return false;
 }
 
-async function detectStatus(page: Page): Promise<string | null> {
 
+async function waitForRealContent(page: Page): Promise<boolean> {
     try {
-
-        const body = await page.evaluate(
-            () => document.body?.innerText?.toLowerCase() || ""
-        );
-
-        if (
-            body.includes("não mostram problemas") ||
-            body.includes("no current problems")
-        ) {
-            return ServiceStatus.SUCCESS;
+        await page.waitForFunction(() => {
+            const body = document.body?.innerText?.toLowerCase() || "";
+            return body.includes("relatos dos usuários") || body.includes("relatos de usuários");
+        });
+        return true;
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`tempo esgotado ou erro: ${error.message}`);
+        } else {
+            console.error(`erro bizarro: ${error}`);
         }
+        return false;
+    }
+}
 
-        if (
-            body.includes("possíveis problemas") ||
-            body.includes("possible problems")
-        ) {
-            return ServiceStatus.WARNING;
+
+async function detectStatus(page: Page): Promise<ServiceStatus | null> {
+    try {
+        const JSHandle = await page.waitForFunction(() => {
+            const body = document.body?.innerText?.toLowerCase() || "";
+            if (body.includes("não mostram problemas")) return "success";
+            if (body.includes("possíveis problemas")) return "warning";
+            if (body.includes("mostram problemas")) return "danger";
+            return false;
+        });
+        const statusString = await JSHandle.jsonValue();
+        if (!statusString) return null;
+        return statusMap[statusString];
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`tempo esgotado ou erro: ${error.message}`);
+        } else {
+            console.error(`erro bizarro: ${error}`);
         }
-
-        if (
-            body.includes("mostram problemas") ||
-            body.includes("show problems with")
-        ) {
-            return ServiceStatus.DANGER;
-        }
-
-        return null;
-
-    } catch {
         return null;
     }
 }
 
-async function checkSingleService(browser: Browser, service: ServicesList): Promise<string | null> {
 
-    const name = service.name;
-    const url = service.url;
+async function checkSingleService(browser: Browser, service: ServicesList): Promise<ServiceStatus | null> {
+    const { name, url } = service;
 
-    let page: Page | undefined;
+    if (!browser.isConnected()) {
+        console.log(`browser desconectado antes de checar: ${name}`)
+        return null
+    }
+
+    let page: Page | null = null;
+    let context: BrowserContext | null = null;
 
     try {
-
-        console.log(`💀 ${name}...`);
-
-        page = await browser.newPage();
-
-        await page.setExtraHTTPHeaders({
-            "Accept-Language":
-                "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        });
-
-        await page.goto(url, {
-            waitUntil: "domcontentloaded",
-            timeout: 45000,
-        });
-
-        const loaded = await waitForRealContent(
-            page,
-            15000
-        );
-
+        context = await browser.newContext();
+        page = await context.newPage();
+        page.setDefaultTimeout(15000);
+        page.setDefaultNavigationTimeout(15000);
+        await page.setExtraHTTPHeaders({ "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7" });
+        await page.goto(url, { waitUntil: "domcontentloaded" });
+        const loaded = await waitForRealContent(page);
         if (!loaded) {
-            console.log("❌");
+            console.log(`💀 ${name}...❌ _cf_`);
             return null;
         }
-
         const status = await detectStatus(page);
-
-        if (status === ServiceStatus.SUCCESS) {
-            console.log("✅");
-        } else if (status === ServiceStatus.WARNING) {
-            console.log("⚠️");
-        } else if (status === ServiceStatus.DANGER) {
-            console.log("🔴");
-        } else {
-            console.log("❓");
-        }
-
+        if (!status) return null;
+        console.log(`💀 ${name}...${statusIcon[status]}`);
         return status;
-
-    } catch (error) {
-
-        const message = error instanceof Error ? error.message : String(error);
-
-        console.log(`❌ (${message.slice(0, 30)})`);
-
-        return null;
-
-    } finally {
-
-        if (page) {
-            await page.close().catch(() => { });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`erro: ${error.message}`);
+        } else {
+            console.error("erro bizarro:", error);
         }
+        return null;
+    } finally {
+        if (context && !context?.isClosed()) await context?.close().catch((e) => { console.error(`erro ao fechar context: ${e.message}`); });
     }
 }
 
+
 export async function checkAllServices(): Promise<ServicesResult[]> {
-
     const results: ServicesResult[] = [];
-
     const startTotal = Date.now();
-
     let browser: Browser | undefined;
-
     try {
 
-        console.log("Iniciando Camoufox...");
-
         browser = (await Camoufox({
-            headless: "virtual",
+            headless: false,
             os: "linux",
             humanize: true,
             geoip: true,
@@ -183,79 +146,49 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         })) as Browser;
 
         console.log("Camoufox iniciado!");
-
         const servicesToCheck = [...SERVICES];
-
-        servicesToCheck.sort(() => Math.random() - 0.5);
-
+        shuffleArray(servicesToCheck);
         for (let i = 0; i < servicesToCheck.length; i++) {
-
             const service = servicesToCheck[i];
-
-            let status = await checkSingleService(
-                browser,
-                service
-            );
-
+            let status = await checkSingleService(browser, service);
             if (!status) {
-
-                await new Promise(resolve =>
-                    setTimeout(resolve, 1500)
-                );
-
-                status = await checkSingleService(
-                    browser,
-                    service
-                );
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                status = await checkSingleService(browser, service);
             }
-
             if (status) {
-
                 results.push({
                     name: service.name,
                     url: service.url,
                     outage: status,
                 });
             }
-
             if (i < servicesToCheck.length - 1) {
-
                 const delay = Math.random() * (3000 - 1500) + 1500;
-
-                await new Promise(resolve =>
-                    setTimeout(resolve, delay)
-                );
+                await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
-
         if (results.length === 0) {
             const errorMessage = `Nenhum serviço foi verificado`;
             await sendEphemeralMessage(errorMessage);
         }
-
     } finally {
-
-        if (browser) {
-            await browser.close().catch(() => { });
-        }
+        if (browser && browser.isConnected()) await browser.close().catch((e) => console.error(`erro ao fechar browser: ${e.message}`));
     }
-
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
-
     console.log(`\n${results.length}/${SERVICES.length} serviços | ${totalTime}s`);
 
-    const statusMap: { [key: string]: number } = {
-        'success': 0,
-        'warning': 1,
-        'danger': 2
-    };
+    // const statusMap: { [key: string]: number } = {
+    //     'success': 0,
+    //     'warning': 1,
+    //     'danger': 2
+    // };
 
-    for (let i = 0; i < results.length; i++) {
-        const service = normalizeServiceName(results[i].name);
-        const statusValue = results[i].outage;
-        const statusNum = statusMap[statusValue];
-        updateServiceStatus(service, statusNum);
-    }
+    // for (let i = 0; i < results.length; i++) {
+    //     const service = normalizeServiceName(results[i].name);
+    //     const statusValue = results[i].outage;
+    //     const statusNum = statusMap[statusValue];
+    //     updateServiceStatus(service, statusNum);
+    // }
 
     return results;
 }
