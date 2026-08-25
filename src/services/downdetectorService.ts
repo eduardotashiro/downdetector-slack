@@ -48,6 +48,29 @@ function shuffleArray(array: ServicesList[]) {
     }
 }
 
+export async function forceCloseBrowser(browser?: Browser, timeoutMs:number=3000): Promise<void> {
+    if (!browser) return;
+    const normalClose = async () => {
+        if (browser.isConnected()) await browser.close();
+    };
+    let timeoutId: NodeJS.Timeout | null = null;
+    const timedOut = await Promise.race([
+        normalClose().then(() => false),
+        new Promise<boolean>((resolve) => { timeoutId = setTimeout(() => resolve(true), timeoutMs); }),
+    ]);
+    if (timeoutId) clearTimeout(timeoutId);
+    if (timedOut || browser.isConnected()) {
+        try {
+            const proc = (browser as Browser & { process?: () => { kill: (signal: string) => void } }).process?.();
+            if (proc) {
+                proc.kill("SIGKILL");
+                console.log("encerrado via SIGKILL.");
+            }
+        } catch {
+            // Processo já encerrado
+        }
+    }
+}
 
 async function waitForRealContent(page: Page): Promise<boolean> {
     try {
@@ -172,7 +195,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             await sendEphemeralMessage(errorMessage);
         }
     } finally {
-        if (browser && browser.isConnected()) await browser.close().catch((e) => console.error(`erro ao fechar browser: ${e.message}`));
+        await forceCloseBrowser(browser, 3000);
     }
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
     console.log(`\n${results.length}/${SERVICES.length} serviços | ${totalTime}s`);
