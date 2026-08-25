@@ -145,7 +145,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             window: [1920, 1080],
         })) as Browser;
 
-        console.log("Camoufox iniciado!");
+        console.log("\nCamoufox iniciado!");
         const servicesToCheck = [...SERVICES];
         shuffleArray(servicesToCheck);
         for (let i = 0; i < servicesToCheck.length; i++) {
