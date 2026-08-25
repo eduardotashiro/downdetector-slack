@@ -54,7 +54,7 @@ async function waitForRealContent(page: Page): Promise<boolean> {
         await page.waitForFunction(() => {
             const body = document.body?.innerText?.toLowerCase() || "";
             return body.includes("relatos dos usuários") || body.includes("relatos de usuários");
-        }, { timeout: 5000 });
+        });
         return true;
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -75,7 +75,7 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
             if (body.includes("possíveis problemas")) return "warning";
             if (body.includes("mostram problemas")) return "danger";
             return false;
-        }, { timeout: 5000 })
+        });
         const statusString = await JSHandle.jsonValue();
         if (!statusString) return null;
         return statusMap[statusString];
@@ -100,14 +100,17 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 
     let page: Page | null = null;
     let context: BrowserContext | null = null;
+
     try {
         context = await browser.newContext();
         page = await context.newPage();
-        await page.setExtraHTTPHeaders({ "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7", });
-        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000, });
+        page.setDefaultTimeout(15000);
+        page.setDefaultNavigationTimeout(15000);
+        await page.setExtraHTTPHeaders({ "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7" });
+        await page.goto(url, { waitUntil: "domcontentloaded" });
         const loaded = await waitForRealContent(page);
         if (!loaded) {
-            console.log(`💀 ${name}...❌`);
+            console.log(`💀 ${name}...❌ _cf_`);
             return null;
         }
         const status = await detectStatus(page);
@@ -122,7 +125,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
         }
         return null;
     } finally {
-        if (context && !context?.isClosed()) await context?.close().catch((e) => { console.error(`erro ao fechar context: ${e.message}` )});
+        if (context && !context?.isClosed()) await context?.close().catch((e) => { console.error(`erro ao fechar context: ${e.message}`); });
     }
 }
 
@@ -149,7 +152,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             const service = servicesToCheck[i];
             let status = await checkSingleService(browser, service);
             if (!status) {
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 status = await checkSingleService(browser, service);
             }
             if (status) {
