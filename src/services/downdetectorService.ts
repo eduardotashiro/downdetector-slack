@@ -2,7 +2,6 @@ import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
-import { sendEphemeralMessage } from "../slack/scraperErrorAlert.js"
 import treeKill from "tree-kill";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
@@ -200,10 +199,6 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
                 const delay = Math.random() * (3000 - 1500) + 1500;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
-        }
-        if (results.length === 0) {
-            const errorMessage = `Nenhum serviço foi verificado`;
-            await sendEphemeralMessage(errorMessage);
         }
     } finally {
         await forceCloseBrowser(browser, 3000);
