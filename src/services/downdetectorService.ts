@@ -3,6 +3,7 @@ import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 import { sendEphemeralMessage } from "../slack/scraperErrorAlert.js"
+import treeKill from "tree-kill";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
@@ -48,29 +49,39 @@ function shuffleArray(array: ServicesList[]) {
     }
 }
 
-export async function forceCloseBrowser(browser?: Browser, timeoutMs:number=3000): Promise<void> {
+
+function killProcessTree(pid: number, signal: "SIGTERM" | "SIGKILL"): Promise<void> {
+    return new Promise((resolve) => {
+        treeKill(pid, signal, (err) => {
+            if (err) console.log(`treeKill(${pid}): ${err.message}`); // normal quando o processo já morreu sozinho, não é erro fatal
+            resolve();
+        });
+    });
+}
+
+
+export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 3000): Promise<void> {
     if (!browser) return;
+    const proc = (browser as Browser & { process?: () => { pid?: number } }).process?.();
+    const pid = proc?.pid;
     const normalClose = async () => {
         if (browser.isConnected()) await browser.close();
     };
     let timeoutId: NodeJS.Timeout | null = null;
     const timedOut = await Promise.race([
-        normalClose().then(() => false),
+        normalClose().then(() => false).catch(() => false),
         new Promise<boolean>((resolve) => { timeoutId = setTimeout(() => resolve(true), timeoutMs); }),
     ]);
     if (timeoutId) clearTimeout(timeoutId);
-    if (timedOut || browser.isConnected()) {
-        try {
-            const proc = (browser as Browser & { process?: () => { kill: (signal: string) => void } }).process?.();
-            if (proc) {
-                proc.kill("SIGKILL");
-                console.log("encerrado via SIGKILL.");
-            }
-        } catch {
-            // Processo já encerrado
-        }
+    if (!timedOut && !browser.isConnected()) return;
+    console.log(`browser não fechou normalmente, timeout=${timedOut}), matando árvore de processos`);
+    if (pid) {
+        await killProcessTree(pid, "SIGKILL");
+    } else if (timedOut || browser.isConnected()) {
+        console.error("não foi possível obter o pid do browser para matar a árvore de processos...");
     }
 }
+
 
 async function waitForRealContent(page: Page): Promise<boolean> {
     try {
@@ -94,10 +105,10 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
     try {
         const JSHandle = await page.waitForFunction(() => {
             const body = document.body?.innerText?.toLowerCase() || "";
-            if (body.includes("não mostram problemas")) return "success";
-            if (body.includes("possíveis problemas")) return "warning";
-            if (body.includes("mostram problemas")) return "danger";
-            return false;
+             if (body.includes("não mostram problemas")) return "success";
+              if (body.includes("possíveis problemas")) return "warning";
+               if (body.includes("mostram problemas")) return "danger";
+                return false;
         });
         const statusString = await JSHandle.jsonValue();
         if (!statusString) return null;

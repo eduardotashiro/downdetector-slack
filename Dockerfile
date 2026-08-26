@@ -22,6 +22,8 @@ FROM node:24-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       xvfb \
+      tini \
+      procps \
       ca-certificates \
       fonts-liberation \
       fonts-noto-color-emoji \
@@ -63,6 +65,7 @@ COPY xvfb.sh ./xvfb.sh
 
 RUN chmod +x ./xvfb.sh
 
-ENTRYPOINT ["/bin/bash", "/app/xvfb.sh"]
+# tini como PID 1:reap de processos
+ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/app/xvfb.sh"]
 
-CMD ["npm", "start"]
+CMD ["node", "--expose-gc", "dist/server.js"]

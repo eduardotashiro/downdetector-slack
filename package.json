@@ -1,6 +1,6 @@
 {
   "name": "downdetector-slack",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Monitor Downdetector | Slack",
   "main": "dist/server.js",
   "type": "module",
@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node --expose-gc dist/server.js",
     "postinstall": "npx camoufox-js fetch",
     "test:alert": "npx tsx src/scripts/testAlert.ts",
     "test:watch": "vitest",
@@ -23,7 +23,8 @@
     "@slack/bolt": "^4.6.0",
     "camoufox-js": "^0.12.0",
     "dotenv": "^17.4.2",
-    "prom-client": "^15.1.3"
+    "prom-client": "^15.1.3",
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
