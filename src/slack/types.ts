@@ -9,7 +9,7 @@ export enum ServiceName {
     BRADESCO = "Bradesco",
     SANTANDER = "Santander",
     PIX = "Pix",
-    PICPAY = "Pic Pay",
+    PICPAY = "PicPay",
     ITAU = "Banco Itaú",
     NUBANK = "Nubank",
     MERCADO_PAGO = "Mercado Pago"
