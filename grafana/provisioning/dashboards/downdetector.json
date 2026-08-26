@@ -45,7 +45,7 @@
     {
       "type": "stat", "title": "", "gridPos": { "h": 2, "w": 6, "x": 12, "y": 4 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
-      "targets": [{ "expr": "downdetector_service_status{service=\"pic_pay\"}", "refId": "A" }],
+      "targets": [{ "expr": "downdetector_service_status{service=\"picpay\"}", "refId": "A" }],
       "fieldConfig": { "defaults": {
         "mappings": [
           { "type": "value", "options": { "0": { "text": "SUCCESS", "color": "green" } } },
@@ -147,7 +147,7 @@
       "targets": [
         { "expr": "downdetector_service_status{service=\"pix\"}", "legendFormat": "Pix", "refId": "A" },
         { "expr": "downdetector_service_status{service=\"nubank\"}", "legendFormat": "Nubank", "refId": "B" },
-        { "expr": "downdetector_service_status{service=\"pic_pay\"}", "legendFormat": "PicPay", "refId": "C" },
+        { "expr": "downdetector_service_status{service=\"picpay\"}", "legendFormat": "PicPay", "refId": "C" },
         { "expr": "downdetector_service_status{service=\"mercado_pago\"}", "legendFormat": "Mercado Pago", "refId": "D" },
         { "expr": "downdetector_service_status{service=\"santander\"}", "legendFormat": "Santander", "refId": "E" },
         { "expr": "downdetector_service_status{service=\"banco_itau\"}", "legendFormat": "Itaú", "refId": "F" },
