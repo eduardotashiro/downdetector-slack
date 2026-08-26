@@ -285,10 +285,14 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 │   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
+│   │   ├── errorMonitor/
+│   │   │   ├── directMessageService.ts
+│   │   │   ├── dmAlert.ts
+│   │   │   ├── ephemeralAlert.ts
+│   │   │   └── ephemeralMessageService.ts
 │   │   ├── incidentMonitor.ts
 │   │   ├── manifest.json
 │   │   ├── notificationOrchestrator.ts
-│   │   ├── scraperErrorAlert.ts
 │   │   └── types.ts
 │   ├── app.ts
 │   └── server.ts
@@ -304,7 +308,8 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 ├── package-lock.json
 ├── package.json
 ├── tsconfig.json
-└── vitest.config.ts
+├── vitest.config.ts
+└── xvfb.sh
 ```
 </details>
 
@@ -944,6 +949,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 <summary>Haz clic para expandir el árbol de archivos</summary>
 
 
+
 ```
 ├── .github/
 │   ├── assets/
@@ -998,10 +1004,14 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 │   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
+│   │   ├── errorMonitor/
+│   │   │   ├── directMessageService.ts
+│   │   │   ├── dmAlert.ts
+│   │   │   ├── ephemeralAlert.ts
+│   │   │   └── ephemeralMessageService.ts
 │   │   ├── incidentMonitor.ts
 │   │   ├── manifest.json
 │   │   ├── notificationOrchestrator.ts
-│   │   ├── scraperErrorAlert.ts
 │   │   └── types.ts
 │   ├── app.ts
 │   └── server.ts
@@ -1017,7 +1027,8 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 ├── package-lock.json
 ├── package.json
 ├── tsconfig.json
-└── vitest.config.ts
+├── vitest.config.ts
+└── xvfb.sh
 ```
 </details>
 
