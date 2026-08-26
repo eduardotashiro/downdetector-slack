@@ -1,5 +1,6 @@
 import "./jobs/monitoring.js";
 import { app } from "./app.js";
+import {config} from "./config/env.js"
 // import {metricsEndpoint} from "./metrics/prometheusClient.js";
 // import {expressApp} from "./app.js";
 
@@ -9,7 +10,7 @@ import { app } from "./app.js";
 
 
 (async () => {
-  const port = process.env.PORT || 3000;
+  const port = config.slack.port;
   try {
     await app.start(port);
     app.logger.info(` app is running! c: ${port}`);
