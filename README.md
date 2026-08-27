@@ -485,6 +485,77 @@ graph LR
 
 ---
 
+## Robustez em produção
+
+<details>
+<summary>Clique para entender as escolhas de resiliência</summary>
+
+O bot foi projetado pra rodar 24/7, e várias decisões de design refletem isso:
+
+## Fechamento do browser com rede de segurança
+
+```ts
+// src/services/downdetectorService.ts
+export async function forceCloseBrowser(
+    browser?: Browser,
+    timeoutMs: number = 3000
+) {
+    // 1. Tenta close() normal com timeout de 3s via Promise.race
+    // 2. Se fechou limpo → retorna sem logar nada
+    // 3. Se travou → tree-kill encerra a árvore inteira de processos (pai + filhos)
+}
+```
+
+**Por que [`tree-kill`](https://github.com/pkrumins/node-tree-kill) ?**
+
+O Firefox spawna múltiplos processos filhos (GPU, Socket, Utility, content). Um `proc.kill("SIGKILL")` só mata o pai, deixando os filhos órfãos consumindo memória. O `tree-kill` garante que toda a família morra junta.
+
+**Por que não forçar sempre?**
+O `close()` normal é mais barato e deixa o Firefox limpar seus próprios arquivos temporários. O `tree-kill` é reservado pros casos em que o browser trava.
+
+## Init próprio [`tini`](https://github.com/krallin/tini) como PID 1
+
+Sem um init real, o Node se torna PID 1 dentro do container, e o Node não faz reap de processos zumbis nem encaminha sinais corretamente. Com [`tini`](https://github.com/krallin/tini) :
+
+* Processos filhos que morrem são reapados imediatamente (sem virar zumbi)
+* `SIGTERM`/`SIGINT` chegam direto no Node
+* Shutdown limpo no deploy
+
+## Validação fail-fast de env vars
+
+```ts
+// src/config/env.ts
+const requiredEnv = [
+    "SLACK_SIGNING_SECRET",
+    "SLACK_BOT_TOKEN",
+    "CHANNEL_ID",
+    "USER_ID",
+    "PORT"
+];
+
+const missingEnv = requiredEnv.filter(name => !process.env[name]);
+
+if (missingEnv.length > 0) {
+    throw new Error(
+        `variáveis não encontradas no .env: ${missingEnv.join(", ")}`
+    );
+}
+```
+
+Se qualquer variável obrigatória estiver faltando, o container morre em ~500ms com uma mensagem clara, muito melhor que descobrir 3 horas depois que o bot está rodando mas não consegue mandar alertas.
+
+## Alertas de erro em dois canais
+
+O [`errorMonitor`](src/slack/errorMonitor):
+
+- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece só pra você, no desktop 
+- [**DM direta:**](https://docs.slack.dev/reference/methods/chat.postMessage/#app_home) aparece em qualquer cliente (incluindo mobile)
+
+Assim você nunca perde um alerta de erro interno, independente do dispositivo que estiver usando.
+
+</details>
+
+
 ## Como os alertas funcionam
 
 <details>
@@ -1258,6 +1329,80 @@ graph LR
 </details>
 
 ---
+
+# Robustez en producción
+
+<details>
+
+<summary>Haz clic para entender las decisiones de resiliencia</summary>
+
+El bot fue diseñado para ejecutarse 24/7, y varias decisiones de diseño reflejan esto:
+
+## Cierre del browser con red de seguridad
+
+```ts
+// src/services/downdetectorService.ts
+
+export async function forceCloseBrowser(
+    browser?: Browser,
+    timeoutMs: number = 3000
+) {
+    // 1. Intenta close() normal con timeout de 3s mediante Promise.race
+    // 2. Si se cerró correctamente → retorna sin registrar nada
+    // 3. Si se bloqueó → tree-kill termina todo el árbol de procesos (padre + hijos)
+}
+```
+
+**¿Por qué [`tree-kill`](https://github.com/pkrumins/node-tree-kill)?**
+
+Firefox genera múltiples procesos hijos (GPU, Socket, Utility, content). Un `proc.kill("SIGKILL")` solo mata al proceso padre, dejando los procesos hijos huérfanos y consumiendo memoria. `tree-kill` garantiza que toda la familia de procesos termine junta.
+
+**¿Por qué no forzarlo siempre?**
+
+El `close()` normal es más económico y permite que Firefox limpie sus propios archivos temporales. `tree-kill` se reserva para los casos en los que el browser se bloquea.
+
+## Init propio [`tini`](https://github.com/krallin/tini) como PID 1
+
+Sin un init real, Node se convierte en PID 1 dentro del contenedor, y Node no realiza el reap de procesos zombie ni reenvía las señales correctamente. Con [`tini`](https://github.com/krallin/tini):
+
+- Los procesos hijos que terminan son reapados inmediatamente (sin convertirse en zombies)
+- `SIGTERM`/`SIGINT` llegan directamente a Node
+- Shutdown limpio durante el deploy
+
+## Validación fail-fast de env vars
+
+```ts
+// src/config/env.ts
+
+const requiredEnv = [
+    "SLACK_SIGNING_SECRET",
+    "SLACK_BOT_TOKEN",
+    "CHANNEL_ID",
+    "USER_ID",
+    "PORT"
+];
+
+const missingEnv = requiredEnv.filter(name => !process.env[name]);
+
+if (missingEnv.length > 0) {
+    throw new Error(
+        `variables no encontradas en .env: ${missingEnv.join(", ")}`
+    );
+}
+```
+
+Si falta alguna variable obligatoria, el contenedor se detiene en ~500 ms con un mensaje claro, mucho mejor que descubrir 3 horas después que el bot está ejecutándose pero no puede enviar alertas.
+
+## Alertas de error en dos canales
+
+El [`errorMonitor`](src/slack/errorMonitor):
+
+- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece solo para ti, en el desktop 
+- [**DM direta:**](https://docs.slack.dev/reference/methods/chat.postMessage/#app_home) aparece en cualquier cliente (incluido el mobile)
+
+De esta forma, nunca pierdes una alerta de error interno, independientemente del dispositivo que estés utilizando.
+
+</details>
 
 ## Cómo funcionan las alertas
 
