@@ -8,7 +8,7 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Slack Bot](https://img.shields.io/badge/Slack-Bot-4A154B?logo=slack&logoColor=white)](https://docs.slack.dev/)
-[![Camoufox](https://img.shields.io/badge/Camoufox-AntiDetection-FF6B35?logo=firefox)](https://camoufox.com/)
+[![Camoufox](https://img.shields.io/badge/Camoufox-AntiDetection-FF6B35?logo=firefox)](https://github.com/apify/camoufox-js)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/)
@@ -45,26 +45,32 @@ O Downdetector é protegido pelo **Cloudflare Turnstile**, que bloqueia scraping
 
 ### Solução
 
-**[Camoufox](https://camoufox.com/)**, um fork do Firefox voltado à redução de sinais de automação do navegador. O navegador é executado em modo **headed** (com interface gráfica) dentro de um display virtual (**Xvfb**), permitindo que o Firefox rode em um ambiente de servidor sem monitor físico.
+O projeto utiliza o **[Camoufox-js](https://github.com/apify/camoufox-js)**, um port em JS/TS do Camoufox original, que é um fork do Firefox voltado à redução de sinais de automação do navegador. O navegador é executado em modo **headed** (com interface gráfica) dentro de um display virtual (**Xvfb**), permitindo que o Firefox rode de forma invisível em um ambiente de servidor.
+
+### Agradecimentos e Créditos
+
+Este projeto foi construído utilizando a versão em JS/TS mantida pela **[Apify](https://github.com/apify)**. O **[Camoufox-js](https://github.com/apify/camoufox-js)** é um port baseado no projeto original **[Camoufox](https://github.com/daijro/camoufox)**, criado por **[daijro](https://github.com/daijro)**. 
+
+Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelentes ferramentas para a comunidade.
 
 ---
 
 ## Funcionalidades
 
-- **Camoufox + Playwright**: navegador baseado em Firefox com ajustes de fingerprint para o ambiente de automação
-- **Headed + Xvfb**: o navegador roda com interface gráfica em um display virtual, mesmo dentro de um servidor
-- **Espera pelo Turnstile**: quando o desafio do Cloudflare aparece, o bot aguarda ele ser resolvido antes de continuar a extração (sem clique automático no checkbox)
-- **Páginas isoladas**: cada serviço é verificado em sua própria página (`newPage()`), sem reaproveitamento de cookies de sessão entre eles
-- **Parsing PT-BR**: o status é identificado a partir dos textos exibidos pelo Downdetector em português, com fallback para algumas expressões em inglês
+- **Headed + Xvfb**: o navegador roda com interface gráfica em um display virtual, mesmo dentro de um servidor, inicializado via [`xvfb.sh`](xvfb.sh)
+- **Páginas isoladas**: cada serviço é verificado em seu próprio contexto (`newContext()` + `newPage()`), sem reaproveitamento de cookies/cache entre eles
+- **Parsing PT-BR**: o status é identificado a partir dos textos exibidos pelo Downdetector em português
 - **Adaptação de idioma**: o navegador envia `Accept-Language` priorizando português do Brasil
-- **Retry automático**: uma consulta que falha recebe uma segunda tentativa antes de ser descartada
+- **Retry automático**: uma consulta que falha recebe uma segunda tentativa utilizando a função checkSingleService em [`downdetectorService.ts`](src/services/downdetectorService.ts) antes de ser descartada
 - **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
-- **Alertas de erro internos**: se nenhum serviço puder ser verificado em um ciclo, o bot envia uma mensagem efêmera de erro (visível só para você) diretamente no Slack, via [**scraperErrorAlert.ts**](src/slack/scraperErrorAlert.ts)
+- **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara simultaneamente uma mensagem efêmera no canal (visível só pra você no desktop) **e** uma DM direta (visível em qualquer client, incluindo mobile), via [`src/slack/errorMonitor/`](src/slack/errorMonitor)
+- **Validação fail-fast de variáveis de ambiente**: o container falha imediatamente na inicialização caso alguma variável obrigatória esteja faltando, evitando deploys silenciosamente quebrados
+- **Fechamento robusto do browser**: `forceCloseBrowser()` tenta o fechamento normal com timeout de 3s; se o browser travar, [`tree-kill`](https://github.com/pkrumins/node-tree-kill) é usado como rede de segurança pra encerrar toda a árvore de processos do Firefox, prevenindo órfãos
+- **Init próprio (tini)**: tini é usado como PID 1 no container pra fazer reap de processos zumbis e encaminhamento correto de sinais (SIGTERM/SIGINT)
 - **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
 - **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
-- **Docker + Railway**: execução containerizada com Xvfb, com Dockerfiles independentes para o bot, o Prometheus e o Grafana
-- **Testes**: testes unitários com Vitest e script manual para testar alertas no Slack
-
+- **Docker multi-stage + Railway**: build separado do runtime com apenas o mínimo necessário pra executar, com Dockerfiles independentes pro bot, Prometheus e Grafana
+- **Testes**: testes unitários com Vitest e script manual pra testar alertas no Slack
 
 ---
 
@@ -93,7 +99,7 @@ O Downdetector é protegido pelo **Cloudflare Turnstile**, que bloqueia scraping
 <details>
 <summary>Clique para expandir</summary>
 
-O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. São necessárias mudanças em apenas **3 arquivos**:
+O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. São necessárias mudanças em apenas **2 arquivos**, os monitores de incidente são criados dinamicamente a partir do enum:
 
 #### 1. [types.ts](src/slack/types.ts) → registra o nome e a URL do serviço
 
@@ -125,27 +131,19 @@ const SERVICES: ServicesList[] = [
 ];
 ```
 
-#### 3. [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts) → cria o monitor do serviço
+#### Como os monitores são criados automaticamente ??
 
-Cada serviço precisa de sua **própria instância** de `IncidentMonitor` para rastrear incidentes de forma independente:
+Em [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts), os monitores são instanciados dinamicamente a partir do enum [ServiceName](src/slack/types.ts).
 
 ```typescript
-const caixaMonitor = new IncidentMonitor(client, channel);
+const monitors = {} as Record<ServiceName, IncidentMonitor>;
 
-const monitors: Record<ServiceName, IncidentMonitor> = {
-    // ... monitores existentes ...
-    [ServiceName.CAIXA]: caixaMonitor
+for (const name of Object.values(ServiceName)) {
+    monitors[name] = new IncidentMonitor(client, channel);
 };
 ```
 
 #### Finalizando
-
-Depois das alterações, rode os testes e faça o deploy normalmente:
-
-```bash
-npm test
-npm run build
-```
 
 Após o push (ou reinício do container), o novo serviço passa a ser monitorado automaticamente no próximo ciclo.
 
@@ -193,19 +191,18 @@ A função `detectStatus()` identifica o estado do serviço procurando frases es
 
 ```typescript
 // src/services/downdetectorService.ts
-async function detectStatus(page: Page): Promise<string | null> {
-    const body = await page.evaluate(() => document.body?.innerText?.toLowerCase() || "");
-
-    if (body.includes("não mostram problemas")) {
-        return ServiceStatus.SUCCESS;
-    }
-    if (body.includes("possíveis problemas")) {
-        return ServiceStatus.WARNING;
-    }
-    if (body.includes("mostram problemas")) {
-        return ServiceStatus.DANGER;
-    }
-    return null;
+async function detectStatus(page: Page): Promise<ServiceStatus | null> {
+    try {
+        ...
+        ...
+        if (body.includes("não mostram problemas")) return "success";
+         if (body.includes("possíveis problemas")) return "warning";
+          if (body.includes("mostram problemas")) return "danger";
+           return false
+        ...
+        ...
+        ...
+        }
 }
 ```
 
@@ -272,44 +269,43 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 │       └── prometheus-datasource.yml
 ├── src/
 │   ├── config/
-│   │   └── env.ts
+│   │   └── env.ts                          # Validação fail-fast de env vars
 │   ├── jobs/
-│   │   └── monitoring.ts
+│   │   └── monitoring.ts                   # Loop de agendamento
 │   ├── metrics/
-│   │   └── prometheusClient.ts
+│   │   └── prometheusClient.ts             # Gauge por serviço
 │   ├── scripts/
-│   │   └── testAlert.ts
+│   │   └── testAlert.ts                    # Disparar alerta manual
 │   ├── services/
-│   │   └── downdetectorService.ts
+│   │   └── downdetectorService.ts          # Scraper + forceCloseBrowser
 │   ├── slack/
 │   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
-│   │   ├── errorMonitor/
-│   │   │   ├── directMessageService.ts
-│   │   │   ├── dmAlert.ts
-│   │   │   ├── ephemeralAlert.ts
-│   │   │   └── ephemeralMessageService.ts
-│   │   ├── incidentMonitor.ts
-│   │   ├── manifest.json
-│   │   ├── notificationOrchestrator.ts
-│   │   └── types.ts
-│   ├── app.ts
-│   └── server.ts
+│   │   ├── errorMonitor/                   # Alertas de erro do próprio bot
+│   │   │   ├── directMessageService.ts     # Envia DM
+│   │   │   ├── dmAlert.ts                  # Instância exportada do DM
+│   │   │   ├── ephemeralAlert.ts           # Instância exportada do ephemeral
+│   │   │   └── ephemeralMessageService.ts  # Envia ephemeral
+│   │   ├── incidentMonitor.ts              # Gerencia estado de incidentes
+│   │   ├── manifest.json                   # Slack App Manifest
+│   │   ├── notificationOrchestrator.ts     # Cria monitores dinamicamente
+│   │   └── types.ts                        # Enums de serviço/URL/status
+│   ├── app.ts                              # Config Slack 
+│   └── server.ts                           # Entry point
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
-├── Dockerfile
+├── Dockerfile                              # Build multi-stage com tini
 ├── Dockerfile.grafana
 ├── Dockerfile.prometheus
 ├── LICENSE
 ├── README.md
 ├── docker-compose.yml
-├── package-lock.json
 ├── package.json
 ├── tsconfig.json
 ├── vitest.config.ts
-└── xvfb.sh
+└── xvfb.sh                                 # Script de inicialização do Xvfb
 ```
 </details>
 
@@ -322,46 +318,72 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 
 ```mermaid
 graph TB
-    Start([Loop contínuo<br/>~2-4min]) --> Server[server.ts<br/>Entry Point]
+    Start([Ciclo contínuo<br/>~2-3min]) --> Server[server.ts<br/>Ponto de entrada]
     Server --> Job[Monitoring Job]
-    Job --> Orchestrator[notificationOrchestrator.ts<br/>CheckAll Function]
+    Job --> Orchestrator[notificationOrchestrator.ts<br/>Função CheckAll]
 
     Orchestrator --> Scraper[downdetectorService.ts<br/>Scraper]
 
     Scraper --> Browser{Camoufox Browser<br/>Firefox headed}
     Browser --> Xvfb[Xvfb<br/>Display Virtual]
-    Browser --> Turnstile[Cloudflare Turnstile<br/>Aguarda resolução]
     Browser --> DD[https://downdetector.com.br]
 
-    DD --> Data{Extração de Status<br/>Parsing PT-BR}
+    DD --> Data{Extração de Estado<br/>Parsing PT-BR}
     Data --> Results["Resultados<br/>ServicesResult[]"]
     Results --> Orchestrator
 
-    Orchestrator --> Incident[Incident Monitors<br/>8 monitores individuais]
-    Orchestrator --> Metrics[prom-client<br/>downdetector_service_status]
+    Orchestrator --> Incident[Monitores de Incidente<br/>]
+    Orchestrator --> ErrorMon{Há resultados?}
+    Orchestrator --> Metrics[prom-client]
 
     Incident --> Slack1[Slack<br/>Alerta Crítico]
     Incident --> Slack2[Slack<br/>Resolução]
 
-    Metrics --> Endpoint["/metrics<br/>Express endpoint"]
+    ErrorMon -- "Nenhum serviço" --> DM[DM]
+    ErrorMon -- "Nenhum serviço" --> Ephemeral[Ephemeral]
+
+    Metrics --> Endpoint["/metrics<br/>Endpoint Express"]
     Endpoint --> Prom[(Prometheus<br/>scrape 15s)]
     Prom --> Grafana[(Grafana<br/>Dashboard público)]
 
-    Slack1 --> End([Time Notificado])
+    Slack1 --> End([Equipe Notificada])
     Slack2 --> End
+    DM --> Dev([Dev Notificado])
+    Ephemeral --> Dev
 
-    style Start fill:#e1f5fe
-    style Orchestrator fill:#fff9c4
-    style Browser fill:#FF6B35,color:#fff
-    style Xvfb fill:#9C27B0,color:#fff
-    style Turnstile fill:#f59e0b,color:#fff
-    style Incident fill:#e1bee7
-    style Metrics fill:#e1bee7
-    style Prom fill:#E6522C,color:#fff
-    style Grafana fill:#F46800,color:#fff
+    %% Estilos - Início e Fim (Verde)
+    style Start fill:#059669,color:#fff
+    style End fill:#059669,color:#fff
+    style Dev fill:#059669,color:#fff
+
+    %% Estilos - Core/Backend (Azul Escuro/Slate)
+    style Server fill:#1e293b,color:#fff
+    style Job fill:#1e293b,color:#fff
+    style Orchestrator fill:#1e293b,color:#fff
+    style Scraper fill:#1e293b,color:#fff
+    style Incident fill:#1e293b,color:#fff
+    style Endpoint fill:#1e293b,color:#fff
+
+    %% Estilos - Scraping e Browser (Roxo)
+    style Browser fill:#8b5cf6,color:#fff
+    style Xvfb fill:#8b5cf6,color:#fff
+    style DD fill:#8b5cf6,color:#fff
+    style Data fill:#8b5cf6,color:#fff
+    style Results fill:#8b5cf6,color:#fff
+
+    %% Estilos - Condição de Erro (Vermelho)
+    style ErrorMon fill:#e11d48,color:#fff
+
+    %% Estilos - Observabilidade (Laranja)
+    style Metrics fill:#ea580c,color:#fff
+    style Prom fill:#ea580c,color:#fff
+    style Grafana fill:#ea580c,color:#fff
+
+    %% Estilos - Slack (Beringela - Mantido)
     style Slack1 fill:#4A154B,color:#fff
     style Slack2 fill:#4A154B,color:#fff
-    style End fill:#e8f5e9
+    style DM fill:#4A154B,color:#fff
+    style Ephemeral fill:#4A154B,color:#fff
 ```
 
 ### Diagrama de componentes
@@ -369,24 +391,31 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Camada de Aplicação"
-        Server[server.ts<br/>Entry Point]
-        App[app.ts<br/>Config do Slack + Express]
-        Job[jobs/monitoring.ts<br/>Loop com delay aleatório]
+        Server[server.ts<br/>Ponto de entrada]
+        App[app.ts<br/>Config Slack + Express]
+        Job[jobs/monitoring.ts<br/>]
+        EnvCfg[config/env.ts<br/>Validação fail-fast]
     end
 
     subgraph "Camada de Orquestração"
-        Orchestrator[notificationOrchestrator.ts<br/>Coordena scraping e notificações]
-        Incident[incidentMonitor.ts<br/>Gerencia estado de incidentes]
+        Orchestrator[notificationOrchestrator.ts<br/>Cria monitores via enum]
+        Incident[incidentMonitor.ts<br/>Gerencia estado dos incidentes]
+        ErrorMon["errorMonitor/<br/>DM + Mensagem Efêmera"]
     end
 
-    subgraph "Camada de Dados"
-        Scraper[downdetectorService.ts<br/>Camoufox + Playwright]
+    subgraph "Camada de Coleta (Scraping)"
+        Scraper[downdetectorService.ts<br/>Camoufox<br/> + Playwright + tree-kill]
     end
 
     subgraph "Observabilidade"
         Metrics[prometheusClient.ts<br/>Gauge por serviço]
-        PromSvc[(Prometheus<br/>container próprio)]
-        GrafanaSvc[(Grafana<br/>container próprio)]
+        PromSvc[(Prometheus<br/>Container isolado)]
+        GrafanaSvc[(Grafana<br/>Container isolado)]
+    end
+
+    subgraph "Infraestrutura"
+        Tini[tini<br/>PID 1 + reap de zumbis]
+        Xvfb[Xvfb<br/>Display virtual]
     end
 
     subgraph "Serviços Externos"
@@ -395,35 +424,61 @@ graph LR
         Camoufox[(Camoufox Browser)]
     end
 
+    %% Fluxos da Aplicação
+    EnvCfg --> Server
     Server --> Job
     Server --> App
     Job --> Orchestrator
 
+    %% Fluxos de Orquestração
     Orchestrator --> Scraper
     Orchestrator --> Incident
+    Orchestrator --> ErrorMon
     Orchestrator --> Metrics
 
+    %% Fluxos de Scraping
     Scraper --> Camoufox
     Camoufox --> Downdetector
 
+    %% Notificações
     Incident --> SlackAPI
+    ErrorMon --> SlackAPI
 
+    %% Fluxos de Observabilidade
     App -- "/metrics" --> Metrics
     PromSvc -- "scrape :3000/metrics" --> App
     GrafanaSvc -- "PromQL" --> PromSvc
 
-    style Server fill:#4CAF50,color:#fff
-    style App fill:#4CAF50,color:#fff
-    style Job fill:#4CAF50,color:#fff
-    style Orchestrator fill:#FFD700,color:#000
-    style Incident fill:#FFD700,color:#000
-    style Metrics fill:#FFD700,color:#000
-    style Scraper fill:#2196F3,color:#fff
-    style Downdetector fill:#FF9800,color:#fff
+    %% Fluxos de Infraestrutura
+    Tini --> Server
+    Tini --> Xvfb
+    Xvfb --> Camoufox
+
+    %% Estilos - Backend (Azul Escuro/Slate)
+    style Server fill:#1e293b,color:#fff
+    style App fill:#1e293b,color:#fff
+    style Job fill:#1e293b,color:#fff
+    style EnvCfg fill:#1e293b,color:#fff
+    style Orchestrator fill:#1e293b,color:#fff
+    style Incident fill:#1e293b,color:#fff
+    style ErrorMon fill:#1e293b,color:#fff
+
+    %% Estilos - Coleta e Browser (Roxo)
+    style Scraper fill:#8b5cf6,color:#fff
+    style Camoufox fill:#8b5cf6,color:#fff
+
+    %% Estilos - Observabilidade (Laranja)
+    style Metrics fill:#ea580c,color:#fff
+    style PromSvc fill:#ea580c,color:#fff
+    style GrafanaSvc fill:#ea580c,color:#fff
+
+    %% Estilos - Infraestrutura (Teal/Verde-azulado)
+    style Tini fill:#0f766e,color:#fff
+    style Xvfb fill:#0f766e,color:#fff
+
+    %% Estilos - Serviços Externos (Cores de Marca)
     style SlackAPI fill:#4A154B,color:#fff
-    style Camoufox fill:#9C27B0,color:#fff
-    style PromSvc fill:#E6522C,color:#fff
-    style GrafanaSvc fill:#F46800,color:#fff
+    style Downdetector fill:#dc2626,color:#fff
 ```
 
 </details>
@@ -764,24 +819,31 @@ Downdetector está protegido por **Cloudflare Turnstile**, que bloquea el scrapi
 
 ### La solución
 
-**[Camoufox](https://camoufox.com/)**, un fork de Firefox orientado a reducir las señales de automatización del navegador. El navegador se ejecuta en modo **headed** (con interfaz gráfica) dentro de un display virtual (**Xvfb**), permitiendo que Firefox corra en un entorno de servidor sin pantalla física.
+El proyecto utiliza **[Camoufox-js](https://github.com/apify/camoufox-js)**, un port en JS/TS del Camoufox original, que es un fork de Firefox orientado a reducir las señales de automatización del navegador. El navegador se ejecuta en modo **headed** (con interfaz gráfica) dentro de un display virtual (**Xvfb**), permitiendo que Firefox corra de forma invisible en un entorno de servidor.
+
+### Agradecimientos y Créditos
+
+Este proyecto fue construido utilizando la versión en JS/TS mantenida por **[Apify](https://github.com/apify)**. **[Camoufox-js](https://github.com/apify/camoufox-js)** es un port basado en el proyecto original **[Camoufox](https://github.com/daijro/camoufox)**, creado por **[daijro](https://github.com/daijro)**. 
+
+Queremos agradecer a los desarrolladores por poner estas excelentes herramientas a disposición de la comunidad.
 
 ---
 
 ## Funcionalidades
 
-- **Camoufox + Playwright**: navegador basado en Firefox con ajustes de fingerprint para el entorno de automatización
-- **Headed + Xvfb**: el navegador corre con interfaz gráfica en un display virtual, incluso dentro de un servidor
-- **Espera del Turnstile**: cuando aparece el desafío de Cloudflare, el bot espera a que se resuelva antes de continuar con la extracción (sin clic automático en el checkbox)
-- **Páginas aisladas**: cada servicio se verifica en su propia página (`newPage()`), sin reutilización de cookies de sesión entre ellos
-- **Parsing PT-BR**: el estado se identifica a partir de los textos que muestra Downdetector en portugués, con fallback a algunas expresiones en inglés
-- **Adaptación de idioma**: el navegador envía `Accept-Language` priorizando portugués de Brasil
-- **Reintento automático**: una consulta que falla recibe un segundo intento antes de descartarse
-- **Ciclo continuo con retraso aleatorio**: el monitoreo corre una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
-- **Alertas de error internas**: si ningún servicio puede verificarse en un ciclo, el bot envía un mensaje efímero de error (visible solo para ti) directamente en Slack, vía [**scraperErrorAlert.ts**](src/slack/scraperErrorAlert.ts)
-- **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), vía `prom-client`
+- **Headed + Xvfb**: el navegador se ejecuta con interfaz gráfica en un display virtual, incluso dentro de un servidor, inicializado mediante [`xvfb.sh`](xvfb.sh)
+- **Páginas aisladas**: cada servicio se verifica en su propio contexto (`newContext()` + `newPage()`), sin reutilización de cookies/caché entre ellos
+- **Parsing PT-BR**: el estado se identifica a partir de los textos que muestra Downdetector en portugués
+- **Adaptación de idioma**: el navegador envía `Accept-Language` priorizando el portugués de Brasil
+- **Reintento automático**: una consulta que falla recibe un segundo intento utilizando la función `checkSingleService` en [`downdetectorService.ts`](src/services/downdetectorService.ts) antes de ser descartada
+- **Ciclo continuo con retraso aleatorio**: el monitoreo se ejecuta una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
+- **Alertas de error internos en dos canales**: si ningún servicio puede ser verificado en un ciclo, el bot dispara simultáneamente un mensaje efímero en el canal (visible solo para usted) **y** un DM directo (visible en cualquier cliente, incluido móvil), a través de [`src/slack/errorMonitor/`](src/slack/errorMonitor)
+- **Validación fail-fast de variables de entorno**: el contenedor falla inmediatamente al iniciar si falta alguna variable obligatoria, evitando despliegues silenciosamente rotos
+- **Cierre robusto del navegador**: `forceCloseBrowser()` intenta el cierre normal con timeout de 3s; si el navegador se bloquea, se usa [`tree-kill`](https://github.com/pkrumins/node-tree-kill) como red de seguridad para finalizar todo el árbol de procesos de Firefox, previniendo huérfanos
+- **Init propio (tini)**: tini se usa como PID 1 en el contenedor para recolectar procesos zombies y el reenvío correcto de señales (SIGTERM/SIGINT)
+- **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), mediante `prom-client`
 - **Dashboard Grafana**: panel provisionado automáticamente con el estado en tiempo real de todos los servicios monitoreados
-- **Docker + Railway**: ejecución en contenedores con Xvfb, con Dockerfiles independientes para el bot, Prometheus y Grafana
+- **Docker multi-stage + Railway**: compilación separada del runtime con solo lo mínimo necesario para ejecutar, con Dockerfiles independientes para el bot, Prometheus y Grafana
 - **Pruebas**: pruebas unitarias con Vitest y script manual para probar alertas en Slack
 
 ---
@@ -811,7 +873,7 @@ Downdetector está protegido por **Cloudflare Turnstile**, que bloquea el scrapi
 <details>
 <summary>Haz clic para expandir</summary>
 
-El bot fue estructurado para que se puedan agregar nuevos servicios de Downdetector **sin modificar la lógica principal del scraper**. Solo se necesitan cambios en **3 archivos**:
+El bot fue estructurado para que se puedan agregar nuevos servicios de Downdetector **sin modificar la lógica principal del scraper**. Solo se necesitan cambios en **2 archivos**, ya que los monitores de incidentes se crean dinámicamente a partir del enum:
 
 #### 1. [types.ts](src/slack/types.ts) → registra el nombre y la URL del servicio
 
@@ -843,27 +905,19 @@ const SERVICES: ServicesList[] = [
 ];
 ```
 
-#### 3. [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts) → crea el monitor del servicio
+#### ¿Cómo se crean los monitores automáticamente?
 
-Cada servicio necesita su **propia instancia** de `IncidentMonitor` para rastrear incidentes de forma independiente:
+En [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts), los monitores se instancian dinámicamente a partir del enum [ServiceName](src/slack/types.ts).
 
 ```typescript
-const caixaMonitor = new IncidentMonitor(client, channel);
+const monitors = {} as Record<ServiceName, IncidentMonitor>;
 
-const monitors: Record<ServiceName, IncidentMonitor> = {
-    // ... monitores existentes ...
-    [ServiceName.CAIXA]: caixaMonitor
+for (const name of Object.values(ServiceName)) {
+    monitors[name] = new IncidentMonitor(client, channel);
 };
 ```
 
 #### Para finalizar
-
-Después de los cambios, corre las pruebas y haz el deploy normalmente:
-
-```bash
-npm test
-npm run build
-```
 
 Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse automáticamente en el próximo ciclo.
 
@@ -911,19 +965,18 @@ La función `detectStatus()` identifica el estado del servicio buscando frases e
 
 ```typescript
 // src/services/downdetectorService.ts
-async function detectStatus(page: Page): Promise<string | null> {
-    const body = await page.evaluate(() => document.body?.innerText?.toLowerCase() || "");
-
-    if (body.includes("não mostram problemas")) {
-        return ServiceStatus.SUCCESS;
-    }
-    if (body.includes("possíveis problemas")) {
-        return ServiceStatus.WARNING;
-    }
-    if (body.includes("mostram problemas")) {
-        return ServiceStatus.DANGER;
-    }
-    return null;
+async function detectStatus(page: Page): Promise<ServiceStatus | null> {
+    try {
+        ...
+        ...
+        if (body.includes("não mostram problemas")) return "success";
+         if (body.includes("possíveis problemas")) return "warning";
+          if (body.includes("mostram problemas")) return "danger";
+           return false
+        ...
+        ...
+        ...
+        }
 }
 ```
 
@@ -947,7 +1000,6 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 <details>
 <summary>Haz clic para expandir el árbol de archivos</summary>
-
 
 
 ```
@@ -991,44 +1043,43 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 │       └── prometheus-datasource.yml
 ├── src/
 │   ├── config/
-│   │   └── env.ts
+│   │   └── env.ts                          # Validación fail-fast de env vars
 │   ├── jobs/
-│   │   └── monitoring.ts
+│   │   └── monitoring.ts                   # Loop de programación
 │   ├── metrics/
-│   │   └── prometheusClient.ts
+│   │   └── prometheusClient.ts             # Gauge por servicio
 │   ├── scripts/
-│   │   └── testAlert.ts
+│   │   └── testAlert.ts                    # Disparar alerta manual
 │   ├── services/
-│   │   └── downdetectorService.ts
+│   │   └── downdetectorService.ts          # Scraper + forceCloseBrowser
 │   ├── slack/
 │   │   ├── __tests__/
 │   │   │   ├── fixtures.ts
 │   │   │   └── incidentMonitor.spec.ts
-│   │   ├── errorMonitor/
-│   │   │   ├── directMessageService.ts
-│   │   │   ├── dmAlert.ts
-│   │   │   ├── ephemeralAlert.ts
-│   │   │   └── ephemeralMessageService.ts
-│   │   ├── incidentMonitor.ts
-│   │   ├── manifest.json
-│   │   ├── notificationOrchestrator.ts
-│   │   └── types.ts
-│   ├── app.ts
-│   └── server.ts
+│   │   ├── errorMonitor/                   # Alertas de error del propio bot
+│   │   │   ├── directMessageService.ts     # Envía DM
+│   │   │   ├── dmAlert.ts                  # Instancia exportada del DM
+│   │   │   ├── ephemeralAlert.ts           # Instancia exportada del ephemeral
+│   │   │   └── ephemeralMessageService.ts  # Envía ephemeral
+│   │   ├── incidentMonitor.ts              # Gestiona el estado de incidentes
+│   │   ├── manifest.json                   # Slack App Manifest
+│   │   ├── notificationOrchestrator.ts     # Crea monitores dinámicamente
+│   │   └── types.ts                        # Enums de servicio/URL/estado
+│   ├── app.ts                              # Config Slack 
+│   └── server.ts                           # Entry point
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
-├── Dockerfile
+├── Dockerfile                              # Build multi-stage con tini
 ├── Dockerfile.grafana
 ├── Dockerfile.prometheus
 ├── LICENSE
 ├── README.md
 ├── docker-compose.yml
-├── package-lock.json
 ├── package.json
 ├── tsconfig.json
 ├── vitest.config.ts
-└── xvfb.sh
+└── xvfb.sh                                 # Script de inicialización de Xvfb
 ```
 </details>
 
@@ -1041,7 +1092,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 ```mermaid
 graph TB
-    Start([Ciclo continuo<br/>~2-4min]) --> Server[server.ts<br/>Punto de entrada]
+    Start([Ciclo continuo<br/>~2-3min]) --> Server[server.ts<br/>Punto de entrada]
     Server --> Job[Monitoring Job]
     Job --> Orchestrator[notificationOrchestrator.ts<br/>Función CheckAll]
 
@@ -1049,18 +1100,21 @@ graph TB
 
     Scraper --> Browser{Camoufox Browser<br/>Firefox headed}
     Browser --> Xvfb[Xvfb<br/>Display Virtual]
-    Browser --> Turnstile[Cloudflare Turnstile<br/>Espera resolución]
     Browser --> DD[https://downdetector.com.br]
 
     DD --> Data{Extracción de Estado<br/>Parsing PT-BR}
     Data --> Results["Resultados<br/>ServicesResult[]"]
     Results --> Orchestrator
 
-    Orchestrator --> Incident[Incident Monitors<br/>8 monitores individuales]
-    Orchestrator --> Metrics[prom-client<br/>downdetector_service_status]
+    Orchestrator --> Incident[Monitores de Incidentes<br/>]
+    Orchestrator --> ErrorMon{¿Hay resultados?}
+    Orchestrator --> Metrics[prom-client]
 
     Incident --> Slack1[Slack<br/>Alerta Crítica]
     Incident --> Slack2[Slack<br/>Resolución]
+
+    ErrorMon -- "Ningún servicio" --> DM[DM]
+    ErrorMon -- "Ningún servicio" --> Ephemeral[Ephemeral]
 
     Metrics --> Endpoint["/metrics<br/>Endpoint Express"]
     Endpoint --> Prom[(Prometheus<br/>scrape 15s)]
@@ -1068,19 +1122,42 @@ graph TB
 
     Slack1 --> End([Equipo Notificado])
     Slack2 --> End
+    DM --> Dev([Dev Notificado])
+    Ephemeral --> Dev
 
-    style Start fill:#e1f5fe
-    style Orchestrator fill:#fff9c4
-    style Browser fill:#FF6B35,color:#fff
-    style Xvfb fill:#9C27B0,color:#fff
-    style Turnstile fill:#f59e0b,color:#fff
-    style Incident fill:#e1bee7
-    style Metrics fill:#e1bee7
-    style Prom fill:#E6522C,color:#fff
-    style Grafana fill:#F46800,color:#fff
+    %% Estilos - Inicio y Fin (Verde)
+    style Start fill:#059669,color:#fff
+    style End fill:#059669,color:#fff
+    style Dev fill:#059669,color:#fff
+
+    %% Estilos - Core/Backend (Azul Oscuro/Slate)
+    style Server fill:#1e293b,color:#fff
+    style Job fill:#1e293b,color:#fff
+    style Orchestrator fill:#1e293b,color:#fff
+    style Scraper fill:#1e293b,color:#fff
+    style Incident fill:#1e293b,color:#fff
+    style Endpoint fill:#1e293b,color:#fff
+
+    %% Estilos - Scraping y Browser (Morado)
+    style Browser fill:#8b5cf6,color:#fff
+    style Xvfb fill:#8b5cf6,color:#fff
+    style DD fill:#8b5cf6,color:#fff
+    style Data fill:#8b5cf6,color:#fff
+    style Results fill:#8b5cf6,color:#fff
+
+    %% Estilos - Condición de Error (Rojo)
+    style ErrorMon fill:#e11d48,color:#fff
+
+    %% Estilos - Observabilidad (Naranja)
+    style Metrics fill:#ea580c,color:#fff
+    style Prom fill:#ea580c,color:#fff
+    style Grafana fill:#ea580c,color:#fff
+
+    %% Estilos - Slack (Berenjena - Mantenido)
     style Slack1 fill:#4A154B,color:#fff
     style Slack2 fill:#4A154B,color:#fff
-    style End fill:#e8f5e9
+    style DM fill:#4A154B,color:#fff
+    style Ephemeral fill:#4A154B,color:#fff
 ```
 
 ### Diagrama de componentes
@@ -1089,23 +1166,30 @@ graph TB
 graph LR
     subgraph "Capa de Aplicación"
         Server[server.ts<br/>Punto de entrada]
-        App[app.ts<br/>Config de Slack + Express]
-        Job[jobs/monitoring.ts<br/>Ciclo con retraso aleatorio]
+        App[app.ts<br/>Config Slack + Express]
+        Job[jobs/monitoring.ts<br/>]
+        EnvCfg[config/env.ts<br/>Validación fail-fast]
     end
 
     subgraph "Capa de Orquestación"
-        Orchestrator[notificationOrchestrator.ts<br/>Coordina scraping y notificaciones]
-        Incident[incidentMonitor.ts<br/>Gestiona el estado de incidentes]
+        Orchestrator[notificationOrchestrator.ts<br/>Crea monitores vía enum]
+        Incident[incidentMonitor.ts<br/>Gestiona estado de los incidentes]
+        ErrorMon["errorMonitor/<br/>DM + Mensaje Efímero"]
     end
 
-    subgraph "Capa de Datos"
-        Scraper[downdetectorService.ts<br/>Camoufox + Playwright]
+    subgraph "Capa de Recolección (Scraping)"
+        Scraper[downdetectorService.ts<br/>Camoufox<br/> + Playwright + tree-kill]
     end
 
     subgraph "Observabilidad"
         Metrics[prometheusClient.ts<br/>Gauge por servicio]
-        PromSvc[(Prometheus<br/>contenedor propio)]
-        GrafanaSvc[(Grafana<br/>contenedor propio)]
+        PromSvc[(Prometheus<br/>Contenedor aislado)]
+        GrafanaSvc[(Grafana<br/>Contenedor aislado)]
+    end
+
+    subgraph "Infraestructura"
+        Tini[tini<br/>PID 1 + reap de zombis]
+        Xvfb[Xvfb<br/>Display virtual]
     end
 
     subgraph "Servicios Externos"
@@ -1114,35 +1198,61 @@ graph LR
         Camoufox[(Camoufox Browser)]
     end
 
+    %% Flujos de la Aplicación
+    EnvCfg --> Server
     Server --> Job
     Server --> App
     Job --> Orchestrator
 
+    %% Flujos de Orquestación
     Orchestrator --> Scraper
     Orchestrator --> Incident
+    Orchestrator --> ErrorMon
     Orchestrator --> Metrics
 
+    %% Flujos de Scraping
     Scraper --> Camoufox
     Camoufox --> Downdetector
 
+    %% Notificaciones
     Incident --> SlackAPI
+    ErrorMon --> SlackAPI
 
+    %% Flujos de Observabilidad
     App -- "/metrics" --> Metrics
     PromSvc -- "scrape :3000/metrics" --> App
     GrafanaSvc -- "PromQL" --> PromSvc
 
-    style Server fill:#4CAF50,color:#fff
-    style App fill:#4CAF50,color:#fff
-    style Job fill:#4CAF50,color:#fff
-    style Orchestrator fill:#FFD700,color:#000
-    style Incident fill:#FFD700,color:#000
-    style Metrics fill:#FFD700,color:#000
-    style Scraper fill:#2196F3,color:#fff
-    style Downdetector fill:#FF9800,color:#fff
+    %% Flujos de Infraestructura
+    Tini --> Server
+    Tini --> Xvfb
+    Xvfb --> Camoufox
+
+    %% Estilos - Backend (Azul Oscuro/Slate)
+    style Server fill:#1e293b,color:#fff
+    style App fill:#1e293b,color:#fff
+    style Job fill:#1e293b,color:#fff
+    style EnvCfg fill:#1e293b,color:#fff
+    style Orchestrator fill:#1e293b,color:#fff
+    style Incident fill:#1e293b,color:#fff
+    style ErrorMon fill:#1e293b,color:#fff
+
+    %% Estilos - Recolección y Browser (Morado)
+    style Scraper fill:#8b5cf6,color:#fff
+    style Camoufox fill:#8b5cf6,color:#fff
+
+    %% Estilos - Observabilidad (Naranja)
+    style Metrics fill:#ea580c,color:#fff
+    style PromSvc fill:#ea580c,color:#fff
+    style GrafanaSvc fill:#ea580c,color:#fff
+
+    %% Estilos - Infraestructura (Teal/Verde azulado)
+    style Tini fill:#0f766e,color:#fff
+    style Xvfb fill:#0f766e,color:#fff
+
+    %% Estilos - Servicios Externos (Colores de Marca)
     style SlackAPI fill:#4A154B,color:#fff
-    style Camoufox fill:#9C27B0,color:#fff
-    style PromSvc fill:#E6522C,color:#fff
-    style GrafanaSvc fill:#F46800,color:#fff
+    style Downdetector fill:#dc2626,color:#fff
 ```
 
 </details>
