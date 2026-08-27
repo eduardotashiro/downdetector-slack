@@ -610,12 +610,12 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 
 ## Configuração
 
-### Pré-requisitos
+## Pré-requisitos
 - Node.js 20+
 - App do Slack com Bot Token ([crie um aqui](https://api.slack.com/apps))
-- Docker (roda o mesmo ambiente com Xvfb usado no Railway, além de Prometheus e Grafana)
+- Docker (roda o mesmo ambiente com Xvfb, além de Prometheus e Grafana)
 
-### Instalação
+## Instalação
 
 <details>
 <summary>Clique para expandir as instruções de setup</summary>
@@ -663,7 +663,7 @@ npm start
 
 </details>
 
-### Slack App Manifest (Recomendado)
+## Slack App Manifest (Recomendado)
 <details>
 <summary>Clique para expandir as instruções</summary>
 
@@ -671,13 +671,13 @@ npm start
 2. Clique em **Create New App**
 3. Escolha **From an app manifest**
 4. Selecione seu workspace
-5. Cole o conteúdo do arquivo `/src/slack/manifest.json`
+5. Cole o conteúdo do arquivo [`manifest.json`](src/slack/manifest.json)
 6. Instale o app no seu workspace
 7. Copie o Bot Token e o Signing Secret pro seu `.env`
 
 </details>
 
-### Deploy com Docker
+## Deploy com Docker
 
 <details>
 <summary>Clique para expandir as instruções de Docker</summary>
@@ -1457,9 +1457,9 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 ### Requisitos previos
 - Node.js 20+
 - App de Slack con Bot Token ([créala aquí](https://api.slack.com/apps))
-- Docker (ejecuta el mismo entorno con Xvfb usado en Railway, además de Prometheus y Grafana)
+- Docker (ejecuta el mismo entorno con Xvfb, además de Prometheus y Grafana)
 
-### Instalación
+## Instalación
 
 <details>
 <summary>Haz clic para expandir las instrucciones de instalación</summary>
@@ -1507,7 +1507,7 @@ npm start
 
 </details>
 
-### Slack App Manifest (Recomendado)
+## Slack App Manifest (Recomendado)
 <details>
 <summary>Haz clic para expandir las instrucciones</summary>
 
@@ -1515,13 +1515,13 @@ npm start
 2. Haz clic en **Create New App**
 3. Elige **From an app manifest**
 4. Selecciona tu workspace
-5. Pega el contenido del archivo `/src/slack/manifest.json`
+5. Pega el contenido del archivo [`manifest.json`](src/slack/manifest.json)
 6. Instala la app en tu workspace
 7. Copia el Bot Token y el Signing Secret a tu `.env`
 
 </details>
 
-### Despliegue con Docker
+## Despliegue con Docker
 
 <details>
 <summary>Haz clic para expandir las instrucciones de Docker</summary>
