@@ -213,7 +213,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             await killLingeringBrowsers();
         }
         if (i < servicesToCheck.length - 1) {
-            const delay = Math.random() * (3000 - 1500) + 1500;
+            const delay = Math.random() * (4000 - 2000) + 2000;
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
