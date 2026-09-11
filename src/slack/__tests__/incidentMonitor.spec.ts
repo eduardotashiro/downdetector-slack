@@ -23,7 +23,7 @@ describe("IncidentMonitor", () => {
             }
         } as any;
 
-        const monitor = new IncidentMonitor(mockClient, "C98E7US65TS")
+        const monitor = new IncidentMonitor(mockClient, ["C98E7US65TS","C98E7US65TSV"])
 
         await monitor.handle(payloadDanger)
 
@@ -38,7 +38,7 @@ describe("IncidentMonitor", () => {
             }
         } as any;
 
-        const monitor = new IncidentMonitor(mockClient, "C98E7US65TS")
+        const monitor = new IncidentMonitor(mockClient, ["C98E7US65TS","C98E7US65TSV"])
 
         await monitor.handle(payloadDanger)
         await monitor.handle(payloadDanger)
@@ -54,7 +54,7 @@ describe("IncidentMonitor", () => {
             }
         } as any;
 
-        const monitor = new IncidentMonitor(mockClient, "C98E7US65TS")
+        const monitor = new IncidentMonitor(mockClient, ["C98E7US65TS","C98E7US65TSV"] )
 
         await monitor.handle(payloadDanger)
         await monitor.handle(payloadSuccess)

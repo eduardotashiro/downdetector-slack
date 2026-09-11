@@ -6,7 +6,7 @@ const client = new WebClient(config.slack.botToken, {
     logLevel: LogLevel.DEBUG,
 });
 
-const channel = config.slack.channel
+const channels = config.slack.channels.split(",");
 const userID = config.slack.userId
 
-export const errorMessageEphemeral = new ErrorMessageEphemeral(client, userID, channel,)
+export const errorMessageEphemeral = new ErrorMessageEphemeral(client, userID, channels)
