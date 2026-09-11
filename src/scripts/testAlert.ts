@@ -4,7 +4,8 @@ import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 import { config } from "../config/env.js";
 
 const client = new WebClient(config.slack.botToken);
-const monitor = new IncidentMonitor(client, config.slack.channel);
+const monitor = new IncidentMonitor(client, config.slack.channels.split(","));
+
 
 async function main() {
 

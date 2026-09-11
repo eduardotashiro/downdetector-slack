@@ -20,7 +20,7 @@ export const config = {
     slack: {
         signingSecret: process.env.SLACK_SIGNING_SECRET!,
         botToken: process.env.SLACK_BOT_TOKEN!,
-        channel: process.env.CHANNEL_ID!,
+        channels: process.env.CHANNEL_ID!,
         userId: process.env.USER_ID!,
         port: process.env.PORT!
     },

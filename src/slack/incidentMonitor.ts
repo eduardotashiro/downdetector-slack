@@ -9,11 +9,11 @@ export class IncidentMonitor {
     } | null = null;
 
     private client: WebClient;
-    private channel: string;
+    private channels: string[];
 
-    constructor(client: WebClient, channel: string) {
+    constructor(client: WebClient, channels: string[]) {
         this.client = client;
-        this.channel = channel
+        this.channels = channels;
     }
 
     async handle(services: ServicesResult): Promise<void> {
@@ -25,10 +25,8 @@ export class IncidentMonitor {
                 alertSent: false
             }
 
-            await this.client.chat.postMessage({
-                channel: this.channel,
-                text: `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às")}\n\n<${url} | Ver no Downdetector>`
-            });
+            const text: string = `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às")}\n\n<${url} | Ver no Downdetector>`;
+            await Promise.all(this.channels.map(channel => this.client.chat.postMessage({ channel, text })));
 
             this.incident.alertSent = true;
             console.log(`STATUS ${ServiceStatus.DANGER} 🔴 PARA ${name} ENVIADO NO SLACK !`);
@@ -50,10 +48,9 @@ export class IncidentMonitor {
             const incidentStart = new Date(this.incident.startedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às");
             const endOfIncident = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às");
 
-            await this.client.chat.postMessage({
-                channel: this.channel,
-                text: `:white_check_mark: *Normalizado* - *${name}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${incidentStart}\n• *Fim:* ${endOfIncident}\n• *Duração:* ${timeText}\n\n<${url} | Ver no Downdetector>`
-            });
+            const text : string = `:white_check_mark: *Normalizado* - *${name}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${incidentStart}\n• *Fim:* ${endOfIncident}\n• *Duração:* ${timeText}\n\n<${url} | Ver no Downdetector>`;
+            await Promise.all(this.channels.map(channel => this.client.chat.postMessage({ channel, text })));
+  
             console.log(`INCIDENTE NO ${name} RESOLVIDO ! DURAÇÃO: ${timeText}`);
 
             this.incident = null;

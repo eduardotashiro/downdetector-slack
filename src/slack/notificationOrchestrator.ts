@@ -7,12 +7,12 @@ import { WebClient } from "@slack/web-api";
 import { config } from "../config/env.js";
 
 const client = new WebClient(config.slack.botToken);
-const channel = config.slack.channel
+const channels = config.slack.channels.split(",");
 
 const monitors = {} as Record<ServiceName, IncidentMonitor>;
 
 for (const name of Object.values(ServiceName)) {
-    monitors[name] = new IncidentMonitor(client, channel);
+    monitors[name] = new IncidentMonitor(client, channels);
 }
 
 export async function CheckAll() {
