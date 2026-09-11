@@ -164,6 +164,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
         }
         return null;
     } finally {
+        if(page && !page.isClosed()) await page.close().catch((e) => { console.error(`erro ao fechar page: ${e.message}`); });
         if (context && !context?.isClosed()) await context?.close().catch((e) => { console.error(`erro ao fechar context: ${e.message}`); });
     }
 }
