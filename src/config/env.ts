@@ -3,6 +3,7 @@ dotenv.config()
 
 const requiredEnv = [
     "SLACK_SIGNING_SECRET",
+    "CAMOUFOX_INSTALL_DIR",
     "SLACK_BOT_TOKEN",
     "CHANNEL_ID",
     "USER_ID",
@@ -22,5 +23,8 @@ export const config = {
         channel: process.env.CHANNEL_ID!,
         userId: process.env.USER_ID!,
         port: process.env.PORT!
+    },
+    camoufox: {
+        installDir: process.env.CAMOUFOX_INSTALL_DIR!
     }
 }

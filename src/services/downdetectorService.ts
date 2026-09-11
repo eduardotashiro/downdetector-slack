@@ -2,11 +2,14 @@ import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
-import treeKill from "tree-kill";
-import { error } from "console";
+import {config} from "../config/env.js";
+import { promisify } from "util";
+import { execFile } from "child_process";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
+const execFileAsync = promisify(execFile);
+    
 export interface ServicesResult {
     name: ServiceName;
     url: ServiceURL;
@@ -50,20 +53,24 @@ function shuffleArray(array: ServicesList[]) {
 }
 
 
-function killProcessTree(pid: number, signal: "SIGTERM" | "SIGKILL"): Promise<void> {
-    return new Promise((resolve) => {
-        treeKill(pid, signal, (err) => {
-            if (err) console.log(`treeKill(${pid}): ${err.message}`); // normal quando o processo já morreu sozinho, não é erro fatal
-            resolve();
-        });
-    });
+const CAMOUFOX_PATTERN = config.camoufox.installDir;
+async function killLingeringBrowsers(): Promise<void> {
+    try {
+        await execFileAsync("pkill", ["-9", "-f", CAMOUFOX_PATTERN]);
+        console.log(`pkill: processos remanescentes '${CAMOUFOX_PATTERN}' finalizados`);
+    } catch (error: unknown) {
+        const code = (error as { code?: number })?.code;
+        if (code === 1) return;
+        if (error instanceof Error) {
+            console.error(`pkill falhou de forma inesperada: ${error.message}`);
+        } else {
+            console.error(`erro bizarro: ${error}`);
+        }
+    }
 }
-
 
 export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 3000): Promise<void> {
     if (!browser) return;
-    const proc = (browser as Browser & { process?: () => { pid?: number } }).process?.();
-    const pid = proc?.pid;
     try {
         await Promise.race([
             (async () => {
@@ -72,18 +79,13 @@ export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 3
             new Promise<void>((_, reject) => setTimeout(() => reject(new Error("timeout no close")), timeoutMs)),
         ]);
     } catch (error: unknown) {
-              if (error instanceof Error) {
-                console.log(`close normal não confirmou sucesso ${error.message}, garantindo kill`);
-        } else {
-            console.error(`erro bizarro: ${error}`);
-        }
+        if (error instanceof Error){
+        console.error(`close normal não confirmou sucesso: ${error.message}`);
+        } 
     }
-    if (pid) {
-        await killProcessTree(pid, "SIGKILL");
-    } else {
-        console.error("não foi possível obter o pid do browser para matar a árvore de processos...");
-    }
+    //camoufox-js não expõe + 
 }
+
 
 
 async function waitForRealContent(page: Page): Promise<boolean> {
@@ -206,6 +208,8 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         }
     } finally {
         await forceCloseBrowser(browser, 3000);
+        await killLingeringBrowsers();
+
     }
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
     console.log(`\n${results.length}/${SERVICES.length} serviços | ${totalTime}s`);
