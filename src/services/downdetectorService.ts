@@ -158,9 +158,9 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
         return status;
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.error(`erro: ${error.message}`);
+            console.error(`Erro ao processar o serviço ${name}: ${error.message}`);
         } else {
-            console.error("erro bizarro:", error);
+            console.error(`Erro bizarro no serviço ${name}:`, error);
         }
         return null;
     } finally {
@@ -174,23 +174,20 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
     const startTotal = Date.now();
     await killLingeringBrowsers();
-    let browser: Browser | undefined;
-    try {
-
-        browser = (await Camoufox({
-            headless: false,
-            os: "linux",
-            humanize: true,
-            geoip: true,
-            block_webrtc: true,
-            window: [1920, 1080],
-        })) as Browser;
-
-        console.log("\nCamoufox iniciado!");
-        const servicesToCheck = [...SERVICES];
-        shuffleArray(servicesToCheck);
-        for (let i = 0; i < servicesToCheck.length; i++) {
-            const service = servicesToCheck[i];
+    const servicesToCheck = [...SERVICES];
+    shuffleArray(servicesToCheck);
+    for (let i = 0; i < servicesToCheck.length; i++) {
+        const service = servicesToCheck[i];
+        let browser: Browser | undefined;
+        try {
+            browser = (await Camoufox({
+                headless: false,
+                os: "linux",
+                humanize: true,
+                geoip: true,
+                block_webrtc: true,
+                window: [1920, 1080],
+            })) as Browser;
             let status = await checkSingleService(browser, service);
             if (!status) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -203,19 +200,25 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
                     outage: status,
                 });
             }
-            if (i < servicesToCheck.length - 1) {
-                const delay = Math.random() * (3000 - 1500) + 1500;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+            console.error(`Erro ao processar o serviço ${service.name}:`, error.message);
+        } else {
+            console.error(`Erro bizarro no serviço ${service.name}:`, error);
         }
-    } finally {
-        await forceCloseBrowser(browser, 2000);
-        await killLingeringBrowsers();
-
+            
+        } finally {
+            // Fecha o browser desta iteração específica imediatamente
+            await forceCloseBrowser(browser, 2000);
+            await killLingeringBrowsers();
+        }
+        if (i < servicesToCheck.length - 1) {
+            const delay = Math.random() * (3000 - 1500) + 1500;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
     console.log(`\n${results.length}/${SERVICES.length} serviços | ${totalTime}s`);
-
     // const statusMap: { [key: string]: number } = {
     //     'success': 0,
     //     'warning': 1,
@@ -228,6 +231,5 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
     //     const statusNum = statusMap[statusValue];
     //     updateServiceStatus(service, statusNum);
     // }
-
     return results;
 }
