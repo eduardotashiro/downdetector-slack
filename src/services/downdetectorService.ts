@@ -3,6 +3,7 @@ import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
 import treeKill from "tree-kill";
+import { error } from "console";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
@@ -63,20 +64,23 @@ export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 3
     if (!browser) return;
     const proc = (browser as Browser & { process?: () => { pid?: number } }).process?.();
     const pid = proc?.pid;
-    const normalClose = async () => {
-        if (browser.isConnected()) await browser.close();
-    };
-    let timeoutId: NodeJS.Timeout | null = null;
-    const timedOut = await Promise.race([
-        normalClose().then(() => false).catch(() => false),
-        new Promise<boolean>((resolve) => { timeoutId = setTimeout(() => resolve(true), timeoutMs); }),
-    ]);
-    if (timeoutId) clearTimeout(timeoutId);
-    if (!timedOut && !browser.isConnected()) return;
-    console.log(`browser não fechou normalmente, timeout=${timedOut}), matando árvore de processos`);
+    try {
+        await Promise.race([
+            (async () => {
+                if (browser.isConnected()) await browser.close();
+            })(),
+            new Promise<void>((_, reject) => setTimeout(() => reject(new Error("timeout no close")), timeoutMs)),
+        ]);
+    } catch (error: unknown) {
+              if (error instanceof Error) {
+                console.log(`close normal não confirmou sucesso ${error.message}, garantindo kill`);
+        } else {
+            console.error(`erro bizarro: ${error}`);
+        }
+    }
     if (pid) {
         await killProcessTree(pid, "SIGKILL");
-    } else if (timedOut || browser.isConnected()) {
+    } else {
         console.error("não foi possível obter o pid do browser para matar a árvore de processos...");
     }
 }
