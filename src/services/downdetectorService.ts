@@ -69,7 +69,7 @@ async function killLingeringBrowsers(): Promise<void> {
     }
 }
 
-export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 3000): Promise<void> {
+export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 2000): Promise<void> {
     if (!browser) return;
     try {
         await Promise.race([
@@ -172,6 +172,7 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
     const startTotal = Date.now();
+    await killLingeringBrowsers();
     let browser: Browser | undefined;
     try {
 
@@ -207,7 +208,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             }
         }
     } finally {
-        await forceCloseBrowser(browser, 3000);
+        await forceCloseBrowser(browser, 2000);
         await killLingeringBrowsers();
 
     }
