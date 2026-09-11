@@ -65,7 +65,7 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelen
 - **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
 - **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara simultaneamente uma mensagem efêmera no canal (visível só pra você no desktop) **e** uma DM direta (visível em qualquer client, incluindo mobile), via [`src/slack/errorMonitor/`](src/slack/errorMonitor)
 - **Validação fail-fast de variáveis de ambiente**: o container falha imediatamente na inicialização caso alguma variável obrigatória esteja faltando, evitando deploys silenciosamente quebrados
-- **Fechamento robusto do browser**: `forceCloseBrowser()` tenta o fechamento normal com timeout de 3s; se o browser travar, [`tree-kill`](https://github.com/pkrumins/node-tree-kill) é usado como rede de segurança pra encerrar toda a árvore de processos do Firefox, prevenindo órfãos
+- **Fechamento robusto do browser**: `forceCloseBrowser()` tenta o fechamento normal com timeout de 3s e, independentemente do resultado ou exceções, utiliza o [`tree-kill`](https://github.com/pkrumins/node-tree-kill) por PID para garantir o encerramento de toda a árvore de processos do Firefox, prevenindo órfãos e vazamentos.
 - **Init próprio (tini)**: tini é usado como PID 1 no container pra fazer reap de processos zumbis e encaminhamento correto de sinais (SIGTERM/SIGINT)
 - **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
 - **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
@@ -501,8 +501,8 @@ export async function forceCloseBrowser(
     timeoutMs: number = 3000
 ) {
     // 1. Tenta close() normal com timeout de 3s via Promise.race
-    // 2. Se fechou limpo → retorna sem logar nada
-    // 3. Se travou → tree-kill encerra a árvore inteira de processos (pai + filhos)
+    // 2. Trata eventuais erros sem mascarar
+    // 3. SEMPRE executa o tree-kill por PID para garantir a limpeza total da árvore de processos
 }
 ```
 
@@ -910,7 +910,7 @@ Queremos agradecer a los desarrolladores por poner estas excelentes herramientas
 - **Ciclo continuo con retraso aleatorio**: el monitoreo se ejecuta una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
 - **Alertas de error internos en dos canales**: si ningún servicio puede ser verificado en un ciclo, el bot dispara simultáneamente un mensaje efímero en el canal (visible solo para usted) **y** un DM directo (visible en cualquier cliente, incluido móvil), a través de [`src/slack/errorMonitor/`](src/slack/errorMonitor)
 - **Validación fail-fast de variables de entorno**: el contenedor falla inmediatamente al iniciar si falta alguna variable obligatoria, evitando despliegues silenciosamente rotos
-- **Cierre robusto del navegador**: `forceCloseBrowser()` intenta el cierre normal con timeout de 3s; si el navegador se bloquea, se usa [`tree-kill`](https://github.com/pkrumins/node-tree-kill) como red de seguridad para finalizar todo el árbol de procesos de Firefox, previniendo huérfanos
+- **Cierre robusto del navegador**: `forceCloseBrowser()` intenta el cierre normal con un timeout de 3s y, sin importar el resultado o si hay excepciones, usa [`tree-kill`](https://github.com/pkrumins/node-tree-kill) por PID para asegurar que se apague todo el árbol de procesos de Firefox y así evitar procesos huérfanos y fugas de memoria.
 - **Init propio (tini)**: tini se usa como PID 1 en el contenedor para recolectar procesos zombies y el reenvío correcto de señales (SIGTERM/SIGINT)
 - **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), mediante `prom-client`
 - **Dashboard Grafana**: panel provisionado automáticamente con el estado en tiempo real de todos los servicios monitoreados
@@ -1348,8 +1348,8 @@ export async function forceCloseBrowser(
     timeoutMs: number = 3000
 ) {
     // 1. Intenta close() normal con timeout de 3s mediante Promise.race
-    // 2. Si se cerró correctamente → retorna sin registrar nada
-    // 3. Si se bloqueó → tree-kill termina todo el árbol de procesos (padre + hijos)
+    // 2. Maneja los posibles errores sin encubrirlos
+    // 3. SIEMPRE ejecuta el tree-kill por PID para asegurar la limpieza total del árbol de procesos
 }
 ```
 
