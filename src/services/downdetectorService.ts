@@ -179,7 +179,7 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
             headless: false,
             os: "linux",
             humanize: true,
-            geoip: true,
+            // geoip: true,
             block_webrtc: true,
             window: [1920, 1080],
         })) as Browser;
