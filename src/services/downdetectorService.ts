@@ -67,7 +67,6 @@ export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 2
 }
 
 
-
 async function waitForRealContent(page: Page): Promise<boolean> {
     try {
         await page.waitForFunction(() => {
@@ -153,20 +152,20 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
     const startTotal = Date.now();
-    const servicesToCheck = [...SERVICES];
-    shuffleArray(servicesToCheck);
-    for (let i = 0; i < servicesToCheck.length; i++) {
-        const service = servicesToCheck[i];
-        let browser: Browser | undefined;
-        try {
-            browser = (await Camoufox({
-                headless: false,
-                os: "linux",
-                humanize: true,
-                geoip: true,
-                block_webrtc: true,
-                window: [1920, 1080],
-            })) as Browser;
+    let browser: Browser | undefined;
+    try {
+        browser = (await Camoufox({
+            headless: false,
+            os: "linux",
+            humanize: true,
+            geoip: true,
+            block_webrtc: true,
+            window: [1920, 1080],
+        })) as Browser;
+        const servicesToCheck = [...SERVICES];
+        shuffleArray(servicesToCheck);
+        for (let i = 0; i < servicesToCheck.length; i++) {
+            const service = servicesToCheck[i];
             let status = await checkSingleService(browser, service);
             if (!status) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -179,19 +178,19 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
                     outage: status,
                 });
             }
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-            console.error(`Erro ao processar o serviço ${service.name}:`, error.message);
+            if (i < servicesToCheck.length - 1) {
+                const delay = Math.random() * (4000 - 2000) + 2000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(`Erro no monitoramento: ${error.message}`);
         } else {
-            console.error(`Erro bizarro no serviço ${service.name}:`, error);
+            console.error(`Erro bizarro no monitoramento:`, error);
         }
-        } finally {
-            await forceCloseBrowser(browser, 2000);
-        }
-        if (i < servicesToCheck.length - 1) {
-            const delay = Math.random() * (4000 - 2000) + 2000;
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    } finally {
+        await forceCloseBrowser(browser, 2000);
     }
     const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
     console.log(`\n${results.length}/${SERVICES.length} serviços | ${totalTime}s`);
