@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npx tsx watch ./src/server.ts",
     "build": "tsc",
-    "start": "node --expose-gc dist/server.js",
+    "start": "node dist/server.js",
     "postinstall": "npx camoufox-js fetch",
     "test:alert": "npx tsx src/scripts/testAlert.ts",
     "test:watch": "vitest",
