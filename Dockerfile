@@ -68,4 +68,4 @@ RUN chmod +x ./xvfb.sh
 # tini como PID 1:reap de processos
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/app/xvfb.sh"]
 
-CMD ["node", "--expose-gc", "dist/server.js"]
+CMD ["node", "dist/server.js"]
