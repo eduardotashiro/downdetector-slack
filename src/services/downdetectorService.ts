@@ -2,13 +2,9 @@ import { Camoufox } from "camoufox-js";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
-import {config} from "../config/env.js";
-import { promisify } from "util";
-import { execFile } from "child_process";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
 
-const execFileAsync = promisify(execFile);
     
 export interface ServicesResult {
     name: ServiceName;
@@ -54,22 +50,6 @@ function shuffleArray(array: ServicesList[]) {
 }
 
 
-const CAMOUFOX_PATTERN = config.camoufox.installDir;
-async function killLingeringBrowsers(): Promise<void> {
-    try {
-        await execFileAsync("pkill", ["-9", "-f", CAMOUFOX_PATTERN]);
-        console.log(`pkill: processos remanescentes '${CAMOUFOX_PATTERN}' finalizados`);
-    } catch (error: unknown) {
-        const code = (error as { code?: number })?.code;
-        if (code === 1) return;
-        if (error instanceof Error) {
-            console.error(`pkill falhou de forma inesperada: ${error.message}`);
-        } else {
-            console.error(`erro bizarro: ${error}`);
-        }
-    }
-}
-
 export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 2000): Promise<void> {
     if (!browser) return;
     try {
@@ -84,7 +64,6 @@ export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 2
         console.error(`close normal não confirmou sucesso: ${error.message}`);
         } 
     }
-    //camoufox-js não expõe + 
 }
 
 
@@ -174,7 +153,6 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 export async function checkAllServices(): Promise<ServicesResult[]> {
     const results: ServicesResult[] = [];
     const startTotal = Date.now();
-    await killLingeringBrowsers();
     const servicesToCheck = [...SERVICES];
     shuffleArray(servicesToCheck);
     for (let i = 0; i < servicesToCheck.length; i++) {
@@ -207,11 +185,8 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         } else {
             console.error(`Erro bizarro no serviço ${service.name}:`, error);
         }
-            
         } finally {
-            // Fecha o browser desta iteração específica imediatamente
             await forceCloseBrowser(browser, 2000);
-            await killLingeringBrowsers();
         }
         if (i < servicesToCheck.length - 1) {
             const delay = Math.random() * (4000 - 2000) + 2000;
