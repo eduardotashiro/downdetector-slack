@@ -165,7 +165,7 @@ async function checkWithRetry( browser: Browser,service: ServicesList):Promise<S
     };
 }
 
-export async function checkAllServices(): Promise<ServicesResult[] | null> {
+export async function checkAllServices(): Promise<ServicesResult[]> {
     let results: ServicesResult[] = [];
     const startTotal = Date.now();
     let browser: Browser | undefined;
