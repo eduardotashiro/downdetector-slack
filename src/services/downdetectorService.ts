@@ -50,7 +50,7 @@ function shuffleArray(array: ServicesList[]) {
 }
 
 
-export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 2000): Promise<void> {
+export async function forceCloseBrowser(browser?: Browser, timeoutMs: number = 1000): Promise<void> {
     if (!browser) return;
     try {
         await Promise.race([
@@ -122,10 +122,10 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
     try {
         context = await browser.newContext();
         page = await context.newPage();
-        page.setDefaultTimeout(15000);
-        page.setDefaultNavigationTimeout(15000);
+        page.setDefaultTimeout(12000);
+        page.setDefaultNavigationTimeout(12000);
         await page.setExtraHTTPHeaders({ "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7" });
-        await page.goto(url, { waitUntil: "domcontentloaded" });
+        await page.goto(url, { waitUntil: "commit" });
         const loaded = await waitForRealContent(page);
         if (!loaded) {
             console.log(`💀 ${name}...❌ _cf_`);
@@ -149,8 +149,24 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 }
 
 
-export async function checkAllServices(): Promise<ServicesResult[]> {
-    const results: ServicesResult[] = [];
+async function checkWithRetry( browser: Browser,service: ServicesList):Promise<ServicesResult | null>{
+    let status = await checkSingleService(browser, service);
+    if (!status) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        status = await checkSingleService(browser, service);
+    }
+    if(!status) {
+        return null;
+    }
+    return {
+        name: service.name,
+        url: service.url,
+        outage: status,
+    };
+}
+
+export async function checkAllServices(): Promise<ServicesResult[] | null> {
+    let results: ServicesResult[] = [];
     const startTotal = Date.now();
     let browser: Browser | undefined;
     try {
@@ -166,20 +182,12 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
         shuffleArray(servicesToCheck);
         for (let i = 0; i < servicesToCheck.length; i++) {
             const service = servicesToCheck[i];
-            let status = await checkSingleService(browser, service);
-            if (!status) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                status = await checkSingleService(browser, service);
-            }
+            let status = await checkWithRetry(browser, service);
             if (status) {
-                results.push({
-                    name: service.name,
-                    url: service.url,
-                    outage: status,
-                });
+                results.push(status);
             }
             if (i < servicesToCheck.length - 1) {
-                const delay = Math.random() * (4000 - 2000) + 2000;
+                const delay = Math.random() * (2000 - 1000) + 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
