@@ -16,8 +16,8 @@ async function run() {
     } catch (error) {
         console.error(`Erro no monitoramento:`, error);
     } finally {
-        const delayMs = getRandomDelay(2, 3);
-        console.log(`Próxima verificação em ~${Math.round(delayMs / 60000)} minutos...`);
+        const delayMs = getRandomDelay(1, 2);
+        console.log(`Próxima verificação em ~${(delayMs / 60000).toFixed(1)} minutos...`);
         setTimeout(run, delayMs);
     }
 }
