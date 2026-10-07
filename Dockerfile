@@ -1,30 +1,13 @@
-FROM node:24-bookworm-slim AS builder
+FROM node:24-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 \
       make \
       g++ \
       ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci && npx camoufox fetch
-
-COPY . .
-RUN npm run build
-
-
-FROM node:24-bookworm-slim
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
       xvfb \
       tini \
       procps \
-      ca-certificates \
       fonts-liberation \
       fonts-noto-color-emoji \
       libgtk-3-0 \
@@ -51,18 +34,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxt6 \
     && rm -rf /var/lib/apt/lists/*
 
-ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
 ENV DISPLAY=:99
 ENV NODE_ENV=production
 
 WORKDIR /app
 
 COPY package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /opt/camoufox /opt/camoufox
-COPY xvfb.sh ./xvfb.sh
+RUN npm ci
 
+COPY . .
+
+RUN npx camoufox fetch
+RUN npm run build
+
+COPY xvfb.sh ./xvfb.sh
 RUN chmod +x ./xvfb.sh
 
 # tini como PID 1:reap de processos
