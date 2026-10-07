@@ -154,13 +154,19 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
 
 async function checkWithRetry( browser: Browser,service: ServicesList):Promise<ServicesResult | null>{
     let status = await checkSingleService(browser, service);
-    if (!status) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        status = await checkSingleService(browser, service);
-    }
+    let retry: number = 0 
+
+        while (!status && retry < 3) {
+            retry++
+            const delay = Math.random() * (2000 - 1000) + 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));  
+            status = await checkSingleService(browser, service);
+        }
+
     if(!status) {
         return null;
     }
+
     return {
         name: service.name,
         url: service.url,
