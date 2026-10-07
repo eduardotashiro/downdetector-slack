@@ -1,4 +1,4 @@
-import { Camoufox } from "camoufox-js";
+import { Camoufox, NewContext } from "camoufox";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from 'playwright-core'
 import { ServiceName, ServiceURL, ServiceStatus } from "../slack/types.js";
@@ -120,12 +120,15 @@ async function checkSingleService(browser: Browser, service: ServicesList): Prom
     let context: BrowserContext | null = null;
 
     try {
-        context = await browser.newContext();
+        context = await NewContext(browser)
         page = await context.newPage();
-        page.setDefaultTimeout(12000);
-        page.setDefaultNavigationTimeout(12000);
+
+        page.setDefaultTimeout(15000);
+        page.setDefaultNavigationTimeout(15000);
+        
         await page.setExtraHTTPHeaders({ "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7" });
         await page.goto(url, { waitUntil: "commit" });
+        
         const loaded = await waitForRealContent(page);
         if (!loaded) {
             console.log(`💀 ${name}...❌ _cf_`);
