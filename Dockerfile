@@ -12,7 +12,7 @@ ENV CAMOUFOX_INSTALL_DIR=/opt/camoufox
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci && npx camoufox-js fetch
+RUN npm ci && npx camoufox fetch
 
 COPY . .
 RUN npm run build
