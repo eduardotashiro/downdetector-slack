@@ -1,0 +1,37 @@
+import { CheckAll } from "./notificationOrchestrator.js";
+
+function getRandomDelay(minMinutes: number, maxMinutes: number): number {
+	const minMs = minMinutes * 60000;
+	const maxMs = maxMinutes * 60000;
+	const randomMs = Math.random() * (maxMs - minMs + 1) + minMs;
+	const delayMs = Math.floor(randomMs);
+	return delayMs;
+}
+
+async function run() {
+	try {
+		console.log(
+			`Monitoramento iniciado`,
+			new Date().toLocaleString("pt-BR", {
+				timeZone: "America/Sao_Paulo",
+			}),
+		);
+		await CheckAll();
+		console.log(
+			"Monitoramento finalizado",
+			new Date().toLocaleString("pt-BR", {
+				timeZone: "America/Sao_Paulo",
+			}),
+		);
+	} catch (error) {
+		console.error(`Erro no monitoramento:`, error);
+	} finally {
+		const delayMs = getRandomDelay(1, 2);
+		console.log(
+			`Próxima verificação em ~${(delayMs / 60000).toFixed(1)} minutos...`,
+		);
+		setTimeout(run, delayMs);
+	}
+}
+
+run();
