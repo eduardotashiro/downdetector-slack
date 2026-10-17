@@ -8,3 +8,4 @@ dist/
 cookies.json
 teste.ts
 debug/
+.zed/
