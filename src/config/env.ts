@@ -1,30 +1,22 @@
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
 const requiredEnv = [
-    "SLACK_SIGNING_SECRET",
-    "CAMOUFOX_INSTALL_DIR",
-    "SLACK_BOT_TOKEN",
-    "CHANNEL_ID",
-    "USER_ID",
-    "PORT"
+	"SLACK_WEBHOOK_ALERT_1",
+	"SLACK_WEBHOOK_ALERT_2",
+	"SLACK_WEBHOOK_ERROR",
 ];
 
-const missingEnv = requiredEnv.filter(name => !process.env[name]);
+const missingEnv = requiredEnv.filter((name) => !process.env[name]);
 
 if (missingEnv.length > 0) {
-    throw new Error(`variáveis não encontradas no .env: ${missingEnv.join(", ")} `);
+	throw new Error(`slack webhook not found: ${missingEnv.join(", ")} `);
 }
 
 export const config = {
-    slack: {
-        signingSecret: process.env.SLACK_SIGNING_SECRET!,
-        botToken: process.env.SLACK_BOT_TOKEN!,
-        channels: process.env.CHANNEL_ID!,
-        userId: process.env.USER_ID!,
-        port: process.env.PORT!
-    },
-    camoufox: {
-        installDir: process.env.CAMOUFOX_INSTALL_DIR!
-    }
-}
+	slack: {
+		webhookUrl1: process.env.SLACK_WEBHOOK_ALERT_1!,
+		webhookUrl2: process.env.SLACK_WEBHOOK_ALERT_2!,
+		webhookErrorUrl: process.env.SLACK_WEBHOOK_ERROR!,
+	},
+};
