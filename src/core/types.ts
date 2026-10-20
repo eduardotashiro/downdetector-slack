@@ -1,30 +1,25 @@
 export enum ServiceStatus {
-    SUCCESS = "success",
-    DANGER = "danger",
-    WARNING = "warning"
+	SUCCESS = "success",
+	DANGER = "danger",
+	WARNING = "warning",
 }
 
-export enum ServiceName {
-    BANCO_DO_BRASIL = "Banco do Brasil",
-    BRADESCO = "Bradesco",
-    SANTANDER = "Santander",
-    PIX = "Pix",
-    PICPAY = "PicPay",
-    ITAU = "Banco Itaú",
-    NUBANK = "Nubank",
-    MERCADO_PAGO = "Mercado Pago",
-    CIELO = "Cielo",
+export interface MonitoredService {
+	name: string;
+	url: string;
 }
 
-export enum ServiceURL {
-    BANCO_DO_BRASIL = "https://downdetector.com.br/fora-do-ar/banco-do-brasil/",
-    BRADESCO = "https://downdetector.com.br/fora-do-ar/bradesco/",
-    SANTANDER = "https://downdetector.com.br/fora-do-ar/santander/",
-    PIX = "https://downdetector.com.br/fora-do-ar/pix/",
-    PICPAY = "https://downdetector.com.br/fora-do-ar/picpay/",
-    ITAU = "https://downdetector.com.br/fora-do-ar/banco-itau/",
-    NUBANK = "https://downdetector.com.br/fora-do-ar/nubank/",
-    MERCADO_PAGO = "https://downdetector.com.br/fora-do-ar/mercadopago/",
-    CIELO = "https://downdetector.com.br/fora-do-ar/cielo/",
+export interface ServiceResult extends MonitoredService {
+	outage: ServiceStatus;
 }
 
+export interface IncidentNotifier {
+	sendDanger(name: string, url: string): Promise<void>;
+	sendSuccess(
+		name: string,
+		url: string,
+		endOfIncident: string,
+		incidentStart: string,
+		timeText: string,
+	): Promise<void>;
+}
