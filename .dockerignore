@@ -11,3 +11,4 @@ Dockerfile
 cookies.json
 debug/
 .github
+.zed/

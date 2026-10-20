@@ -32,19 +32,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libcairo2 \
 	libdbus-glib-1-2 \
 	libxt6 \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& npm install -g pnpm
 
 ENV DISPLAY=:99
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
 RUN npx camoufox fetch
-RUN npm run build
+RUN pnpm build
 ENV NODE_ENV=production
 
 COPY xvfb.sh ./xvfb.sh
