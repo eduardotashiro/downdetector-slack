@@ -1,21 +1,14 @@
 import { NewContext } from "camoufox";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from "playwright-core";
-import { ServiceName, ServiceURL, ServiceStatus } from "../core/types.js";
+import { ServiceStatus } from "../core/types.js";
+import type { ServiceResult, MonitoredService } from "../core/types.js";
+import { SERVICES } from "../config/services.js";
 import { launchBrowser } from "../providers/browser.js";
+import { shuffleArray, sleep } from "../utils/helpers.js";
+import { forceCloseBrowser } from "./closeBrowser.js";
 // import { updateServiceStatus } from "../metrics/prometheusClient.js";
 // import { normalizeServiceName } from "../metrics/prometheusClient.js";
-
-export interface ServicesResult {
-	name: ServiceName;
-	url: ServiceURL;
-	outage: ServiceStatus;
-}
-
-interface ServicesList {
-	name: ServiceName;
-	url: ServiceURL;
-}
 
 const statusMap: Record<string, ServiceStatus> = {
 	success: ServiceStatus.SUCCESS,
@@ -28,51 +21,6 @@ const statusIcon: Record<ServiceStatus, string> = {
 	[ServiceStatus.WARNING]: "⚠️",
 	[ServiceStatus.DANGER]: "🔴",
 };
-
-const SERVICES: ServicesList[] = [
-	{ name: ServiceName.PICPAY, url: ServiceURL.PICPAY },
-	{ name: ServiceName.NUBANK, url: ServiceURL.NUBANK },
-	{ name: ServiceName.PIX, url: ServiceURL.PIX },
-	{ name: ServiceName.SANTANDER, url: ServiceURL.SANTANDER },
-	{ name: ServiceName.ITAU, url: ServiceURL.ITAU },
-	{ name: ServiceName.BRADESCO, url: ServiceURL.BRADESCO },
-	{ name: ServiceName.BANCO_DO_BRASIL, url: ServiceURL.BANCO_DO_BRASIL },
-	{ name: ServiceName.MERCADO_PAGO, url: ServiceURL.MERCADO_PAGO },
-	{ name: ServiceName.CIELO, url: ServiceURL.CIELO },
-];
-
-function shuffleArray(array: ServicesList[]) {
-	for (let i = array.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[array[i], array[j]] = [array[j], array[i]];
-	}
-}
-
-export async function forceCloseBrowser(
-	browser?: Browser,
-	timeoutMs: number = 1000,
-): Promise<void> {
-	if (!browser) return;
-	try {
-		await Promise.race([
-			(async () => {
-				if (browser.isConnected()) await browser.close();
-			})(),
-			new Promise<void>((_, reject) =>
-				setTimeout(
-					() => reject(new Error("timeout no close")),
-					timeoutMs,
-				),
-			),
-		]);
-	} catch (error: unknown) {
-		if (error instanceof Error) {
-			console.error(
-				`close normal não confirmou sucesso: ${error.message}`,
-			);
-		}
-	}
-}
 
 async function waitForRealContent(page: Page): Promise<boolean> {
 	try {
@@ -118,7 +66,7 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 
 async function checkSingleService(
 	browser: Browser,
-	service: ServicesList,
+	service: MonitoredService,
 ): Promise<ServiceStatus | null> {
 	const { name, url } = service;
 
@@ -174,15 +122,15 @@ async function checkSingleService(
 
 async function checkWithRetry(
 	browser: Browser,
-	service: ServicesList,
-): Promise<ServicesResult | null> {
+	service: MonitoredService,
+): Promise<ServiceResult | null> {
 	let status = await checkSingleService(browser, service);
 	let retry: number = 0;
 
 	while (!status && retry < 3) {
 		retry++;
 		const delay = Math.random() * (2000 - 1000) + 1000;
-		await new Promise((resolve) => setTimeout(resolve, delay));
+		await sleep(delay);
 		status = await checkSingleService(browser, service);
 	}
 
@@ -197,8 +145,8 @@ async function checkWithRetry(
 	};
 }
 
-export async function checkAllServices(): Promise<ServicesResult[]> {
-	let results: ServicesResult[] = [];
+export async function checkAllServices(): Promise<ServiceResult[]> {
+	let results: ServiceResult[] = [];
 	const startTotal = Date.now();
 	let browser: Browser | undefined;
 	try {
@@ -213,14 +161,12 @@ export async function checkAllServices(): Promise<ServicesResult[]> {
 			}
 			if (i < servicesToCheck.length - 1) {
 				const delay = Math.random() * (2000 - 1000) + 1000;
-				await new Promise((resolve) => setTimeout(resolve, delay));
+				await sleep(delay);
 			}
 		}
 	} catch (error: unknown) {
 		if (error instanceof Error) {
-			console.error(`Erro no monitoramento: ${error.message}`);
-		} else {
-			console.error(`Erro bizarro no monitoramento:`, error);
+			console.error(`Erro completo do monitoramento:`, error);
 		}
 	} finally {
 		await forceCloseBrowser(browser, 2000);
