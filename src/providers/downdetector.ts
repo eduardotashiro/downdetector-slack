@@ -24,13 +24,17 @@ const statusIcon: Record<ServiceStatus, string> = {
 
 async function waitForRealContent(page: Page): Promise<boolean> {
 	try {
-		await page.waitForFunction(() => {
-			const body = document.body?.innerText?.toLowerCase() || "";
-			return (
-				body.includes("relatos dos usuários") ||
-				body.includes("relatos de usuários")
-			);
-		});
+		await page.waitForFunction(
+			() => {
+				const body = document.body?.innerText?.toLowerCase() || "";
+				return (
+					body.includes("relatos dos usuários") ||
+					body.includes("relatos de usuários")
+				);
+			},
+			undefined,
+			{ timeout: 8000, polling: 250 },
+		);
 		return true;
 	} catch (error: unknown) {
 		if (error instanceof Error) {
@@ -44,13 +48,17 @@ async function waitForRealContent(page: Page): Promise<boolean> {
 
 async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 	try {
-		const JSHandle = await page.waitForFunction(() => {
-			const body = document.body?.innerText?.toLowerCase() || "";
-			if (body.includes("não mostram problemas")) return "success";
-			if (body.includes("possíveis problemas")) return "warning";
-			if (body.includes("mostram problemas")) return "danger";
-			return false;
-		});
+		const JSHandle = await page.waitForFunction(
+			() => {
+				const body = document.body?.innerText?.toLowerCase() || "";
+				if (body.includes("não mostram problemas")) return "success";
+				if (body.includes("possíveis problemas")) return "warning";
+				if (body.includes("mostram problemas")) return "danger";
+				return false;
+			},
+			undefined,
+			{ timeout: 5000, polling: 250 },
+		);
 		const statusString = await JSHandle.jsonValue();
 		if (!statusString) return null;
 		return statusMap[statusString];
@@ -81,9 +89,6 @@ async function checkSingleService(
 	try {
 		context = await NewContext(browser);
 		page = await context.newPage();
-
-		page.setDefaultTimeout(15000);
-		page.setDefaultNavigationTimeout(15000);
 
 		await page.setExtraHTTPHeaders({
 			"Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
