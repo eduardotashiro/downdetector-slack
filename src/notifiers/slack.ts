@@ -37,9 +37,18 @@ export class SlackNotifier {
 					body: JSON.stringify({ text: message }),
 				});
 				if (!response.ok) {
-					throw new Error(`HTTP Fail to sendMessage: ${response.status}`);
+					throw new Error(
+						`HTTP Fail to sendMessage: ${response.status}`,
+					);
 				}
 			}),
 		);
+
+		// TODO: implementar retry para webhook que faia
+		if (result.some((response) => response.status === "rejected")) {
+			throw new Error(
+				"Falha ao enviar mensagem para um ou mais webhooks",
+			);
+		}
 	}
 }
