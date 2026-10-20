@@ -1,11 +1,5 @@
-import { ServicesResult } from "../../providers/downdetector.js";
+import type { IncidentNotifier, ServiceResult } from "./types.js";
 import { ServiceStatus } from "./types.js";
-import { SlackNotifier } from "../../notifiers/slack.js";
-import { config } from "../../config/env.js";
-
-const webhooks: string[] = [config.slack.webhookUrl1, config.slack.webhookUrl2];
-
-const slackNotifier = new SlackNotifier(webhooks);
 
 export class IncidentMonitor {
 	private incident: {
@@ -13,7 +7,8 @@ export class IncidentMonitor {
 		alertSent: boolean;
 	} | null = null;
 
-	async handle(services: ServicesResult): Promise<void> {
+	constructor(private notifier: IncidentNotifier) {}
+	async handle(services: ServiceResult): Promise<void> {
 		const { name, url, outage: status } = services;
 
 		if (status === ServiceStatus.DANGER && !this.incident) {
@@ -22,7 +17,7 @@ export class IncidentMonitor {
 				alertSent: false,
 			};
 
-			slackNotifier.sendDanger(name, url);
+			await this.notifier.sendDanger(name, url);
 
 			this.incident.alertSent = true;
 			console.log(
@@ -54,7 +49,7 @@ export class IncidentMonitor {
 				.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
 				.replace(",", " às");
 
-			slackNotifier.sendSuccess(
+			await this.notifier.sendSuccess(
 				name,
 				url,
 				endOfIncident,
