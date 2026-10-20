@@ -27,9 +27,9 @@ export class SlackNotifier {
 	}
 
 	private async sendMessage(message: string): Promise<void> {
-		await Promise.allSettled(
-			this.webhooks.map(async (wh) => {
-				const response: Response = await fetch(wh, {
+		const result = await Promise.allSettled(
+			this.webhooks.map(async (webhook) => {
+				const response: Response = await fetch(webhook, {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -37,9 +37,7 @@ export class SlackNotifier {
 					body: JSON.stringify({ text: message }),
 				});
 				if (!response.ok) {
-					throw new Error(
-						`failed to send message: ${response.status}`,
-					);
+					throw new Error(`HTTP Fail to sendMessage: ${response.status}`);
 				}
 			}),
 		);
