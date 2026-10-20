@@ -11,7 +11,7 @@
 		"dev": "pnpm tsx watch ./src/main.ts",
 		"build": "tsc",
 		"start": "node dist/main.js",
-		"test:alert": "pnpm tsx ./scripts/testAlert.ts",
+		"test:alert": "pnpm tsx ./scripts/realAlertTest.ts",
 		"test:watch": "vitest",
 		"test": "vitest run"
 	},
