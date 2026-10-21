@@ -5,7 +5,7 @@ export class SlackNotifier {
 		this.webhooks = webhooks;
 	}
 
-	async sendDanger(name: string, url: string) {
+	async sendDanger(name: string, url: string): Promise<void> {
 		const messageDanger: string = `:alert: *Nível Crítico - ${name}*\n\n• *Status:* \`critic\`\n• *Detectado em:* ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }).replace(",", " às")}\n\n<${url} | Ver no Downdetector>`;
 		await this.sendMessage(messageDanger);
 	}
@@ -16,7 +16,7 @@ export class SlackNotifier {
 		endOfIncident: string,
 		incidentStart: string,
 		timeText: string,
-	) {
+	): Promise<void> {
 		const messageSuccess: string = `:white_check_mark: *Normalizado* - *${name}*\n\n• *Status:* \`resolved\`\n• *Detectado em:* ${incidentStart}\n• *Fim:* ${endOfIncident}\n• *Duração:* ${timeText}\n\n<${url} | Ver no Downdetector>`;
 		await this.sendMessage(messageSuccess);
 	}
@@ -45,7 +45,12 @@ export class SlackNotifier {
 		);
 
 		// TODO: implementar retry para webhook que faia
-		if (result.some((response) => response.status === "rejected")) {
+		if (
+			result.some(
+				(response: PromiseSettledResult<void>) =>
+					response.status === "rejected",
+			)
+		) {
 			throw new Error(
 				"Falha ao enviar mensagem para um ou mais webhooks",
 			);

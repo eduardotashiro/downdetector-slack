@@ -1,5 +1,5 @@
 import { CheckAll } from "./notificationOrchestrator.js";
-import { getRandomDelay } from "../utils/helpers.js"
+import { getRandomDelay } from "../utils/helpers.js";
 
 export async function startMonitorLoop() {
 	try {
@@ -19,7 +19,7 @@ export async function startMonitorLoop() {
 	} catch (error) {
 		console.error(`Erro no monitoramento:`, error);
 	} finally {
-		const delayMs = getRandomDelay(15, 30);
+		const delayMs = getRandomDelay(13, 31);
 		console.log(
 			`Próxima verificação em ~${(delayMs / 1000).toFixed(0)} segundos...`,
 		);
