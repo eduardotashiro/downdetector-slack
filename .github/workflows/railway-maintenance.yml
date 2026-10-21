@@ -2,7 +2,7 @@ name: Redeploy 4 ML
 
 "on":
     schedule:
-        - cron: "42 21 * * *"
+        - cron: "52 21 * * *"
           timezone: "America/Sao_Paulo"
     workflow_dispatch:
 
