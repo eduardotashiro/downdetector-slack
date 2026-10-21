@@ -1,0 +1,24 @@
+name: Redeploy 4 ML
+
+"on":
+    schedule:
+        - cron: "42 21 * * *"
+          timezone: "America/Sao_Paulo"
+    workflow_dispatch:
+
+jobs:
+    redeploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install Railway CLI
+              run: npm install -g @railway/cli
+
+            - name: Redeploy
+              env:
+                  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+              run: |
+                  railway redeploy \
+                    --service downdetector-slack-perf-copy \
+                    --environment production \
+                    --yes
