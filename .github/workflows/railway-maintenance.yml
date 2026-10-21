@@ -20,5 +20,4 @@ jobs:
               run: |
                   railway redeploy \
                     --service downdetector-slack-perf-copy \
-                    --environment production \
                     --yes
