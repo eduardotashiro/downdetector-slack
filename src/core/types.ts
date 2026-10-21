@@ -23,3 +23,5 @@ export interface IncidentNotifier {
 		timeText: string,
 	): Promise<void>;
 }
+
+export type ContentResult = "loaded" | "blocked" | false;

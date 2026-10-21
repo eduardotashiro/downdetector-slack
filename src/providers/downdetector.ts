@@ -2,7 +2,11 @@ import { NewContext } from "camoufox";
 import type { Browser, Page } from "playwright-core";
 import { BrowserContext } from "playwright-core";
 import { ServiceStatus } from "../core/types.js";
-import type { ServiceResult, MonitoredService } from "../core/types.js";
+import type {
+	ServiceResult,
+	MonitoredService,
+	ContentResult,
+} from "../core/types.js";
 import { SERVICES } from "../config/services.js";
 import { launchBrowser } from "../providers/browser.js";
 import { shuffleArray, sleep } from "../utils/helpers.js";
@@ -22,20 +26,30 @@ const statusIcon: Record<ServiceStatus, string> = {
 	[ServiceStatus.DANGER]: "🔴",
 };
 
-async function waitForRealContent(page: Page): Promise<boolean> {
+async function waitForRealContent(page: Page): Promise<ContentResult> {
 	try {
-		await page.waitForFunction(
+		const result = await page.waitForFunction(
 			() => {
 				const body = document.body?.innerText?.toLowerCase() || "";
-				return (
+
+				const html =
+					document.documentElement?.innerHTML?.toLowerCase() || "";
+
+				if (html.includes("cf-ray")) return "blocked";
+
+				if (
 					body.includes("relatos dos usuários") ||
 					body.includes("relatos de usuários")
-				);
+				) {
+					return "loaded";
+				}
+				return false;
 			},
 			undefined,
 			{ timeout: 8000, polling: 250 },
 		);
-		return true;
+		const contentStrr = await result.jsonValue();
+		return contentStrr;
 	} catch (error: unknown) {
 		if (error instanceof Error) {
 			console.error(`tempo esgotado ou erro: ${error.message}`);
@@ -48,18 +62,13 @@ async function waitForRealContent(page: Page): Promise<boolean> {
 
 async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 	try {
-		const JSHandle = await page.waitForFunction(
-			() => {
-				const body = document.body?.innerText?.toLowerCase() || "";
-				if (body.includes("não mostram problemas")) return "success";
-				if (body.includes("possíveis problemas")) return "warning";
-				if (body.includes("mostram problemas")) return "danger";
-				return false;
-			},
-			undefined,
-			{ timeout: 5000, polling: 250 },
-		);
-		const statusString = await JSHandle.jsonValue();
+		const statusString = await page.evaluate(() => {
+			const body = document.body?.innerText?.toLowerCase() || "";
+			if (body.includes("não mostram problemas")) return "success";
+			if (body.includes("possíveis problemas")) return "warning";
+			if (body.includes("mostram problemas")) return "danger";
+			return false;
+		});
 		if (!statusString) return null;
 		return statusMap[statusString];
 	} catch (error: unknown) {
@@ -93,7 +102,7 @@ async function checkSingleService(
 		await page.setExtraHTTPHeaders({
 			"Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
 		});
-		await page.goto(url, { waitUntil: "commit" });
+		await page.goto(url, { waitUntil: "commit", timeout: 10000 });
 
 		const loaded = await waitForRealContent(page);
 		if (!loaded) {
@@ -130,11 +139,11 @@ async function checkWithRetry(
 	service: MonitoredService,
 ): Promise<ServiceResult | null> {
 	let status = await checkSingleService(browser, service);
-	let retry: number = 0;
+	let retry: number = 1;
 
-	while (!status && retry < 3) {
+	while (!status && retry < 2) {
 		retry++;
-		const delay = Math.random() * (2000 - 1000) + 1000;
+		const delay = Math.random() * (1500 - 800) + 800;
 		await sleep(delay);
 		status = await checkSingleService(browser, service);
 	}
