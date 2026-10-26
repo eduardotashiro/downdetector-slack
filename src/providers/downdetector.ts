@@ -82,21 +82,19 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 }
 
 async function checkSingleService(
-	browser: Browser,
+	context: BrowserContext,
 	service: MonitoredService,
 ): Promise<ServiceStatus | null> {
 	const { name, url } = service;
 
-	if (!browser.isConnected()) {
+	if (!context.browser()?.isConnected()) {
 		console.log(`browser desconectado antes de checar: ${name}`);
 		return null;
 	}
 
 	let page: Page | null = null;
-	let context: BrowserContext | null = null;
 
 	try {
-		context = await NewContext(browser);
 		page = await context.newPage();
 
 		await page.setExtraHTTPHeaders({
@@ -127,25 +125,21 @@ async function checkSingleService(
 			await page.close().catch((e) => {
 				console.error(`erro ao fechar page: ${e.message}`);
 			});
-		if (context && !context?.isClosed())
-			await context?.close().catch((e) => {
-				console.error(`erro ao fechar context: ${e.message}`);
-			});
 	}
 }
 
 async function checkWithRetry(
-	browser: Browser,
+	context: BrowserContext,
 	service: MonitoredService,
 ): Promise<ServiceResult | null> {
-	let status = await checkSingleService(browser, service);
+	let status = await checkSingleService(context, service);
 	let retry: number = 1;
 
 	while (!status && retry < 2) {
 		retry++;
 		const delay = Math.random() * (2000 - 1000) + 1000;
 		await sleep(delay);
-		status = await checkSingleService(browser, service);
+		status = await checkSingleService(context, service);
 	}
 
 	if (!status) {
@@ -163,13 +157,15 @@ export async function checkAllServices(): Promise<ServiceResult[]> {
 	let results: ServiceResult[] = [];
 	const startTotal = Date.now();
 	let browser: Browser | undefined;
+	let context: BrowserContext | undefined;
 	try {
 		browser = await launchBrowser();
+		context = await NewContext(browser);
 		const servicesToCheck = [...SERVICES];
 		shuffleArray(servicesToCheck);
 		for (let i = 0; i < servicesToCheck.length; i++) {
 			const service = servicesToCheck[i];
-			let status = await checkWithRetry(browser, service);
+			let status = await checkWithRetry(context, service);
 			if (status) {
 				results.push(status);
 			}
@@ -183,6 +179,9 @@ export async function checkAllServices(): Promise<ServiceResult[]> {
 			console.error(`Erro completo do monitoramento:`, error);
 		}
 	} finally {
+		await context?.close().catch((e) => {
+			console.error(`erro ao fechar context: ${e.message}`);
+		});
 		await forceCloseBrowser(browser, 2000);
 	}
 	const totalTime = ((Date.now() - startTotal) / 1000).toFixed(1);
