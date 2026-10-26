@@ -11,7 +11,6 @@
 [![Camoufox](https://img.shields.io/badge/Camoufox-AntiDetection-FF6B35?logo=firefox)](https://github.com/daijro/camoufox)
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)](https://grafana.com/)
-[![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/)
 
 **[🇧🇷 Português](#-português)**
 
@@ -45,13 +44,13 @@ O Downdetector é protegido pelo **Cloudflare Turnstile**, que bloqueia scraping
 
 ### Solução
 
-O projeto utiliza o **[Camoufox-js](https://github.com/apify/camoufox-js)**, um port em JS/TS do Camoufox original, que é um fork do Firefox voltado à redução de sinais de automação do navegador. O navegador é executado em modo **headed** (com interface gráfica) dentro de um display virtual (**Xvfb**), permitindo que o Firefox rode de forma invisível em um ambiente de servidor.
+O projeto utiliza o **[Camoufox](https://github.com/daijro/camoufox)**, um fork do Firefox voltado à redução de sinais de automação do navegador. O navegador é executado em modo **headed** (com interface gráfica) dentro de um display virtual (**Xvfb**), permitindo que o Firefox rode de forma invisível em um ambiente de servidor.
 
 ### Agradecimentos e Créditos
 
-Este projeto foi construído utilizando a versão em JS/TS mantida pela **[Apify](https://github.com/apify)**. O **[Camoufox-js](https://github.com/apify/camoufox-js)** é um port baseado no projeto original **[Camoufox](https://github.com/daijro/camoufox)**, criado por **[daijro](https://github.com/daijro)**. 
+Este projeto foi construído utilizando a versão TS do **[Camoufox](https://github.com/apify/camoufox-js)** criado por **[daijro](https://github.com/daijro)**.
 
-Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelentes ferramentas para a comunidade.
+Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essa excelente ferramenta para a comunidade, onde tive a honra de colaborar com meu primeiro PR, MUITO OBRIGADO !
 
 ---
 
@@ -63,10 +62,10 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelen
 - **Adaptação de idioma**: o navegador envia `Accept-Language` priorizando português do Brasil
 - **Retry automático**: uma consulta que falha recebe uma segunda tentativa utilizando a função checkSingleService em [`downdetectorService.ts`](src/services/downdetectorService.ts) antes de ser descartada
 - **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
-- **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara simultaneamente uma mensagem efêmera no canal (visível só pra você no desktop) **e** uma DM direta (visível em qualquer client, incluindo mobile), via [`src/slack/errorMonitor/`](src/slack/errorMonitor)
+- **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara uma DM direta (visível em qualquer client, incluindo mobile), [`sendError()`](src/notifier/slack.ts)
 - **Validação fail-fast de variáveis de ambiente**: o container falha imediatamente na inicialização caso alguma variável obrigatória esteja faltando, evitando deploys silenciosamente quebrados
-- **Fechamento robusto do browser**: `forceCloseBrowser()` tenta o fechamento normal com timeout de 3s e, independentemente do resultado ou exceções, utiliza o [`tree-kill`](https://github.com/pkrumins/node-tree-kill) por PID para garantir o encerramento de toda a árvore de processos do Firefox, prevenindo órfãos e vazamentos.
-- **Init próprio (tini)**: tini é usado como PID 1 no container pra fazer reap de processos zumbis e encaminhamento correto de sinais (SIGTERM/SIGINT)
+- **Fechamento robusto do browser**: [`forceCloseBrowser()`](src/provider/closeBrowser.ts) tenta o fechamento normal com timeout de 2s
+- **Init próprio (tini)**: tini é usado como PID 1 no container pra fazer reap de processos
 - **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
 - **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
 - **Docker multi-stage + Railway**: build separado do runtime com apenas o mínimo necessário pra executar, com Dockerfiles independentes pro bot, Prometheus e Grafana
@@ -79,16 +78,17 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelen
 <details>
 <summary>Clique para expandir</summary>
 
-| Serviço | URL |
-|---------|-----|
-| **PIX** | [downdetector.com.br/fora-do-ar/pix/](https://downdetector.com.br/fora-do-ar/pix/) |
-| **Itaú** | [downdetector.com.br/fora-do-ar/banco-itau/](https://downdetector.com.br/fora-do-ar/banco-itau/) |
-| **Bradesco** | [downdetector.com.br/fora-do-ar/bradesco/](https://downdetector.com.br/fora-do-ar/bradesco/) |
-| **Santander** | [downdetector.com.br/fora-do-ar/santander/](https://downdetector.com.br/fora-do-ar/santander/) |
-| **Nubank** | [downdetector.com.br/fora-do-ar/nubank/](https://downdetector.com.br/fora-do-ar/nubank/) |
+| Serviço             | URL                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **PIX**             | [downdetector.com.br/fora-do-ar/pix/](https://downdetector.com.br/fora-do-ar/pix/)                         |
+| **Itaú**            | [downdetector.com.br/fora-do-ar/banco-itau/](https://downdetector.com.br/fora-do-ar/banco-itau/)           |
+| **Bradesco**        | [downdetector.com.br/fora-do-ar/bradesco/](https://downdetector.com.br/fora-do-ar/bradesco/)               |
+| **Santander**       | [downdetector.com.br/fora-do-ar/santander/](https://downdetector.com.br/fora-do-ar/santander/)             |
+| **Nubank**          | [downdetector.com.br/fora-do-ar/nubank/](https://downdetector.com.br/fora-do-ar/nubank/)                   |
 | **Banco do Brasil** | [downdetector.com.br/fora-do-ar/banco-do-brasil/](https://downdetector.com.br/fora-do-ar/banco-do-brasil/) |
-| **Mercado Pago** | [downdetector.com.br/fora-do-ar/mercadopago/](https://downdetector.com.br/fora-do-ar/mercadopago/) |
-| **PicPay** | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/picpay/) |
+| **Mercado Pago**    | [downdetector.com.br/fora-do-ar/mercadopago/](https://downdetector.com.br/fora-do-ar/mercadopago/)         |
+| **PicPay**          | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/picpay/)                   |
+| **Cielo**           | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/cielo/)                    |
 
 </details>
 
@@ -99,7 +99,7 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essas excelen
 <details>
 <summary>Clique para expandir</summary>
 
-O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. São necessárias mudanças em apenas **2 arquivos**, os monitores de incidente são criados dinamicamente a partir do enum:
+O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. São necessárias mudanças em apenas **1 arquivo**, os monitores de incidente são criados dinamicamente :
 
 #### 1. [types.ts](src/slack/types.ts) → registra o nome e a URL do serviço
 
@@ -107,13 +107,13 @@ Adicione o serviço aos enums `ServiceName` e `ServiceURL`:
 
 ```typescript
 export enum ServiceName {
-    // ... serviços existentes ...
-    CAIXA = "Caixa Econômica"
+	// ... serviços existentes ...
+	CAIXA = "Caixa Econômica",
 }
 
 export enum ServiceURL {
-    // ... URLs existentes ...
-    CAIXA = "https://downdetector.com.br/fora-do-ar/caixa/"
+	// ... URLs existentes ...
+	CAIXA = "https://downdetector.com.br/fora-do-ar/caixa/",
 }
 ```
 
@@ -123,11 +123,11 @@ Adicione a entrada no array `SERVICES`:
 
 ```typescript
 const SERVICES: ServicesList[] = [
-    // ... serviços existentes ...
-    {
-        name: ServiceName.CAIXA,
-        url: ServiceURL.CAIXA
-    }
+	// ... serviços existentes ...
+	{
+		name: ServiceName.CAIXA,
+		url: ServiceURL.CAIXA,
+	},
 ];
 ```
 
@@ -139,8 +139,8 @@ Em [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts), os moni
 const monitors = {} as Record<ServiceName, IncidentMonitor>;
 
 for (const name of Object.values(ServiceName)) {
-    monitors[name] = new IncidentMonitor(client, channel);
-};
+	monitors[name] = new IncidentMonitor(client, channel);
+}
 ```
 
 #### Finalizando
@@ -163,7 +163,7 @@ O parser de status depende dos **textos exibidos** na página do Downdetector. A
 ```typescript
 // src/services/downdetectorService.ts
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
+	"Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
 });
 ```
 
@@ -176,12 +176,12 @@ No arquivo `src/services/downdetectorService.ts`, troque o `Accept-Language` pro
 ```typescript
 // Exemplo: Chile
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'es-CL,es;q=0.9,en-US;q=0.8,en;q=0.7'
+	"Accept-Language": "es-CL,es;q=0.9,en-US;q=0.8,en;q=0.7",
 });
 
 // Exemplo: EUA
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'en-US,en;q=0.9'
+	"Accept-Language": "en-US,en;q=0.9",
 });
 ```
 
@@ -208,11 +208,11 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 
 Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 
-| Status | PT-BR | EN-US | ES-CL |
-|--------|-------|-------|-------|
+| Status    | PT-BR                   | EN-US                 | ES-CL                   |
+| --------- | ----------------------- | --------------------- | ----------------------- |
 | `SUCCESS` | `não mostram problemas` | `no current problems` | `no muestran problemas` |
-| `WARNING` | `possíveis problemas` | `possible problems` | `posibles problemas` |
-| `DANGER` | `mostram problemas` | `show problems with` | `muestran problemas` |
+| `WARNING` | `possíveis problemas`   | `possible problems`   | `posibles problemas`    |
+| `DANGER`  | `mostram problemas`     | `show problems with`  | `muestran problemas`    |
 
 > ⚠️ **Atenção:** a ordem das verificações importa! No PT-BR e no ES-CL, a frase de `SUCCESS` contém a frase de `DANGER` como substring (ex: `"não mostram problemas"` contém `"mostram problemas"`). Por isso `SUCCESS` é verificado **antes** de `DANGER` no código — se você adaptar para outro idioma, verifique se as frases do seu idioma têm esse mesmo tipo de sobreposição antes de definir a ordem dos `if`.
 
@@ -227,86 +227,86 @@ Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
 <details>
 <summary>Clique para expandir a árvore de arquivos</summary>
 
-
 ```
-├── .github/
-│   ├── assets/
-│   │   ├── es-CL/
-│   │   │   ├── dd-danger.png
-│   │   │   ├── dd-success.png
-│   │   │   └── dd-warning.png
-│   │   ├── grafana/
-│   │   │   └── dashboard.png
-│   │   ├── pt-BR/
-│   │   │   ├── alert-critical.png
-│   │   │   ├── alert-resolved.png
-│   │   │   ├── dd-danger.png
-│   │   │   ├── dd-success.png
-│   │   │   └── dd-warning.png
-│   │   └── banner.png
-│   └── workflows/
-│       └── ci.yaml
-├── grafana/
-│   ├── logos/
-│   │   ├── bancodobrasil.png
-│   │   ├── bradesco.png
-│   │   ├── itau.png
-│   │   ├── mercadopago.png
-│   │   ├── nubank.png
-│   │   ├── picpay.png
-│   │   ├── pix.png
-│   │   └── santander.png
-│   ├── prometheus/
-│   │   ├── prometheus.railway.yml
-│   │   └── prometheus.yml
-│   ├── provisioning/
-│   │   ├── dashboards/
-│   │   │   ├── dashboards.yml
-│   │   │   └── downdetector.json
-│   │   └── datasources/
-│   │       └── prometheus.yml
-│   └── railway/
-│       └── prometheus-datasource.yml
-├── src/
-│   ├── config/
-│   │   └── env.ts                          # Validação fail-fast de env vars
-│   ├── jobs/
-│   │   └── monitoring.ts                   # Loop de agendamento
-│   ├── metrics/
-│   │   └── prometheusClient.ts             # Gauge por serviço
-│   ├── scripts/
-│   │   └── testAlert.ts                    # Disparar alerta manual
-│   ├── services/
-│   │   └── downdetectorService.ts          # Scraper + forceCloseBrowser
-│   ├── slack/
-│   │   ├── __tests__/
-│   │   │   ├── fixtures.ts
-│   │   │   └── incidentMonitor.spec.ts
-│   │   ├── errorMonitor/                   # Alertas de erro do próprio bot
-│   │   │   ├── directMessageService.ts     # Envia DM
-│   │   │   ├── dmAlert.ts                  # Instância exportada do DM
-│   │   │   ├── ephemeralAlert.ts           # Instância exportada do ephemeral
-│   │   │   └── ephemeralMessageService.ts  # Envia ephemeral
-│   │   ├── incidentMonitor.ts              # Gerencia estado de incidentes
-│   │   ├── manifest.json                   # Slack App Manifest
-│   │   ├── notificationOrchestrator.ts     # Cria monitores dinamicamente
-│   │   └── types.ts                        # Enums de serviço/URL/status
-│   ├── app.ts                              # Config Slack 
-│   └── server.ts                           # Entry point
-├── .dockerignore
-├── .env.example
-├── .gitignore
-├── Dockerfile                              # Build multi-stage com tini
+
+.
+├── debug
+│   └── configBrowser.txt
+├── docker-compose.yml
+├── Dockerfile
 ├── Dockerfile.grafana
 ├── Dockerfile.prometheus
 ├── LICENSE
-├── README.md
-├── docker-compose.yml
+├── manifest.yml
+├── monitoring
+│   ├── grafana
+│   │   ├── logos
+│   │   │   ├── bancodobrasil.png
+│   │   │   ├── bradesco.png
+│   │   │   ├── itau.png
+│   │   │   ├── mercadopago.png
+│   │   │   ├── nubank.png
+│   │   │   ├── picpay.png
+│   │   │   ├── pix.png
+│   │   │   └── santander.png
+│   │   └── provisioning
+│   │       ├── dashboards
+│   │       │   ├── dashboards.yml
+│   │       │   └── downdetector.json
+│   │       └── datasources
+│   │           └── datasource.yml
+│   └── prometheus
+│       ├── prometheus.railway.yml
+│       ├── prometheus.yml
+│       └── railway
+│           └── prometheus-datasource.yml
+├── node_modules
+│   ├── camoufox -> .pnpm/camoufox@0.5.8_playwright-core@1.62.1/node_modules/camoufox
+│   ├── dotenv -> .pnpm/dotenv@17.4.2/node_modules/dotenv
+│   ├── playwright-core -> .pnpm/playwright-core@1.62.1/node_modules/playwright-core
+│   ├── prom-client -> .pnpm/prom-client@15.1.3/node_modules/prom-client
+│   ├── tsx -> .pnpm/tsx@4.23.15/node_modules/tsx
+│   ├── @types
+│   │   └── node -> ../.pnpm/@types+node@24.19.2/node_modules/@types/node
+│   ├── typescript -> .pnpm/typescript@5.9.3/node_modules/typescript
+│   └── vitest -> .pnpm/vitest@4.1.12_@opentelemetry+api@1.9.1_@types+node@24.19.2_vite@8.3.4_@types+node@24.19_fdfec7337a89109b06e839ad6a8badc0/node_modules/vitest
 ├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── README.md
+├── scripts
+│   └── realAlertTest.ts
+├── src
+│   ├── config
+│   │   ├── env.ts
+│   │   └── services.ts
+│   ├── core
+│   │   ├── incidentMonitor.ts
+│   │   └── types.ts
+│   ├── jobs
+│   │   ├── monitorLoop.ts
+│   │   └── notificationOrchestrator.ts
+│   ├── main.ts
+│   ├── metrics
+│   │   └── prometheusClient.ts
+│   ├── notifiers
+│   │   └── slack.ts
+│   ├── providers
+│   │   ├── browser.ts
+│   │   ├── closeBrowser.ts
+│   │   └── downdetector.ts
+│   └── utils
+│       └── helpers.ts
+├── tests
+│   ├── integration
+│   │   └── slackNotifier.spec.ts
+│   └── unit
+│       └── incidentMonitor.spec.ts
 ├── tsconfig.json
 ├── vitest.config.ts
-└── xvfb.sh                                 # Script de inicialização do Xvfb
+└── xvfb.sh
 ```
+
 </details>
 
 ## Arquitetura
@@ -497,12 +497,12 @@ O bot foi projetado pra rodar 24/7, e várias decisões de design refletem isso:
 ```ts
 // src/services/downdetectorService.ts
 export async function forceCloseBrowser(
-    browser?: Browser,
-    timeoutMs: number = 3000
+	browser?: Browser,
+	timeoutMs: number = 3000,
 ) {
-    // 1. Tenta close() normal com timeout de 3s via Promise.race
-    // 2. Trata eventuais erros sem mascarar
-    // 3. SEMPRE executa o tree-kill por PID para garantir a limpeza total da árvore de processos
+	// 1. Tenta close() normal com timeout de 3s via Promise.race
+	// 2. Trata eventuais erros sem mascarar
+	// 3. SEMPRE executa o tree-kill por PID para garantir a limpeza total da árvore de processos
 }
 ```
 
@@ -517,28 +517,28 @@ O `close()` normal é mais barato e deixa o Firefox limpar seus próprios arquiv
 
 Sem um init real, o Node se torna PID 1 dentro do container, e o Node não faz reap de processos zumbis nem encaminha sinais corretamente. Com [`tini`](https://github.com/krallin/tini) :
 
-* Processos filhos que morrem são reapados imediatamente (sem virar zumbi)
-* `SIGTERM`/`SIGINT` chegam direto no Node
-* Shutdown limpo no deploy
+- Processos filhos que morrem são reapados imediatamente (sem virar zumbi)
+- `SIGTERM`/`SIGINT` chegam direto no Node
+- Shutdown limpo no deploy
 
 ## Validação fail-fast de env vars
 
 ```ts
 // src/config/env.ts
 const requiredEnv = [
-    "SLACK_SIGNING_SECRET",
-    "SLACK_BOT_TOKEN",
-    "CHANNEL_ID",
-    "USER_ID",
-    "PORT"
+	"SLACK_SIGNING_SECRET",
+	"SLACK_BOT_TOKEN",
+	"CHANNEL_ID",
+	"USER_ID",
+	"PORT",
 ];
 
-const missingEnv = requiredEnv.filter(name => !process.env[name]);
+const missingEnv = requiredEnv.filter((name) => !process.env[name]);
 
 if (missingEnv.length > 0) {
-    throw new Error(
-        `variáveis não encontradas no .env: ${missingEnv.join(", ")}`
-    );
+	throw new Error(
+		`variáveis não encontradas no .env: ${missingEnv.join(", ")}`,
+	);
 }
 ```
 
@@ -548,13 +548,12 @@ Se qualquer variável obrigatória estiver faltando, o container morre em ~500ms
 
 O [`errorMonitor`](src/slack/errorMonitor):
 
-- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece só pra você, no desktop 
+- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece só pra você, no desktop
 - [**DM direta:**](https://docs.slack.dev/reference/methods/chat.postMessage/#app_home) aparece em qualquer cliente (incluindo mobile)
 
 Assim você nunca perde um alerta de erro interno, independente do dispositivo que estiver usando.
 
 </details>
-
 
 ## Como os alertas funcionam
 
@@ -563,11 +562,11 @@ Assim você nunca perde um alerta de erro interno, independente do dispositivo q
 
 Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças de status:
 
-| Status no Downdetector | O que significa | Ação no Slack | Valor no Grafana |
-|------------------------|-----------------|---------------|-------------------|
-| 🟢 **Success** | Relatos dos usuários **não indicam problemas** com o serviço | Nenhuma ação (estado normal) | `0` |
-| 🟡 **Warning** | Relatos mostram **possíveis problemas** com o serviço | ⚠️ Apenas logado (sem alerta) | `1` |
-| 🔴 **Danger** | Relatos mostram **problemas confirmados** com o serviço | ☠️ **Alerta Crítico** enviado imediatamente | `2` |
+| Status no Downdetector | O que significa                                              | Ação no Slack                               | Valor no Grafana |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------- | ---------------- |
+| 🟢 **Success**         | Relatos dos usuários **não indicam problemas** com o serviço | Nenhuma ação (estado normal)                | `0`              |
+| 🟡 **Warning**         | Relatos mostram **possíveis problemas** com o serviço        | ⚠️ Apenas logado (sem alerta)               | `1`              |
+| 🔴 **Danger**          | Relatos mostram **problemas confirmados** com o serviço      | ☠️ **Alerta Crítico** enviado imediatamente | `2`              |
 
 </details>
 
@@ -577,19 +576,22 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 <summary>Clique para ver como cada status aparece no Downdetector</summary>
 
 #### 🟢 Success → Serviço operando normalmente
+
 ![Status Success](.github/assets/pt-BR/dd-success.png)
 
-*"Os relatos dos usuários não indicam problemas atuais com o WhatsApp."*
+_"Os relatos dos usuários não indicam problemas atuais com o WhatsApp."_
 
 #### 🟡 Warning → Possíveis problemas detectados
+
 ![Status Warning](.github/assets/pt-BR/dd-warning.png)
 
-*"Relatos de usuários mostram possíveis problemas com WhatsApp."*
+_"Relatos de usuários mostram possíveis problemas com WhatsApp."_
 
 #### 🔴 Danger → Problemas confirmados
+
 ![Status Danger](.github/assets/pt-BR/dd-danger.png)
 
-*"Relatos de usuários mostram problemas com WhatsApp."*
+_"Relatos de usuários mostram problemas com WhatsApp."_
 
 </details>
 
@@ -599,9 +601,11 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 <summary>Clique para ver como os alertas aparecem no Slack</summary>
 
 #### ☠️ Alerta Crítico (quando o serviço entra em `danger`)
+
 ![Exemplo de Alerta Crítico](.github/assets/pt-BR/alert-critical.png)
 
 #### 🎉 Alerta de Resolução (quando o serviço volta pra `success`)
+
 ![Exemplo de Resolução](.github/assets/pt-BR/alert-resolved.png)
 
 </details>
@@ -611,6 +615,7 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 ## Configuração
 
 ## Pré-requisitos
+
 - Node.js 20+
 - App do Slack com Bot Token ([crie um aqui](https://api.slack.com/apps))
 - Docker (roda o mesmo ambiente com Xvfb, além de Prometheus e Grafana)
@@ -621,12 +626,14 @@ Cada serviço tem seu próprio monitor de incidente que acompanha as mudanças d
 <summary>Clique para expandir as instruções de setup</summary>
 
 1. **Clone o repositório**
+
 ```bash
 git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
 2. **Instale as dependências** (isso também baixa o binário do Camoufox, via `postinstall`)
+
 ```bash
 npm install
 ```
@@ -638,6 +645,7 @@ Crie um arquivo `.env` na raiz do projeto:
 ```env
 cp .env.example .env
 ```
+
 Depois, edite o arquivo `.env`:
 
 ```env
@@ -652,11 +660,13 @@ PORT=3000
 ```
 
 4. **Compile o projeto**
+
 ```bash
 npm run build
 ```
 
 5. **Inicie o bot**
+
 ```bash
 npm start
 ```
@@ -664,6 +674,7 @@ npm start
 </details>
 
 ## Slack App Manifest (Recomendado)
+
 <details>
 <summary>Clique para expandir as instruções</summary>
 
@@ -685,16 +696,20 @@ npm start
 O Camoufox roda em modo **headed** (não headless) aqui, pois passa pelo Cloudflare de forma bem mais confiável. Como não tem monitor físico, a imagem Docker roda ele dentro de um display virtual (Xvfb).
 
 **Só o bot (build e execução local):**
+
 ```bash
 docker build -t downdetector-slack .
 docker run --rm -it --env-file .env downdetector-slack
 ```
 
 **Stack completa local (bot + Prometheus + Grafana) via Docker Compose:**
+
 ```bash
 docker compose up --build
 ```
+
 Isso sobe três containers na mesma rede (`monitoring`):
+
 - `bot` → expõe `:3000` (inclui `/metrics`)
 - `prometheus` → `:9090`, faz scrape do bot a cada 15s
 - `grafana` → `:3001`, já vem com o datasource e o dashboard provisionados automaticamente login padrão `admin` / `admin`, definido em [docker-compose.yml](docker-compose.yml)
@@ -705,23 +720,24 @@ Não precisa mapear porta do bot em produção, pois ele nunca recebe tráfego H
 
 O projeto usa três Dockerfiles separados para permitir o deploy independente de cada peça no Railway:
 
-| Serviço | Dockerfile | Observações |
-|---------|-----------|--------------|
-| **bot** | `Dockerfile` | Roda o scraper, o Slack e expõe `/metrics` |
-| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, aponta pro hostname interno `bot.railway.internal:3000` |
-| **grafana** | `Dockerfile.grafana` | Usa `grafana/railway/prometheus-datasource.yml`, aponta pro hostname interno `prometheus.railway.internal:9090` |
+| Serviço        | Dockerfile              | Observações                                                                                                     |
+| -------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **bot**        | `Dockerfile`            | Roda o scraper, o Slack e expõe `/metrics`                                                                      |
+| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, aponta pro hostname interno `bot.railway.internal:3000`        |
+| **grafana**    | `Dockerfile.grafana`    | Usa `grafana/railway/prometheus-datasource.yml`, aponta pro hostname interno `prometheus.railway.internal:9090` |
 
 Passos:
+
 1. Suba seu código pro GitHub
-2. No Railway, crie **três serviços** a partir do mesmo repositório, cada um apontando pro respectivo Dockerfile (em *Settings → Build → Dockerfile Path*)
+2. No Railway, crie **três serviços** a partir do mesmo repositório, cada um apontando pro respectivo Dockerfile (em _Settings → Build → Dockerfile Path_)
 3. No serviço **bot**, adicione as variáveis de ambiente:
-   - `SLACK_BOT_TOKEN`
-   - `SLACK_SIGNING_SECRET`
-   - `CHANNEL_ID`
-   - `USER_ID`
-   - `PORT`
+    - `SLACK_BOT_TOKEN`
+    - `SLACK_SIGNING_SECRET`
+    - `CHANNEL_ID`
+    - `USER_ID`
+    - `PORT`
 4. Mantenha o serviço **bot** em **1 réplica**, rodar mais de uma significa alertas duplicados pro mesmo incidente
-5. Como os três serviços estão no mesmo projeto Railway, eles se enxergam pela rede interna (`*.railway.internal`) sem precisar expor portas publicamente — exceto o Grafana, que você pode tornar público em *Settings → Networking* pra acessar o dashboard
+5. Como os três serviços estão no mesmo projeto Railway, eles se enxergam pela rede interna (`*.railway.internal`) sem precisar expor portas publicamente — exceto o Grafana, que você pode tornar público em _Settings → Networking_ pra acessar o dashboard
 6. O Railway faz deploy automático a cada push na `main`, em todos os serviços configurados
 
 </details>
@@ -734,18 +750,22 @@ Passos:
 <summary>Clique para expandir exemplos de uso</summary>
 
 **Modo Desenvolvimento:**
+
 ```bash
 npm run dev
 ```
+
 Roda com hot-reload usando `tsx watch`. No Linux sem display, envolva com `xvfb-run -a npm run dev`.
 
 **Modo Produção:**
+
 ```bash
 npm run build
 npm start
 ```
 
 **Agendamento do ciclo de monitoramento:**
+
 ```typescript
 // src/jobs/monitoring.ts
 // roda uma vez ao iniciar e se reagenda com um delay aleatório entre 2 e 4 minutos
@@ -782,15 +802,15 @@ O label `service` é gerado a partir do nome do serviço, normalizado (minúscul
 
 ### Dashboard Grafana
 
-
 ![dashboard](.github/assets/grafana/dashboard.png)
 
-
 O dashboard [`downdetector.json`](grafana/provisioning/dashboards/downdetector.json) é carregado automaticamente pelo provider configurado em [`dashboards.yml`](grafana/provisioning/dashboards/dashboards.yml), e mostra:
+
 - Um painel `stat` por serviço, com cor verde/amarelo/vermelho de acordo com o status atual (`SUCCESS` / `WARNING` / `DANGER`)
 - Um painel `timeseries` com o histórico de status de todos os serviços nas últimas horas
 
 O datasource do Prometheus também é provisionado automaticamente:
+
 - Localmente, via [`grafana/provisioning/datasources/prometheus.yml`](grafana/provisioning/datasources/prometheus.yml) (`http://prometheus:9090`)
 - No Railway, via [`grafana/railway/prometheus-datasource.yml`](grafana/railway/prometheus-datasource.yml) (`http://prometheus.railway.internal:9090`)
 
@@ -799,6 +819,7 @@ O datasource do Prometheus também é provisionado automaticamente:
 ```bash
 docker compose up --build
 ```
+
 - Grafana: [http://localhost:3001](http://localhost:3001) (login `admin` / `admin`)
 - Prometheus: [http://localhost:9090](http://localhost:9090)
 - Métricas cruas do bot: [http://localhost:3000/metrics](http://localhost:3000/metrics)
@@ -813,6 +834,7 @@ docker compose up --build
 <summary>Clique para expandir o guia de testes</summary>
 
 **Rodar os testes:**
+
 ```bash
 npm test            # Roda os testes uma vez
 npm run test:watch  # Modo watch
@@ -820,11 +842,13 @@ npm run test:watch  # Modo watch
 
 **Testar alertas no seu canal do Slack:**
 Manda um alerta DANGER real seguido de uma resolução SUCCESS pro canal configurado no seu `.env`, sem mexer nos monitores de produção:
+
 ```bash
 npm run test:alert
 ```
 
 **Estrutura dos testes:**
+
 ```
 src/slack/__tests__/
 ├── fixtures.ts                  # Dados mockados pros testes
@@ -842,22 +866,29 @@ src/slack/__tests__/
 
 1. Faça um fork do repositório
 2. Crie uma branch de feature
+
 ```bash
 git checkout -b feature/minha-feature-incrivel
 ```
+
 3. Faça commit das suas mudanças (use [Conventional Commits](https://www.conventionalcommits.org/))
+
 ```bash
 git commit -m 'feat: adiciona feature incrível'
 ```
+
 4. Suba pra branch
+
 ```bash
 git push origin feature/minha-feature-incrivel
 ```
+
 5. Abra um Pull Request
 
 **Convenção de commits:** `feat`, `fix`, `docs`, `test`, `perf`, `refactor`, `chore`
 
 **Antes de submeter o PR:**
+
 ```bash
 npm test              # Roda os testes
 npm run build         # Verifica se o build funciona
@@ -872,6 +903,7 @@ npm run build         # Verifica se o build funciona
 Esse projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) pra detalhes.
 
 ---
+
 ---
 
 # 🇨🇱 Español
@@ -894,7 +926,7 @@ El proyecto utiliza **[Camoufox-js](https://github.com/apify/camoufox-js)**, un 
 
 ### Agradecimientos y Créditos
 
-Este proyecto fue construido utilizando la versión en JS/TS mantenida por **[Apify](https://github.com/apify)**. **[Camoufox-js](https://github.com/apify/camoufox-js)** es un port basado en el proyecto original **[Camoufox](https://github.com/daijro/camoufox)**, creado por **[daijro](https://github.com/daijro)**. 
+Este proyecto fue construido utilizando la versión en JS/TS mantenida por **[Apify](https://github.com/apify)**. **[Camoufox-js](https://github.com/apify/camoufox-js)** es un port basado en el proyecto original **[Camoufox](https://github.com/daijro/camoufox)**, creado por **[daijro](https://github.com/daijro)**.
 
 Queremos agradecer a los desarrolladores por poner estas excelentes herramientas a disposición de la comunidad.
 
@@ -924,16 +956,16 @@ Queremos agradecer a los desarrolladores por poner estas excelentes herramientas
 <details>
 <summary>Haz clic para expandir</summary>
 
-| Servicio | URL |
-|---------|-----|
-| **PIX** | [downdetector.com.br/fora-do-ar/pix/](https://downdetector.com.br/fora-do-ar/pix/) |
-| **Itaú** | [downdetector.com.br/fora-do-ar/banco-itau/](https://downdetector.com.br/fora-do-ar/banco-itau/) |
-| **Bradesco** | [downdetector.com.br/fora-do-ar/bradesco/](https://downdetector.com.br/fora-do-ar/bradesco/) |
-| **Santander** | [downdetector.com.br/fora-do-ar/santander/](https://downdetector.com.br/fora-do-ar/santander/) |
-| **Nubank** | [downdetector.com.br/fora-do-ar/nubank/](https://downdetector.com.br/fora-do-ar/nubank/) |
+| Servicio            | URL                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **PIX**             | [downdetector.com.br/fora-do-ar/pix/](https://downdetector.com.br/fora-do-ar/pix/)                         |
+| **Itaú**            | [downdetector.com.br/fora-do-ar/banco-itau/](https://downdetector.com.br/fora-do-ar/banco-itau/)           |
+| **Bradesco**        | [downdetector.com.br/fora-do-ar/bradesco/](https://downdetector.com.br/fora-do-ar/bradesco/)               |
+| **Santander**       | [downdetector.com.br/fora-do-ar/santander/](https://downdetector.com.br/fora-do-ar/santander/)             |
+| **Nubank**          | [downdetector.com.br/fora-do-ar/nubank/](https://downdetector.com.br/fora-do-ar/nubank/)                   |
 | **Banco do Brasil** | [downdetector.com.br/fora-do-ar/banco-do-brasil/](https://downdetector.com.br/fora-do-ar/banco-do-brasil/) |
-| **Mercado Pago** | [downdetector.com.br/fora-do-ar/mercadopago/](https://downdetector.com.br/fora-do-ar/mercadopago/) |
-| **PicPay** | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/picpay/) |
+| **Mercado Pago**    | [downdetector.com.br/fora-do-ar/mercadopago/](https://downdetector.com.br/fora-do-ar/mercadopago/)         |
+| **PicPay**          | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/picpay/)                   |
 
 </details>
 
@@ -952,13 +984,13 @@ Agrega el servicio a los enums `ServiceName` y `ServiceURL`:
 
 ```typescript
 export enum ServiceName {
-    // ... servicios existentes ...
-    CAIXA = "Caixa Econômica"
+	// ... servicios existentes ...
+	CAIXA = "Caixa Econômica",
 }
 
 export enum ServiceURL {
-    // ... URLs existentes ...
-    CAIXA = "https://downdetector.com.br/fora-do-ar/caixa/"
+	// ... URLs existentes ...
+	CAIXA = "https://downdetector.com.br/fora-do-ar/caixa/",
 }
 ```
 
@@ -968,11 +1000,11 @@ Agrega la entrada al array `SERVICES`:
 
 ```typescript
 const SERVICES: ServicesList[] = [
-    // ... servicios existentes ...
-    {
-        name: ServiceName.CAIXA,
-        url: ServiceURL.CAIXA
-    }
+	// ... servicios existentes ...
+	{
+		name: ServiceName.CAIXA,
+		url: ServiceURL.CAIXA,
+	},
 ];
 ```
 
@@ -984,8 +1016,8 @@ En [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts), los mon
 const monitors = {} as Record<ServiceName, IncidentMonitor>;
 
 for (const name of Object.values(ServiceName)) {
-    monitors[name] = new IncidentMonitor(client, channel);
-};
+	monitors[name] = new IncidentMonitor(client, channel);
+}
 ```
 
 #### Para finalizar
@@ -1008,7 +1040,7 @@ El parser de estado depende de los **textos que muestra** la página de Downdete
 ```typescript
 // src/services/downdetectorService.ts
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
+	"Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
 });
 ```
 
@@ -1021,12 +1053,12 @@ En el archivo `src/services/downdetectorService.ts`, cambia el `Accept-Language`
 ```typescript
 // Ejemplo: Chile
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'es-CL,es;q=0.9,en-US;q=0.8,en;q=0.7'
+	"Accept-Language": "es-CL,es;q=0.9,en-US;q=0.8,en;q=0.7",
 });
 
 // Ejemplo: EE. UU.
 await page.setExtraHTTPHeaders({
-    'Accept-Language': 'en-US,en;q=0.9'
+	"Accept-Language": "en-US,en;q=0.9",
 });
 ```
 
@@ -1053,11 +1085,11 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 
 Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos:
 
-| Estado | PT-BR | EN-US | ES-CL |
-|--------|-------|-------|-------|
+| Estado    | PT-BR                   | EN-US                 | ES-CL                   |
+| --------- | ----------------------- | --------------------- | ----------------------- |
 | `SUCCESS` | `não mostram problemas` | `no current problems` | `no muestran problemas` |
-| `WARNING` | `possíveis problemas` | `possible problems` | `posibles problemas` |
-| `DANGER` | `mostram problemas` | `show problems with` | `muestran problemas` |
+| `WARNING` | `possíveis problemas`   | `possible problems`   | `posibles problemas`    |
+| `DANGER`  | `mostram problemas`     | `show problems with`  | `muestran problemas`    |
 
 ⚠️ **Atención:** ¡El orden de las comprobaciones importa! En PT-BR y ES-CL, la frase `SUCCESS` contiene la frase `DANGER` como subcadena (por ejemplo, `"show no problems"` contiene `"show problems"`). Por lo tanto, `SUCCESS` se comprueba **antes** de `DANGER` en el código. Si lo adaptas a otro idioma, comprueba si las frases en tu idioma tienen este mismo tipo de superposición antes de definir el orden de las sentencias `if`.
 
@@ -1071,7 +1103,6 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 
 <details>
 <summary>Haz clic para expandir el árbol de archivos</summary>
-
 
 ```
 ├── .github/
@@ -1136,7 +1167,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 │   │   ├── manifest.json                   # Slack App Manifest
 │   │   ├── notificationOrchestrator.ts     # Crea monitores dinámicamente
 │   │   └── types.ts                        # Enums de servicio/URL/estado
-│   ├── app.ts                              # Config Slack 
+│   ├── app.ts                              # Config Slack
 │   └── server.ts                           # Entry point
 ├── .dockerignore
 ├── .env.example
@@ -1152,6 +1183,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 ├── vitest.config.ts
 └── xvfb.sh                                 # Script de inicialización de Xvfb
 ```
+
 </details>
 
 ## Arquitectura
@@ -1344,12 +1376,12 @@ El bot fue diseñado para ejecutarse 24/7, y varias decisiones de diseño reflej
 // src/services/downdetectorService.ts
 
 export async function forceCloseBrowser(
-    browser?: Browser,
-    timeoutMs: number = 3000
+	browser?: Browser,
+	timeoutMs: number = 3000,
 ) {
-    // 1. Intenta close() normal con timeout de 3s mediante Promise.race
-    // 2. Maneja los posibles errores sin encubrirlos
-    // 3. SIEMPRE ejecuta el tree-kill por PID para asegurar la limpieza total del árbol de procesos
+	// 1. Intenta close() normal con timeout de 3s mediante Promise.race
+	// 2. Maneja los posibles errores sin encubrirlos
+	// 3. SIEMPRE ejecuta el tree-kill por PID para asegurar la limpieza total del árbol de procesos
 }
 ```
 
@@ -1375,19 +1407,19 @@ Sin un init real, Node se convierte en PID 1 dentro del contenedor, y Node no re
 // src/config/env.ts
 
 const requiredEnv = [
-    "SLACK_SIGNING_SECRET",
-    "SLACK_BOT_TOKEN",
-    "CHANNEL_ID",
-    "USER_ID",
-    "PORT"
+	"SLACK_SIGNING_SECRET",
+	"SLACK_BOT_TOKEN",
+	"CHANNEL_ID",
+	"USER_ID",
+	"PORT",
 ];
 
-const missingEnv = requiredEnv.filter(name => !process.env[name]);
+const missingEnv = requiredEnv.filter((name) => !process.env[name]);
 
 if (missingEnv.length > 0) {
-    throw new Error(
-        `variables no encontradas en .env: ${missingEnv.join(", ")}`
-    );
+	throw new Error(
+		`variables no encontradas en .env: ${missingEnv.join(", ")}`,
+	);
 }
 ```
 
@@ -1397,7 +1429,7 @@ Si falta alguna variable obligatoria, el contenedor se detiene en ~500 ms con un
 
 El [`errorMonitor`](src/slack/errorMonitor):
 
-- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece solo para ti, en el desktop 
+- [**Ephemeral:**](https://docs.slack.dev/reference/methods/chat.postEphemeral/) aparece solo para ti, en el desktop
 - [**DM direta:**](https://docs.slack.dev/reference/methods/chat.postMessage/#app_home) aparece en cualquier cliente (incluido el mobile)
 
 De esta forma, nunca pierdes una alerta de error interno, independientemente del dispositivo que estés utilizando.
@@ -1411,11 +1443,11 @@ De esta forma, nunca pierdes una alerta de error interno, independientemente del
 
 Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de estado:
 
-| Estado en Downdetector | Qué significa | Acción en Slack | Valor en Grafana |
-|------------------------|-----------------|---------------|--------------------|
-| 🟢 **Success** | Los reportes de usuarios **no indican problemas** con el servicio | Ninguna acción (estado normal) | `0` |
-| 🟡 **Warning** | Los reportes muestran **posibles problemas** con el servicio | ⚠️ Solo se registra en el log (sin alerta) | `1` |
-| 🔴 **Danger** | Los reportes muestran **problemas confirmados** con el servicio | ☠️ **Alerta Crítica** enviada de inmediato | `2` |
+| Estado en Downdetector | Qué significa                                                     | Acción en Slack                            | Valor en Grafana |
+| ---------------------- | ----------------------------------------------------------------- | ------------------------------------------ | ---------------- |
+| 🟢 **Success**         | Los reportes de usuarios **no indican problemas** con el servicio | Ninguna acción (estado normal)             | `0`              |
+| 🟡 **Warning**         | Los reportes muestran **posibles problemas** con el servicio      | ⚠️ Solo se registra en el log (sin alerta) | `1`              |
+| 🔴 **Danger**          | Los reportes muestran **problemas confirmados** con el servicio   | ☠️ **Alerta Crítica** enviada de inmediato | `2`              |
 
 </details>
 
@@ -1425,12 +1457,15 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 <summary>Haz clic para ver cómo aparece cada estado en Downdetector</summary>
 
 #### 🟢 Success → Servicio funcionando con normalidad
+
 ![Estado Success](.github/assets/es-CL/dd-success.png)
 
 #### 🟡 Warning → Posibles problemas detectados
+
 ![Estado Warning](.github/assets/es-CL/dd-warning.png)
 
 #### 🔴 Danger → Problemas confirmados
+
 ![Estado Danger](.github/assets/es-CL/dd-danger.png)
 
 </details>
@@ -1443,9 +1478,11 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 > ℹ️ Las alertas del bot siempre se envían **en portugués**, sin importar el idioma de este README, el texto está fijo en [incidentMonitor.ts](src/slack/incidentMonitor.ts).
 
 #### ☠️ Alerta Crítica (cuando el servicio entra en `danger`)
+
 ![Ejemplo de Alerta Crítica](.github/assets/pt-BR/alert-critical.png)
 
 #### 🎉 Alerta de Resolución (cuando el servicio vuelve a `success`)
+
 ![Ejemplo de Resolución](.github/assets/pt-BR/alert-resolved.png)
 
 </details>
@@ -1455,6 +1492,7 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 ## Configuración
 
 ### Requisitos previos
+
 - Node.js 20+
 - App de Slack con Bot Token ([créala aquí](https://api.slack.com/apps))
 - Docker (ejecuta el mismo entorno con Xvfb, además de Prometheus y Grafana)
@@ -1465,12 +1503,14 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 <summary>Haz clic para expandir las instrucciones de instalación</summary>
 
 1. **Clona el repositorio**
+
 ```bash
 git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
 2. **Instala las dependencias** (esto también descarga el binario de Camoufox, vía `postinstall`)
+
 ```bash
 npm install
 ```
@@ -1482,6 +1522,7 @@ Crea un archivo `.env` en la raíz del proyecto:
 ```env
 cp .env.example .env
 ```
+
 Luego, edita el archivo `.env`:
 
 ```env
@@ -1496,11 +1537,13 @@ PORT=3000
 ```
 
 4. **Compila el proyecto**
+
 ```bash
 npm run build
 ```
 
 5. **Inicia el bot**
+
 ```bash
 npm start
 ```
@@ -1508,6 +1551,7 @@ npm start
 </details>
 
 ## Slack App Manifest (Recomendado)
+
 <details>
 <summary>Haz clic para expandir las instrucciones</summary>
 
@@ -1529,16 +1573,20 @@ npm start
 Camoufox se ejecuta en modo **headed** (no headless) aquí, porque pasa Cloudflare de forma mucho más confiable. Como no hay pantalla física, la imagen de Docker lo ejecuta dentro de un display virtual (Xvfb).
 
 **Solo el bot (build y ejecución local):**
+
 ```bash
 docker build -t downdetector-slack .
 docker run --rm -it --env-file .env downdetector-slack
 ```
 
 **Stack completo local (bot + Prometheus + Grafana) vía Docker Compose:**
+
 ```bash
 docker compose up --build
 ```
+
 Esto levanta tres contenedores en la misma red (`monitoring`):
+
 - `bot` → expone `:3000` (incluye `/metrics`)
 - `prometheus` → `:9090`, hace scrape del bot cada 15s
 - `grafana` → `:3001`, ya viene con el datasource y el dashboard provisionados automáticamente login por defecto `admin` / `admin`, definido en `[docker-compose.yml](docker-compose.yml)
@@ -1549,23 +1597,24 @@ No hace falta mapear el puerto del bot en producción, pues nunca recibe tráfic
 
 El proyecto usa tres Dockerfiles separados para permitir el despliegue independiente de cada pieza en Railway:
 
-| Servicio | Dockerfile | Notas |
-|---------|-----------|--------------|
-| **bot** | `Dockerfile` | Corre el scraper, Slack y expone `/metrics` |
-| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, apunta al hostname interno `bot.railway.internal:3000` |
-| **grafana** | `Dockerfile.grafana` | Usa `grafana/railway/prometheus-datasource.yml`, apunta al hostname interno `prometheus.railway.internal:9090` |
+| Servicio       | Dockerfile              | Notas                                                                                                          |
+| -------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **bot**        | `Dockerfile`            | Corre el scraper, Slack y expone `/metrics`                                                                    |
+| **prometheus** | `Dockerfile.prometheus` | Usa `grafana/prometheus/prometheus.railway.yml`, apunta al hostname interno `bot.railway.internal:3000`        |
+| **grafana**    | `Dockerfile.grafana`    | Usa `grafana/railway/prometheus-datasource.yml`, apunta al hostname interno `prometheus.railway.internal:9090` |
 
 Pasos:
+
 1. Sube tu código a GitHub
-2. En Railway, crea **tres servicios** desde el mismo repositorio, cada uno apuntando a su respectivo Dockerfile (en *Settings → Build → Dockerfile Path*)
+2. En Railway, crea **tres servicios** desde el mismo repositorio, cada uno apuntando a su respectivo Dockerfile (en _Settings → Build → Dockerfile Path_)
 3. En el servicio **bot**, agrega las variables de entorno:
-   - `SLACK_BOT_TOKEN`
-   - `SLACK_SIGNING_SECRET`
-   - `CHANNEL_ID`
-   - `USER_ID`
-   - `PORT`
+    - `SLACK_BOT_TOKEN`
+    - `SLACK_SIGNING_SECRET`
+    - `CHANNEL_ID`
+    - `USER_ID`
+    - `PORT`
 4. Mantén el servicio **bot** en **1 réplica**, pues ejecutar más de una significa alertas duplicadas para el mismo incidente
-5. Como los tres servicios están en el mismo proyecto de Railway, se comunican por la red interna (`*.railway.internal`) sin necesidad de exponer puertos públicamente — excepto Grafana, que puedes hacer público en *Settings → Networking* para acceder al dashboard
+5. Como los tres servicios están en el mismo proyecto de Railway, se comunican por la red interna (`*.railway.internal`) sin necesidad de exponer puertos públicamente — excepto Grafana, que puedes hacer público en _Settings → Networking_ para acceder al dashboard
 6. Railway despliega automáticamente en cada push a `main`, en todos los servicios configurados
 
 </details>
@@ -1578,18 +1627,22 @@ Pasos:
 <summary>Haz clic para expandir ejemplos de uso</summary>
 
 **Modo Desarrollo:**
+
 ```bash
 npm run dev
 ```
+
 Se ejecuta con hot-reload usando `tsx watch`. En Linux sin pantalla, envuélvelo con `xvfb-run -a npm run dev`.
 
 **Modo Producción:**
+
 ```bash
 npm run build
 npm start
 ```
 
 **Programación del ciclo de monitoreo:**
+
 ```typescript
 // src/jobs/monitoring.ts
 // corre una vez al iniciar y se reprograma con un retraso aleatorio de entre 2 y 4 minutos
@@ -1629,10 +1682,12 @@ La etiqueta `service` se genera a partir del nombre del servicio, normalizado (m
 ![dashboard](.github/assets/grafana/dashboard.png)
 
 El dashboard [`downdetector.json`](grafana/provisioning/dashboards/downdetector.json) se carga automáticamente mediante el provider configurado en [`dashboards.yml`](grafana/provisioning/dashboards/dashboards.yml), y muestra:
+
 - Un panel `stat` por servicio, con color verde/amarillo/rojo según el estado actual (`SUCCESS` / `WARNING` / `DANGER`)
 - Un panel `timeseries` con el historial de estados de todos los servicios en las últimas horas
 
 El datasource de Prometheus también se provisiona automáticamente:
+
 - Localmente, vía [`grafana/provisioning/datasources/prometheus.yml`](grafana/provisioning/datasources/prometheus.yml) (`http://prometheus:9090`)
 - En Railway, vía [`grafana/railway/prometheus-datasource.yml`](grafana/railway/prometheus-datasource.yml) (`http://prometheus.railway.internal:9090`)
 
@@ -1641,10 +1696,10 @@ El datasource de Prometheus también se provisiona automáticamente:
 ```bash
 docker compose up --build
 ```
+
 - Grafana: [http://localhost:3001](http://localhost:3001) (login `admin` / `admin`)
 - Prometheus: [http://localhost:9090](http://localhost:9090)
 - Métricas crudas del bot: [http://localhost:3000/metrics](http://localhost:3000/metrics)
-
 
 </details>
 
@@ -1656,6 +1711,7 @@ docker compose up --build
 <summary>Haz clic para expandir la guía de pruebas</summary>
 
 **Ejecutar las pruebas:**
+
 ```bash
 npm test            # Ejecuta las pruebas una vez
 npm run test:watch  # Modo watch
@@ -1663,11 +1719,13 @@ npm run test:watch  # Modo watch
 
 **Probar alertas en tu canal de Slack:**
 Envía una alerta DANGER real seguida de una resolución SUCCESS al canal configurado en tu `.env`, sin tocar los monitores de producción:
+
 ```bash
 npm run test:alert
 ```
 
 **Estructura de las pruebas:**
+
 ```
 src/slack/__tests__/
 ├── fixtures.ts                  # Datos simulados para las pruebas
@@ -1685,22 +1743,29 @@ src/slack/__tests__/
 
 1. Haz un fork del repositorio
 2. Crea una rama de feature
+
 ```bash
 git checkout -b feature/mi-feature-increible
 ```
+
 3. Haz commit de tus cambios (usa [Conventional Commits](https://www.conventionalcommits.org/))
+
 ```bash
 git commit -m 'feat: agrega feature increíble'
 ```
+
 4. Sube la rama
+
 ```bash
 git push origin feature/mi-feature-increible
 ```
+
 5. Abre un Pull Request
 
 **Convención de commits:** `feat`, `fix`, `docs`, `test`, `perf`, `refactor`, `chore`
 
 **Antes de enviar el PR:**
+
 ```bash
 npm test              # Ejecuta las pruebas
 npm run build         # Verifica que el build funcione
