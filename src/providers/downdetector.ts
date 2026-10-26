@@ -143,7 +143,7 @@ async function checkWithRetry(
 
 	while (!status && retry < 2) {
 		retry++;
-		const delay = Math.random() * (1500 - 800) + 800;
+		const delay = Math.random() * (2000 - 1000) + 1000;
 		await sleep(delay);
 		status = await checkSingleService(browser, service);
 	}

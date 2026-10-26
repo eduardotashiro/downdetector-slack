@@ -19,7 +19,7 @@ export async function startMonitorLoop() {
 	} catch (error) {
 		console.error(`Erro no monitoramento:`, error);
 	} finally {
-		const delayMs = getRandomDelay(13, 31);
+		const delayMs = getRandomDelay(15, 30);
 		console.log(
 			`Próxima verificação em ~${(delayMs / 1000).toFixed(0)} segundos...`,
 		);
