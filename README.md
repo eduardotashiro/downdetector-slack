@@ -623,6 +623,8 @@ Isso sobe três containers na mesma rede (`monitoring`):
 
 Não precisa mapear porta do bot em produção, pois ele nunca recebe tráfego HTTP externo além do scrape do Prometheus (`/metrics`) e das requisições de saída pro Downdetector e pro Slack.
 
+</details>
+
 ---
 
 ## Uso
@@ -644,6 +646,8 @@ Roda com hot-reload usando `tsx watch`. No Linux sem display, envolva com `xvfb-
 pnpm run build
 pnpm start
 ```
+
+</details>
 
 ---
 
