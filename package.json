@@ -1,6 +1,6 @@
 {
 	"name": "downdetector-slack",
-	"version": "2.3.0",
+	"version": "3.0.0",
 	"description": "Monitor Downdetector | Slack",
 	"main": "dist/main.js",
 	"type": "module",

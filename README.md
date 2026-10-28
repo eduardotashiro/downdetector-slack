@@ -57,21 +57,18 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essa excelent
 ## Funcionalidades
 
 - **Headed + Xvfb**: o navegador roda com interface gráfica em um display virtual, mesmo dentro de um servidor, inicializado via [`xvfb.sh`](xvfb.sh)
-- **Páginas isoladas**: cada serviço é verificado em seu próprio contexto (`newContext()` + `newPage()`), sem reaproveitamento de cookies/cache entre eles
+- **Um context por ciclo**: os serviços compartilham um único context (`NewContext()`) criado a cada ciclo, com uma `newPage()` por serviço. Assim os cookies (como os do Cloudflare) são reaproveitados dentro do ciclo, e o context é fechado no final dele
 - **Parsing PT-BR**: o status é identificado a partir dos textos exibidos pelo Downdetector em português
-- **Adaptação de idioma**: o navegador envia `Accept-Language` priorizando português do Brasil
-- **Retry automático**: uma consulta que falha recebe uma segunda tentativa utilizando a função checkSingleService em [`downdetectorService.ts`](src/services/downdetectorService.ts) antes de ser descartada
-- **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda continuamente, com um intervalo aleatório entre execuções
-- **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara uma DM direta (visível em qualquer client, incluindo mobile), [`sendError()`](src/notifier/slack.ts)
-- **Validação fail-fast de variáveis de ambiente**: o container falha imediatamente na inicialização caso alguma variável obrigatória esteja faltando, evitando deploys silenciosamente quebrados
-- **Fechamento robusto do browser**: [`forceCloseBrowser()`](src/provider/closeBrowser.ts) tenta o fechamento normal com timeout de 2s
+- **Retry automático**: uma consulta que falha recebe uma segunda tentativa (`checkWithRetry()` em [`downdetector.ts`](src/providers/downdetector.ts)) antes de ser descartada
+- **Ciclo contínuo com atraso aleatório**: o monitoramento roda uma vez ao iniciar e depois se reagenda sozinho, com um intervalo aleatório de 15 a 30 segundos entre os ciclos ([`monitorLoop.ts`](src/jobs/monitorLoop.ts))
+- **Alertas via Incoming Webhooks do Slack**: `danger` dispara um alerta crítico em dois canais; quando o serviço volta pra `success`, o bot manda a resolução com a duração do incidente. `warning` só aparece no log
+- **Alertas de erro internos em dois canais**: se nenhum serviço puder ser verificado em um ciclo, o bot dispara uma DM direta ou canal (depende do tipo de webhook que chamada)(visível em qualquer client, incluindo mobile), [`sendError()`](src/notifiers/slack.ts)
+- **Validação fail-fast de variáveis de ambiente**: o bot falha logo na inicialização se algum webhook estiver faltando ([`env.ts`](src/config/env.ts)), evitando deploys silenciosamente quebrados
+- **Fechamento robusto do browser**: [`forceCloseBrowser()`](src/providers/closeBrowser.ts) tenta o fechamento normal com timeout de 2s e só registra o erro no momento se não confirmar
 - **Init próprio (tini)**: tini é usado como PID 1 no container pra fazer reap de processos
-- **Métricas Prometheus**: expõe `/metrics` com o status de cada serviço (`downdetector_service_status`), via `prom-client`
-- > Não utiliazdo no momento, suba um servidor http e expoe o caminho, descomente os codigos que é successo
-- **Dashboard Grafana**: painel provisionado automaticamente com o status em tempo real de todos os serviços monitorados
-- > Não utiliazdo no momento, suba um servidor http e expoe o caminho, descomente os codigos que é successo
-- **Docker multi-stage + Railway**: build separado do runtime com apenas o mínimo necessário pra executar, com Dockerfiles independentes pro bot, Prometheus e Grafana
+- **Docker**: imagem com Xvfb e as dependências do Firefox, pronta pra rodar em container
 - **Testes**: testes unitários com Vitest e script manual pra testar alertas no Slack
+- **Observabilidade (pausada)**: Prometheus e Grafana já estão no repositório, mas desativados por enquanto. Veja [Observabilidade](#observabilidade)
 
 ---
 
@@ -90,7 +87,7 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essa excelent
 | **Banco do Brasil** | [downdetector.com.br/fora-do-ar/banco-do-brasil/](https://downdetector.com.br/fora-do-ar/banco-do-brasil/) |
 | **Mercado Pago**    | [downdetector.com.br/fora-do-ar/mercadopago/](https://downdetector.com.br/fora-do-ar/mercadopago/)         |
 | **PicPay**          | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/picpay/)                   |
-| **Cielo**           | [downdetector.com.br/fora-do-ar/picpay/](https://downdetector.com.br/fora-do-ar/cielo/)                    |
+| **Cielo**           | [downdetector.com.br/fora-do-ar/cielo/](https://downdetector.com.br/fora-do-ar/cielo/)                     |
 
 </details>
 
@@ -101,25 +98,21 @@ Fica aqui o agradecimento aos desenvolvedores por disponibilizarem essa excelent
 <details>
 <summary>Clique para expandir</summary>
 
-O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. São necessárias mudanças em apenas **1 arquivo**, os monitores de incidente são criados dinamicamente :
-
-#### 1. [downdetectorService.ts](src/cinfig/services.ts) → inclui o serviço na lista de scraping
-
-Adicione name e url no array:
+O bot foi estruturado para que novos serviços do Downdetector possam ser adicionados **sem alterar a lógica principal do scraper**. Só é preciso mexer em **1 arquivo**, [`services.ts`](src/config/services.ts):
 
 ```typescript
 const SERVICES: MonitoredService[] = [
 	// ... serviços existentes
 	{
 		name: "Banco do Brasil",
-		url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/",
+		url: "https://downdetector.com.br/fora-do-ar/slug-do-servico/",
 	},
 ];
 ```
 
 #### Como os monitores são criados automaticamente ??
 
-Em [notificationOrchestrator.ts](src/slack/notificationOrchestrator.ts), os monitores são instanciados dinamicamente a partir [SERVICES](src/slack/config/services.ts).
+Os monitores de incidente são criados dinamicamente a partir dessa lista, em [`notificationOrchestrator.ts`](src/jobs/notificationOrchestrator.ts). Após o push (ou reinício do container), o novo serviço passa a ser monitorado no próximo ciclo.
 
 ```typescript
 const monitors = new Map<string, IncidentMonitor>();
@@ -144,20 +137,11 @@ Após o push (ou reinício do container), o novo serviço passa a ser monitorado
 <details>
 <summary>Clique para expandir</summary>
 
-O parser de status depende dos **textos exibidos** na página do Downdetector. Atualmente o projeto prioriza `pt-BR` através do header `Accept-Language`:
+O bot lê os **textos exibidos** na página do Downdetector, então trocar de idioma exige ajustar **três pontos**, todos em [`downdetector.ts`](src/providers/downdetector.ts):
 
-```typescript
-// src/provider/downdetector.ts
-await page.setExtraHTTPHeaders({
-	"Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-});
-```
+#### 1. O idioma enviado ao site
 
-Para adaptar o projeto a outro idioma, você precisa ajustar **dois pontos**:
-
-#### 1. Alterar o idioma enviado ao site
-
-No arquivo `src/services/downdetectorService.ts`, troque o `Accept-Language` pro idioma desejado:
+Em `checkSingleService()`, troque o `Accept-Language`:
 
 ```typescript
 // Exemplo: Chile
@@ -166,12 +150,15 @@ await page.setExtraHTTPHeaders({
 });
 ```
 
-#### 2. Adaptar as expressões do parser
+#### 2. O texto que indica que a página carregou
 
-A função `detectStatus()` identifica o estado do serviço procurando frases específicas no HTML da página:
+`waitForRealContent()` espera aparecer `"relatos dos usuários"` ou `"relatos de usuários"`. Troque pelo texto equivalente da página no seu idioma, senão toda checagem estoura o timeout.
+
+#### 3. As frases de status
+
+`detectStatus()` identifica o estado do serviço procurando frases no texto da página:
 
 ```typescript
-// src/provider/downdetector.ts
 async function detectStatus(page: Page): Promise<ServiceStatus | null> {
     try {
         ...
@@ -187,17 +174,15 @@ async function detectStatus(page: Page): Promise<ServiceStatus | null> {
 }
 ```
 
-Para outros idiomas, substitua as strings pelas equivalentes. Alguns exemplos:
-
 | Status    | PT-BR                   | ES-CL                   |
 | --------- | ----------------------- | ----------------------- |
 | `SUCCESS` | `não mostram problemas` | `no muestran problemas` |
 | `WARNING` | `possíveis problemas`   | `posibles problemas`    |
 | `DANGER`  | `mostram problemas`     | `muestran problemas`    |
 
-> ⚠️ **Atenção:** a ordem das verificações importa! No PT-BR e no ES-CL, a frase de `SUCCESS` contém a frase de `DANGER` como substring (ex: `"não mostram problemas"` contém `"mostram problemas"`). Por isso `SUCCESS` é verificado **antes** de `DANGER` no código — se você adaptar para outro idioma, verifique se as frases do seu idioma têm esse mesmo tipo de sobreposição antes de definir a ordem dos `if`.
+> ⚠️ **Atenção:** a ordem das verificações importa! No PT-BR e no ES-CL, a frase de `SUCCESS` contém a frase de `DANGER` como substring (ex: `"não mostram problemas"` contém `"mostram problemas"`). Por isso `SUCCESS` é verificado **antes** de `DANGER` no código, se você adaptar para outro idioma, verifique se as frases do seu idioma têm esse mesmo tipo de sobreposição antes de definir a ordem dos `if`.
 
-> 💡 **Dica de debug:** se o parser deixar de reconhecer um status (o Downdetector pode mudar os textos com o tempo), abra a página no seu navegador, inspecione o texto exibido e atualize as expressões da função `detectStatus()` conforme necessário.
+> 💡 **Dica de debug:** se o parser deixar de reconhecer um status (o Downdetector pode mudar os textos com o tempo), abra a página no navegador, inspecione o texto exibido e atualize as frases.
 
 </details>
 
@@ -532,9 +517,9 @@ _"Relatos de usuários mostram problemas com WhatsApp."_
 
 ## Pré-requisitos
 
-- Node.js 22+
-- App do Slack com Bot Token ([crie um aqui](https://api.slack.com/apps))
-- Docker (roda o mesmo ambiente com Xvfb, além de Prometheus e Grafana)
+- Node.js 22.15+ e [pnpm](https://pnpm.io/)
+- Um app do Slack com Incoming Webhooks ([crie um aqui](https://api.slack.com/apps))
+- Docker (opcional, roda o mesmo ambiente com Xvfb)
 
 ## Instalação
 
@@ -548,31 +533,39 @@ git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
-2. **Instale as dependências** (isso também baixa o binário browser)
+2. **Instale as dependências**
 
 ```bash
 pnpm install
 ```
 
-3. **Configure as variáveis de ambiente**
+3. **Baixe o navegador** (o `pnpm install` não baixa o binário do Camoufox; o Dockerfile faz o mesmo comando)
 
-Crie um arquivo `.env` na raiz do projeto:
+```bash
+npx camoufox fetch
+```
 
-```env
+4. **Configure as variáveis de ambiente**
+
+```bash
 cp .env.example .env
 ```
 
-Depois, preencha o arquivo `.env`:
+Depois, preencha o `.env` com os 3 webhooks (veja a próxima seção):
 
-> Documentação: [Envio de mensagens usando webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+```env
+SLACK_WEBHOOK_ALERT_1=https://hooks.slack.com/services/...
+SLACK_WEBHOOK_ALERT_2=https://hooks.slack.com/services/...
+SLACK_WEBHOOK_ERROR=https://hooks.slack.com/services/...
+```
 
-4. **Compile o projeto**
+5. **Compile o projeto**
 
 ```bash
 pnpm run build
 ```
 
-5. **Inicie o bot**
+6. **Inicie o bot**
 
 ```bash
 pnpm start
@@ -580,22 +573,29 @@ pnpm start
 
 </details>
 
-## Slack App Manifest (Recomendado)
+### Webhooks do Slack
 
 <details>
+
 <summary>Clique para expandir as instruções</summary>
 
-1. Acesse https://api.slack.com/apps
-2. Clique em **Create New App**
-3. Escolha **From an app manifest**
-4. Selecione seu workspace
-5. Cole o conteúdo do arquivo [`manifest.json`](manifest.yml)
-6. Instale o app no seu workspace
-7. Copie o Bot Token e o Signing Secret pro seu `.env`
+1. Acesse https://api.slack.com/apps e clique em **Create New App**
+
+2. Crie do zero, ou escolha **From an app manifest** e cole o conteúdo de [`manifest.yml`](manifest.yml)
+
+3. Em **Incoming Webhooks**, ative a opção e clique em **Add New Webhook to Workspace**, escolhendo o canal. Faça isso uma vez por variável:
+
+    - `SLACK_WEBHOOK_ALERT_1` e `SLACK_WEBHOOK_ALERT_2` → canais que recebem os alertas críticos e as resoluções
+
+    - `SLACK_WEBHOOK_ERROR` → canal que recebe os erros do próprio bot
+
+4. Copie cada URL pro `.env`
+
+> Documentação: [Envio de mensagens usando webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
 
 </details>
 
-## Deploy com Docker
+### Docker
 
 <details>
 <summary>Clique para expandir as instruções de Docker</summary>
@@ -647,16 +647,20 @@ pnpm run build
 pnpm start
 ```
 
+> Na primeira execução o Camoufox baixa uma base GeoIP (`geoip: true`), então o primeiro ciclo demora mais.
+
 </details>
 
 ---
 
-## Observabilidade (off)
+## Observabilidade
 
 <details>
 <summary>Clique para expandir/recolher</summary>
 
-O bot expõe métricas no formato Prometheus e vem com um dashboard Grafana pronto, provisionado automaticamente — sem precisar configurar nada manualmente.
+> ⏸️ **Desativada por enquanto.** Os arquivos de Prometheus e Grafana estão no repositório, mas nada expõe o `/metrics` ainda.
+
+O bot expõe métricas no formato Prometheus e vem com um dashboard Grafana pronto, provisionado automaticamente, sem precisar configurar nada manualmente.
 
 ### Métrica exposta
 
@@ -676,15 +680,15 @@ O label `service` é gerado a partir do nome do serviço, normalizado (minúscul
 
 ![dashboard](.github/assets/grafana/dashboard.png)
 
-O dashboard [`downdetector.yml`](grafana/provisioning/dashboards/downdetector.json) é carregado automaticamente pelo provider configurado em [`dashboards.yml`](grafana/provisioning/dashboards/dashboards.yml), e mostra:
+O dashboard [`downdetector.json`](monitoring/grafana/provisioning/dashboards/downdetector.json) é carregado automaticamente pelo provider configurado em [`dashboards.yml`](monitoring/grafana/provisioning/dashboards/dashboards.yml), e mostra:
 
 - Um painel `stat` por serviço, com cor verde/amarelo/vermelho de acordo com o status atual (`SUCCESS` / `WARNING` / `DANGER`)
 - Um painel `timeseries` com o histórico de status de todos os serviços nas últimas horas
 
 O datasource do Prometheus também é provisionado automaticamente:
 
-- Localmente, via [`monitoring/prometheus/prometheus.yml`](grafana/provisioning/datasources/prometheus.yml) (`http://prometheus:9090`)
-- No Railway, via [`grafana/railway/prometheus-datasource.yml`](monitoring/prometheus/prometheus.railway.yml) (`http://prometheus.railway.internal:9090`)
+- Localmente, via [`datasource.yml`](monitoring/grafana/provisioning/datasources/datasource.yml) (`http://prometheus:9090`)
+- No Railway, via [`prometheus-datasource.yml`](monitoring/prometheus/railway/prometheus-datasource.yml) (`http://prometheus.railway.internal:9090`)
 
 ### Rodando localmente
 
@@ -800,20 +804,17 @@ Queda aquí el agradecimiento a los desarrolladores por poner esta excelente her
 
 - **Headed + Xvfb**: el navegador se ejecuta con interfaz gráfica en un display virtual, incluso dentro de un servidor, inicializado mediante [`xvfb.sh`](xvfb.sh)
 - **Contexto compartido por ciclo**: los servicios se verifican dentro de un único contexto (`NewContext()`) creado en cada ciclo, con una `newPage()` por servicio; así las cookies (como las de Cloudflare) se comparten entre las verificaciones del mismo ciclo, y el contexto se cierra al final de este
-- **Parsing PT-BR**: el estado se identifica a partir de los textos que muestra Downdetector en portugués
-- **Adaptación de idioma**: el navegador envía `Accept-Language` priorizando el portugués de Brasil
-- **Reintento automático**: una consulta que falla recibe un segundo intento mediante la función `checkSingleService` en [`downdetector.ts`](src/providers/downdetector.ts) antes de ser descartada
-- **Ciclo continuo con retraso aleatorio**: el monitoreo se ejecuta una vez al iniciar y luego se reprograma continuamente, con un intervalo aleatorio entre ejecuciones
-- **Alertas de error internos en dos canales**: si ningún servicio puede ser verificado en un ciclo, el bot dispara un DM directo (visible en cualquier cliente, incluido móvil), [`sendError()`](src/notifiers/slack.ts)
-- **Validación fail-fast de variables de entorno**: el contenedor falla inmediatamente al iniciar si falta alguna variable obligatoria, evitando despliegues silenciosamente rotos
-- **Cierre robusto del navegador**: [`forceCloseBrowser()`](src/providers/closeBrowser.ts) intenta el cierre normal con un timeout de 2s
+- **Parsing PT-BR**: el estado se identifica a partir de los textos que muestra Downdetector en portugués, y el navegador envía `Accept-Language` priorizando pt-BR
+- **Reintento automático**: una consulta que falla recibe un segundo intento (`checkWithRetry()` en [`downdetector.ts`](src/providers/downdetector.ts)) antes de ser descartada
+- **Ciclo continuo con retraso aleatorio**: el monitoreo se ejecuta una vez al iniciar y luego se reprograma solo, con un intervalo aleatorio de 15 a 30 segundos entre ciclos ([`monitorLoop.ts`](src/jobs/monitorLoop.ts))
+- **Alertas vía Incoming Webhooks de Slack**: `danger` dispara una alerta crítica en dos canales; cuando el servicio vuelve a `success`, el bot envía la resolución con la duración del incidente. `warning` solo aparece en el log
+- **Alerta de error interno**: si ningún servicio puede ser verificado en un ciclo, el bot avisa en un canal aparte, [`sendError()`](src/notifiers/slack.ts)
+- **Validación fail-fast de variables de entorno**: el bot falla de inmediato al iniciar si falta algún webhook ([`env.ts`](src/config/env.ts)), evitando despliegues silenciosamente rotos
+- **Cierre robusto del navegador**: [`forceCloseBrowser()`](src/providers/closeBrowser.ts) intenta el cierre normal con un timeout de 2s y solo registra el error si no se confirma
 - **Init propio (tini)**: tini se usa como PID 1 en el contenedor para hacer reap de procesos
-- **Métricas Prometheus**: expone `/metrics` con el estado de cada servicio (`downdetector_service_status`), mediante `prom-client`
-    > No se utiliza por el momento: levanta un servidor HTTP, expón la ruta y descomenta el código correspondiente.
-- **Dashboard Grafana**: panel provisionado automáticamente con el estado en tiempo real de todos los servicios monitoreados
-    > No se utiliza por el momento: levanta un servidor HTTP, expón la ruta y descomenta el código correspondiente.
-- **Docker multi-stage + Railway**: build separado del runtime con solo lo mínimo necesario para ejecutar, con Dockerfiles independientes para el bot, Prometheus y Grafana
+- **Docker**: imagen con Xvfb y las dependencias de Firefox, lista para correr en un contenedor (ej.: Railway)
 - **Pruebas**: pruebas unitarias con Vitest y script manual para probar alertas en Slack
+- **Observabilidad (en pausa)**: Prometheus y Grafana ya están en el repositorio, pero desactivados por ahora. Ver [Observabilidad](#observabilidad)
 
 ---
 
@@ -843,25 +844,25 @@ Queda aquí el agradecimiento a los desarrolladores por poner esta excelente her
 <details>
 <summary>Haz clic para expandir</summary>
 
-El bot fue estructurado para que se puedan agregar nuevos servicios de Downdetector **sin modificar la lógica principal del scraper**. Solo se necesitan cambios en **1 archivo**, ya que los monitores de incidentes se crean dinámicamente:
+El bot fue estructurado para que se puedan agregar nuevos servicios de Downdetector **sin modificar la lógica principal del scraper**. Solo hay que tocar **1 archivo**, [`services.ts`](src/config/services.ts):
 
 #### 1. [services.ts](src/config/services.ts) → incluye el servicio en la lista de scraping
 
 Agrega `name` y `url` al array:
 
 ```typescript
-const SERVICES: MonitoredService[] = [
+export const SERVICES: MonitoredService[] = [
 	// ... servicios existentes
 	{
-		name: "Banco do Brasil",
-		url: "https://downdetector.com.br/fora-do-ar/banco-do-brasil/",
+		name: "Nombre del Servicio",
+		url: "https://downdetector.com.br/fora-do-ar/slug-del-servicio/",
 	},
 ];
 ```
 
 #### ¿Cómo se crean los monitores automáticamente?
 
-En [notificationOrchestrator.ts](src/jobs/notificationOrchestrator.ts), los monitores se instancian dinámicamente a partir de [SERVICES](src/config/services.ts).
+Los monitores de incidentes se crean dinámicamente a partir de esa lista, en [`notificationOrchestrator.ts`](src/jobs/notificationOrchestrator.ts). Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse en el próximo ciclo.
 
 ```typescript
 const monitors = new Map<string, IncidentMonitor>();
@@ -872,8 +873,6 @@ for (const service of SERVICES) {
 ```
 
 #### Para finalizar
-
-Después del push (o reinicio del contenedor), el nuevo servicio pasa a monitorearse automáticamente en el próximo ciclo.
 
 > 💡 **Tip:** no olvides actualizar también la tabla [Servicios monitoreados](#servicios-monitoreados) y, si quieres verlo en Grafana, agrega un nuevo panel `stat` en [downdetector.json](monitoring/grafana/provisioning/dashboards/downdetector.json) apuntando a la etiqueta normalizada del servicio (ver [Observabilidad](#observabilidad)).
 
@@ -910,6 +909,8 @@ await page.setExtraHTTPHeaders({
 
 #### 2. Adaptar las expresiones del parser
 
+`waitForRealContent()` espera que aparezca `"relatos dos usuários"` o `"relatos de usuários"`. Cámbialo por el texto equivalente de la página en tu idioma; si no, todas las verificaciones terminan en timeout.
+
 La función `detectStatus()` identifica el estado del servicio buscando frases específicas en el texto de la página:
 
 ```typescript
@@ -937,7 +938,7 @@ Para otros idiomas, reemplaza las strings por sus equivalentes. Algunos ejemplos
 | `WARNING` | `possíveis problemas`   | `posibles problemas`    |
 | `DANGER`  | `mostram problemas`     | `muestran problemas`    |
 
-> ⚠️ **Atención:** ¡el orden de las comprobaciones importa! En PT-BR y en ES-CL, la frase de `SUCCESS` contiene la frase de `DANGER` como subcadena (ej.: `"não mostram problemas"` contiene `"mostram problemas"`). Por eso `SUCCESS` se comprueba **antes** que `DANGER` en el código. Si lo adaptas a otro idioma, verifica si las frases de tu idioma tienen este mismo tipo de superposición antes de definir el orden de los `if`.
+> ⚠️ **Atención:** ¡el orden de las comprobaciones importa! En PT-BR y en ES-CL, la frase de `SUCCESS` contiene la frase de `DANGER` como subcadena (ej: `"não mostram problemas"` contiene `"mostram problemas"`). Por eso `SUCCESS` se comprueba **antes** que `DANGER` en el código. Si lo adaptas a otro idioma, verifica si las frases de tu idioma tienen este mismo tipo de superposición antes de definir el orden de los `if`.
 
 > 💡 **Tip de debug:** si el parser deja de reconocer un estado (Downdetector puede cambiar los textos con el tiempo), abre la página en tu navegador, inspecciona el texto mostrado y actualiza las expresiones de la función `detectStatus()` según sea necesario.
 
@@ -1270,9 +1271,9 @@ Cada servicio tiene su propio monitor de incidentes que rastrea los cambios de e
 
 ## Requisitos previos
 
-- Node.js 22+
-- App de Slack con Bot Token ([créala aquí](https://api.slack.com/apps))
-- Docker (ejecuta el mismo entorno con Xvfb, además de Prometheus y Grafana)
+- Node.js 22.15+ y [pnpm](https://pnpm.io/)
+- Una app de Slack con Incoming Webhooks ([créala aquí](https://api.slack.com/apps))
+- Docker (opcional, ejecuta el mismo entorno con Xvfb)
 
 ## Instalación
 
@@ -1286,31 +1287,39 @@ git clone https://github.com/eduardotashiro/downdetector-slack.git
 cd downdetector-slack
 ```
 
-2. **Instala las dependencias** (esto también descarga el binario del navegador)
+2. **Instala las dependencias**
 
 ```bash
 pnpm install
 ```
 
-3. **Configura las variables de entorno**
+3. **Descarga el navegador** (`pnpm install` no descarga el binario de Camoufox; el Dockerfile ejecuta el mismo comando)
 
-Crea un archivo `.env` en la raíz del proyecto:
+```bash
+npx camoufox fetch
+```
+
+4. **Configura las variables de entorno**
 
 ```bash
 cp .env.example .env
 ```
 
-Luego, completa el archivo `.env`:
+Luego, completa el `.env` con los 3 webhooks (ver la siguiente sección):
 
-> Documentación: [Envío de mensajes mediante webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
+```env
+SLACK_WEBHOOK_ALERT_1=https://hooks.slack.com/services/...
+SLACK_WEBHOOK_ALERT_2=https://hooks.slack.com/services/...
+SLACK_WEBHOOK_ERROR=https://hooks.slack.com/services/...
+```
 
-4. **Compila el proyecto**
+5. **Compila el proyecto**
 
 ```bash
 pnpm run build
 ```
 
-5. **Inicia el bot**
+6. **Inicia el bot**
 
 ```bash
 pnpm start
@@ -1318,22 +1327,28 @@ pnpm start
 
 </details>
 
-## Slack App Manifest (Recomendado)
+### Webhooks de Slack
 
 <details>
 <summary>Haz clic para expandir las instrucciones</summary>
 
-1. Ve a https://api.slack.com/apps
-2. Haz clic en **Create New App**
-3. Elige **From an app manifest**
-4. Selecciona tu workspace
-5. Pega el contenido del archivo [`manifest.yml`](manifest.yml)
-6. Instala la app en tu workspace
-7. Copia el Bot Token y el Signing Secret a tu `.env`
+1. Ve a https://api.slack.com/apps y haz clic en **Create New App**
+
+2. Créala desde cero, o elige **From an app manifest** y pega el contenido de [`manifest.yml`](manifest.yml)
+
+3. En **Incoming Webhooks**, activa la opción y haz clic en **Add New Webhook to Workspace**, eligiendo el canal. Hazlo una vez por variable:
+
+    - `SLACK_WEBHOOK_ALERT_1` y `SLACK_WEBHOOK_ALERT_2` → canales que reciben las alertas críticas y las resoluciones
+
+    - `SLACK_WEBHOOK_ERROR` → canal que recibe los errores del propio bot
+
+4. Copia cada URL al `.env`
+
+> Documentación: [Envío de mensajes mediante webhooks](https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks/)
 
 </details>
 
-## Despliegue con Docker
+## Docker
 
 <details>
 <summary>Haz clic para expandir las instrucciones de Docker</summary>
@@ -1385,20 +1400,31 @@ pnpm run build
 pnpm start
 ```
 
+> En la primera ejecución Camoufox descarga una base GeoIP (`geoip: true`), por lo que el primer ciclo tarda más.
+
 </details>
 
 ---
 
-## Observabilidad (off)
+## Observabilidad
+
+> ⏸️ **Desactivada por ahora.** Los archivos de Prometheus y Grafana están en el repositorio, pero nada expone todavía el `/metrics`.
 
 <details>
 <summary>Haz clic para expandir/colapsar</summary>
 
-El bot expone métricas en formato Prometheus y viene con un dashboard de Grafana listo, provisionado automáticamente, sin necesidad de configurar nada manualmente.
+Lo que ya existe:
+
+- [`src/metrics/prometheusClient.ts`](src/metrics/prometheusClient.ts): un `Gauge` por servicio (`downdetector_service_status`), con la etiqueta `service` normalizada (minúsculas, sin acentos, espacios convertidos en `_`) mediante la función `normalizeServiceName()`
+- [`monitoring/`](monitoring): configs de Prometheus (local y Railway) y dashboard de Grafana con provisionamiento automático
+
+Para reactivarla:
+
+1. Levantar un servidor HTTP que sirva el `metricsEndpoint` en `/metrics`, en el puerto 3000
+2. Descomentar el bloque de métricas al final de `checkAllServices()`, en [`downdetector.ts`](src/providers/downdetector.ts)
+3. Ajustar las rutas de [`docker-compose.yml`](docker-compose.yml) y de [`Dockerfile.grafana`](Dockerfile.grafana), que todavía apuntan a las carpetas antiguas (ahora es `monitoring/`)
 
 ### Métrica expuesta
-
-El endpoint `GET /metrics` expone la métrica `downdetector_service_status`, un `Gauge` por servicio, definido en [`src/metrics/prometheusClient.ts`](src/metrics/prometheusClient.ts):
 
 ```
 # HELP downdetector_service_status Status do serviço monitorado pelo Downdetector: 0 = success, 1 = warning, 2 = danger
@@ -1407,8 +1433,6 @@ downdetector_service_status{service="pix"} 0
 downdetector_service_status{service="nubank"} 0
 downdetector_service_status{service="banco_itau"} 2
 ```
-
-La etiqueta `service` se genera a partir del nombre del servicio, normalizado (minúsculas, sin acentos, espacios convertidos en `_`) mediante la función `normalizeServiceName()`.
 
 ### Dashboard de Grafana
 
@@ -1464,36 +1488,26 @@ pnpm run test:alert
 ## Contribución
 
 <details>
-<summary>Haz clic para expandir la guía de contribución</summary>
+<summary>Haz clic para expandir</summary>
 
 1. Haz un fork del repositorio
-2. Crea una rama de feature
+2. Crea una rama, haz commit (usa [Conventional Commits](https://www.conventionalcommits.org/)) y súbela:
 
 ```bash
-git checkout -b feature/mi-feature-increible
+git checkout -b feature/mi-feature-bacan
+git commit -m 'feat: agrega feature bacan'
+git push origin feature/mi-feature-bacan
 ```
 
-3. Haz commit de tus cambios (usa [Conventional Commits](https://www.conventionalcommits.org/))
-
-```bash
-git commit -m 'feat: agrega feature increíble'
-```
-
-4. Sube la rama
-
-```bash
-git push origin feature/mi-feature-increible
-```
-
-5. Abre un Pull Request
+3. Abre un Pull Request
 
 **Convención de commits:** `feat`, `fix`, `docs`, `test`, `perf`, `refactor`, `chore`
 
-**Antes de enviar el PR:**
+**Antes de enviar el PR** (el CI ejecuta estos mismos dos comandos):
 
 ```bash
-pnpm test              # Ejecuta las pruebas
-pnpm run build         # Verifica que el build funcione
+pnpm test
+pnpm run build
 ```
 
 </details>
